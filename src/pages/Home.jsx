@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, Shield, Clock, Leaf } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
+import CategoryGrid from '@/components/home/CategoryGrid';
 import { motion } from 'framer-motion';
 
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
@@ -139,6 +140,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Category Grid */}
+      <CategoryGrid />
 
       {/* Category Carousels */}
       <section className="py-8 pb-24">
