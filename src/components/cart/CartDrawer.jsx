@@ -72,6 +72,15 @@ export default function CartDrawer() {
           order_id: order.id,
           balance_after: newBalance
         });
+
+        // Process referral bonus if this is first purchase
+        if (!user.referral_bonus_claimed && user.referred_by) {
+          try {
+            await base44.functions.invoke('processReferral', {});
+          } catch (refError) {
+            console.error('Referral error:', refError);
+          }
+        }
       } catch (pointsError) {
         console.error('Points error:', pointsError);
       }

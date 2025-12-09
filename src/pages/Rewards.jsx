@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -6,6 +6,7 @@ import { Gift, History, Award, TrendingUp, Crown } from 'lucide-react';
 import LoyaltyCard from '@/components/loyalty/LoyaltyCard';
 import RewardCard from '@/components/loyalty/RewardCard';
 import PointsHistory from '@/components/loyalty/PointsHistory';
+import ReferralCard from '@/components/loyalty/ReferralCard';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -24,6 +25,21 @@ export default function Rewards() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
+
+  // Generate referral code if user doesn't have one
+  useEffect(() => {
+    const generateCode = async () => {
+      if (user && !user.referral_code) {
+        try {
+          await base44.functions.invoke('generateReferralCode', {});
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        } catch (error) {
+          console.error('Failed to generate referral code:', error);
+        }
+      }
+    };
+    generateCode();
+  }, [user, queryClient]);
 
   const { data: rewards = [], isLoading: loadingRewards } = useQuery({
     queryKey: ['rewards'],
@@ -117,6 +133,16 @@ export default function Rewards() {
           className="mb-8"
         >
           <LoyaltyCard user={user} points={userPoints} />
+        </motion.div>
+
+        {/* Referral Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <ReferralCard user={user} />
         </motion.div>
 
         {/* Tier Progress */}
