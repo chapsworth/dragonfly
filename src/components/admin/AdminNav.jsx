@@ -12,7 +12,32 @@ const navItems = [
   { name: 'Carousel Settings', page: 'AdminCarousel', icon: Settings },
 ];
 
-export default function AdminNav({ currentPage }) {
+export default function AdminNav({ currentPage, mobile }) {
+  if (mobile) {
+    return (
+      <div className="flex items-center justify-around">
+        {navItems.slice(0, 5).map(item => {
+          const isActive = currentPage === item.page;
+          return (
+            <Link
+              key={item.page}
+              to={createPageUrl(item.page)}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[60px]",
+                isActive 
+                  ? "text-emerald-600"
+                  : "text-emerald-400"
+              )}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-xs font-medium">{item.name}</span>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <nav className="bg-white/80 backdrop-blur-xl border-r border-white/40 h-screen sticky top-0 w-64 p-4">
       <Link to={createPageUrl('Home')} className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-8 p-2">

@@ -33,35 +33,58 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-      <AdminNav currentPage="AdminDashboard" />
-      
-      <div className="flex-1 p-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-4xl font-bold text-emerald-900 mb-2">Dashboard</h1>
-          <p className="text-emerald-600 mb-8">Welcome to your admin panel</p>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+      {/* Mobile Header */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40 px-4 py-4">
+        <h1 className="text-2xl font-bold text-emerald-900">Dashboard</h1>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
-              >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-4 shadow-lg`}>
-                  <stat.icon className="w-7 h-7 text-white" />
-                </div>
-                <p className="text-sm text-emerald-600 mb-1">{stat.label}</p>
-                <p className="text-3xl font-bold text-emerald-900">{stat.value}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+      <div className="flex">
+        {/* Desktop Nav */}
+        <div className="hidden lg:block">
+          <AdminNav currentPage="AdminDashboard" />
+        </div>
+        
+        <div className="flex-1 p-4 sm:p-6 lg:p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {/* Desktop Header */}
+            <div className="hidden lg:block mb-8">
+              <h1 className="text-4xl font-bold text-emerald-900 mb-2">Dashboard</h1>
+              <p className="text-emerald-600">Welcome to your admin panel</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {stats.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+                >
+                  <div className="flex items-center gap-4 sm:flex-col sm:items-start">
+                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                      <stat.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                    </div>
+                    <div className="sm:mt-4">
+                      <p className="text-xs sm:text-sm text-emerald-600 mb-0.5 sm:mb-1">{stat.label}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-emerald-900">{stat.value}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/40 px-4 py-3 z-40">
+        <AdminNav currentPage="AdminDashboard" mobile />
       </div>
     </div>
   );
