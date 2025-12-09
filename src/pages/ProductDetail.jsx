@@ -22,6 +22,7 @@ export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get('id');
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const { addToCart, setIsCartOpen } = useCart();
 
   const { data: product, isLoading } = useQuery({
@@ -32,6 +33,12 @@ export default function ProductDetail() {
     },
     enabled: !!productId
   });
+
+  React.useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariant(product.variants[0]);
+    }
+  }, [product]);
 
   if (isLoading) {
     return (
@@ -55,10 +62,12 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+      addToCart(product, selectedVariant);
     }
     setIsCartOpen(true);
   };
+
+  const currentPrice = selectedVariant?.price || product?.price || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-12 px-4">
@@ -128,6 +137,30 @@ export default function ProductDetail() {
               </div>
             )}
 
+            {/* Variant Selector */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-bold text-emerald-900 mb-3">Select Size</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant.name}
+                      onClick={() => setSelectedVariant(variant)}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all",
+                        selectedVariant?.name === variant.name
+                          ? "border-emerald-500 bg-emerald-50"
+                          : "border-emerald-200 bg-white hover:border-emerald-300"
+                      )}
+                    >
+                      <p className="font-semibold text-emerald-900">{variant.name}</p>
+                      <p className="text-sm text-emerald-600">${variant.price.toFixed(2)}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Description */}
             {product.description && (
               <div className="mb-6 p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40">
@@ -141,7 +174,7 @@ export default function ProductDetail() {
               <div className="flex items-center gap-4 mb-4">
                 <div>
                   <p className="text-sm text-emerald-600 mb-1">Price</p>
-                  <p className="text-4xl font-bold text-emerald-700">${product.price?.toFixed(2)}</p>
+                  <p className="text-4xl font-bold text-emerald-700">${currentPrice.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-3 ml-auto">
                   <Button
@@ -169,13 +202,13 @@ export default function ProductDetail() {
                 className="w-full h-16 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold text-lg shadow-lg shadow-emerald-500/30"
               >
                 <ShoppingBag className="w-6 h-6 mr-2" />
-                Add to Bag - ${(product.price * quantity).toFixed(2)}
+                Add to Bag - ${(currentPrice * quantity).toFixed(2)}
               </Button>
 
               {product.in_stock ? (
                 <p className="text-center text-sm text-emerald-600 mt-3 flex items-center justify-center gap-2">
                   <Award className="w-4 h-4" />
-                  Earn {Math.floor(product.price * quantity)} loyalty points
+                  Earn {Math.floor(currentPrice * quantity)} loyalty points
                 </p>
               ) : (
                 <p className="text-center text-sm text-red-600 mt-3">Out of stock</p>

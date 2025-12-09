@@ -13,13 +13,29 @@ const strainColors = {
   'n/a': 'from-slate-400 to-gray-500'
 };
 
+const getDefaultVariant = (category) => {
+  const variantMap = {
+    'flower': 'Eighth',
+    'vapes': '1 Cart',
+    'edibles': '1 Unit',
+    'concentrates': '1 Gram'
+  };
+  return variantMap[category] || null;
+};
+
 export default function ProductCard({ product }) {
   const { addToCart, setIsCartOpen } = useCart();
+  const [selectedVariant, setSelectedVariant] = React.useState(() => {
+    if (product.variants && product.variants.length > 0) {
+      return product.variants[0];
+    }
+    return null;
+  });
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    addToCart(product, selectedVariant);
   };
 
   return (
@@ -96,8 +112,31 @@ export default function ProductCard({ product }) {
           <p className="text-xs text-emerald-500 mb-2">{product.weight}</p>
         )}
 
+        {/* Variant Selector */}
+        {product.variants && product.variants.length > 0 && (
+          <div className="mb-3" onClick={(e) => e.preventDefault()}>
+            <select
+              value={selectedVariant?.name || ''}
+              onChange={(e) => {
+                e.stopPropagation();
+                const variant = product.variants.find(v => v.name === e.target.value);
+                setSelectedVariant(variant);
+              }}
+              className="w-full px-2 py-1.5 text-xs rounded-lg border border-emerald-200 bg-white text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              {product.variants.map((variant) => (
+                <option key={variant.name} value={variant.name}>
+                  {variant.name} - ${variant.price.toFixed(2)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-emerald-700">${product.price?.toFixed(2)}</span>
+          <span className="text-lg font-bold text-emerald-700">
+            ${(selectedVariant?.price || product.price)?.toFixed(2)}
+          </span>
         </div>
       </div>
     </motion.div>

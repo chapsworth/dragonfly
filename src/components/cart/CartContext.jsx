@@ -13,32 +13,43 @@ export function CartProvider({ children }) {
     localStorage.setItem('cannabis_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, variant = null) => {
     setCartItems(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const cartItemKey = variant ? `${product.id}-${variant.name}` : product.id;
+      const existing = prev.find(item => item.cartItemKey === cartItemKey);
+      
       if (existing) {
         return prev.map(item =>
-          item.id === product.id
+          item.cartItemKey === cartItemKey
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      
+      const itemToAdd = {
+        ...product,
+        cartItemKey,
+        selectedVariant: variant,
+        price: variant?.price || product.price,
+        quantity: 1
+      };
+      
+      return [...prev, itemToAdd];
     });
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
+  const removeFromCart = (cartItemKey) => {
+    setCartItems(prev => prev.filter(item => item.cartItemKey !== cartItemKey));
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (cartItemKey, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(cartItemKey);
       return;
     }
     setCartItems(prev =>
       prev.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        item.cartItemKey === cartItemKey ? { ...item, quantity } : item
       )
     );
   };
