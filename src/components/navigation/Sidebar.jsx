@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
-  Wind, Sparkles, Flame, Package, X 
+  Wind, Sparkles, Flame, Package, X, ClipboardList 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,6 +22,7 @@ const categories = [
 const navItems = [
   { name: 'Home', page: 'Home', icon: Home },
   { name: 'Shop', page: 'Shop', icon: ShoppingBag },
+  { name: 'My Orders', page: 'Orders', icon: ClipboardList },
   { name: 'Contact', page: 'Contact', icon: Phone },
 ];
 

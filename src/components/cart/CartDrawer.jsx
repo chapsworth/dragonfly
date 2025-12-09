@@ -30,7 +30,7 @@ export default function CartDrawer() {
 
     setIsSubmitting(true);
     try {
-      await base44.entities.Order.create({
+      const order = await base44.entities.Order.create({
         items: cartItems.map(item => ({
           product_id: item.id,
           name: item.name,
@@ -41,12 +41,32 @@ export default function CartDrawer() {
         total: cartTotal,
         ...formData
       });
+
+      // Send order confirmation email
+      try {
+        await base44.functions.invoke('sendOrderEmail', {
+          orderId: order.id,
+          status: 'pending',
+          customerEmail: formData.customer_email,
+          customerName: formData.customer_name
+        });
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+
       setOrderComplete(true);
       clearCart();
       setTimeout(() => {
         setIsCartOpen(false);
         setOrderComplete(false);
         setStep('cart');
+        setFormData({
+          customer_name: '',
+          customer_email: '',
+          customer_phone: '',
+          delivery_address: '',
+          notes: ''
+        });
       }, 3000);
     } catch (error) {
       console.error(error);
