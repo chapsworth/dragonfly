@@ -12,6 +12,8 @@ import { motion } from 'framer-motion';
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
 
 export default function Home() {
+  const [selectedCategory, setSelectedCategory] = React.useState('all');
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
@@ -142,35 +144,35 @@ export default function Home() {
       </section>
 
       {/* Category Grid */}
-      <CategoryGrid />
+      <CategoryGrid 
+        selectedCategory={selectedCategory} 
+        onCategoryChange={setSelectedCategory} 
+      />
 
       {/* Category Carousels */}
       <section className="py-8 pb-24">
         <div className="max-w-full">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl font-bold text-emerald-900 px-4 mb-8"
-          >
-            Shop by Category
-          </motion.h2>
-
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : (
-            (activeCarousels.length > 0 ? activeCarousels : categories).map(item => {
-              const cat = typeof item === 'string' ? item : item.category;
-              return (
-                <CategoryCarousel
-                  key={cat}
-                  category={cat}
-                  products={productsByCategory[cat] || []}
-                />
-              );
-            })
+            (activeCarousels.length > 0 ? activeCarousels : categories)
+              .filter(item => {
+                if (selectedCategory === 'all') return true;
+                const cat = typeof item === 'string' ? item : item.category;
+                return cat === selectedCategory;
+              })
+              .map(item => {
+                const cat = typeof item === 'string' ? item : item.category;
+                return (
+                  <CategoryCarousel
+                    key={cat}
+                    category={cat}
+                    products={productsByCategory[cat] || []}
+                  />
+                );
+              })
           )}
         </div>
       </section>
