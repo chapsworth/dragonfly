@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
+import CategoryGrid from '@/components/home/CategoryGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const categories = [
@@ -103,6 +104,12 @@ export default function Shop() {
               : 'Browse our premium selection of cannabis products'}
           </p>
         </motion.div>
+
+        {/* Category Grid */}
+        <CategoryGrid 
+          selectedCategory={category}
+          onCategoryChange={setCategory}
+        />
 
         {/* Filters */}
         <motion.div
