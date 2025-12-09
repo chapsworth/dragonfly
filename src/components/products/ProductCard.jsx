@@ -2,6 +2,8 @@ import React from 'react';
 import { ShoppingBag, Leaf } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -14,17 +16,20 @@ const strainColors = {
 export default function ProductCard({ product }) {
   const { addToCart, setIsCartOpen } = useCart();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     addToCart(product);
     setIsCartOpen(true);
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      className="min-w-[200px] sm:min-w-[240px] bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-lg shadow-emerald-900/5 overflow-hidden group"
-    >
-      <div className="relative aspect-square overflow-hidden">
+    <Link to={`${createPageUrl('ProductDetail')}?id=${product.id}`}>
+      <motion.div
+        whileHover={{ y: -4 }}
+        className="min-w-[200px] sm:min-w-[240px] bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-lg shadow-emerald-900/5 overflow-hidden group"
+      >
+        <div className="relative aspect-square overflow-hidden">
         <img
           src={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=400'}
           alt={product.name}
@@ -79,5 +84,6 @@ export default function ProductCard({ product }) {
         </div>
       </div>
     </motion.div>
+    </Link>
   );
 }

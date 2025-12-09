@@ -16,8 +16,28 @@ export default function Home() {
     queryFn: () => base44.entities.Product.list()
   });
 
+  const { data: carouselSettings = [] } = useQuery({
+    queryKey: ['carouselSettings'],
+    queryFn: () => base44.entities.CarouselSettings.list()
+  });
+
+  // Sort carousels by display_order and filter active ones
+  const activeCarousels = carouselSettings
+    .filter(c => c.is_active)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
   const productsByCategory = categories.reduce((acc, cat) => {
-    acc[cat] = products.filter(p => p.category === cat);
+    const carouselSetting = carouselSettings.find(c => c.category === cat);
+    
+    if (carouselSetting?.featured_product_ids?.length > 0) {
+      // Use featured products in specified order
+      acc[cat] = carouselSetting.featured_product_ids
+        .map(id => products.find(p => p.id === id))
+        .filter(Boolean);
+    } else {
+      // Show all products in category
+      acc[cat] = products.filter(p => p.category === cat);
+    }
     return acc;
   }, {});
 
@@ -137,13 +157,16 @@ export default function Home() {
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : (
-            categories.map(cat => (
-              <CategoryCarousel
-                key={cat}
-                category={cat}
-                products={productsByCategory[cat]}
-              />
-            ))
+            (activeCarousels.length > 0 ? activeCarousels : categories).map(item => {
+              const cat = typeof item === 'string' ? item : item.category;
+              return (
+                <CategoryCarousel
+                  key={cat}
+                  category={cat}
+                  products={productsByCategory[cat] || []}
+                />
+              );
+            })
           )}
         </div>
       </section>
