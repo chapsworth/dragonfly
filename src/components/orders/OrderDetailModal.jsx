@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X, MapPin, User, Mail, Phone, MessageSquare } from 'lucide-react';
 import OrderStatusTracker from './OrderStatusTracker';
+import LiveMapTracking from '../tracking/LiveMapTracking';
 
 export default function OrderDetailModal({ order, isOpen, onClose }) {
   if (!order) return null;
@@ -20,6 +21,11 @@ export default function OrderDetailModal({ order, isOpen, onClose }) {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
+          {/* Live Map Tracking */}
+          {order.status === 'out_for_delivery' && (
+            <LiveMapTracking order={order} />
+          )}
+
           {/* Status Tracker */}
           <OrderStatusTracker status={order.status} />
 
