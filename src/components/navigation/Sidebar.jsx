@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
-  Wind, Sparkles, Flame, Package, X, ClipboardList 
+  Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -28,6 +29,16 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me()
+      .then(setUser)
+      .catch(() => setUser(null));
+  }, []);
+
+  const isAdmin = user?.role === 'admin';
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="left" className="w-80 bg-white/80 backdrop-blur-xl border-r border-white/20 p-0">
@@ -63,6 +74,27 @@ export default function Sidebar({ isOpen, onClose }) {
                 </motion.div>
               ))}
             </div>
+
+            {isAdmin && (
+              <div className="border-t border-emerald-100/50 pt-4 mb-6">
+                <h3 className="px-4 text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-3">
+                  Admin
+                </h3>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <Link
+                    to={createPageUrl('AdminDashboard')}
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                    <span className="font-medium text-emerald-800">Dashboard</span>
+                  </Link>
+                </motion.div>
+              </div>
+            )}
 
             <div className="border-t border-emerald-100/50 pt-4">
               <h3 className="px-4 text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-3">
