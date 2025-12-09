@@ -34,6 +34,7 @@ export default function CartDrawer() {
         items: cartItems.map(item => ({
           product_id: item.id,
           name: item.name,
+          variant: item.selectedVariant?.name || null,
           price: item.price,
           quantity: item.quantity,
           image_url: item.image_url
@@ -156,7 +157,7 @@ export default function CartDrawer() {
                 <>
                   <div className="flex-1 overflow-auto py-4 space-y-3">
                     {cartItems.map(item => (
-                      <div key={item.id} className="flex gap-3 p-3 rounded-2xl bg-white/60 backdrop-blur border border-white/40">
+                      <div key={item.cartItemKey} className="flex gap-3 p-3 rounded-2xl bg-white/60 backdrop-blur border border-white/40">
                         <img
                           src={item.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=100'}
                           alt={item.name}
@@ -164,17 +165,20 @@ export default function CartDrawer() {
                         />
                         <div className="flex-1">
                           <h4 className="font-semibold text-emerald-900 text-sm">{item.name}</h4>
+                          {item.selectedVariant && (
+                            <p className="text-xs text-emerald-600">{item.selectedVariant.name}</p>
+                          )}
                           <p className="text-emerald-600 font-bold">${item.price.toFixed(2)}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.cartItemKey, item.quantity - 1)}
                               className="p-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors"
                             >
                               <Minus className="w-4 h-4 text-emerald-700" />
                             </button>
                             <span className="w-8 text-center font-medium">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.cartItemKey, item.quantity + 1)}
                               className="p-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors"
                             >
                               <Plus className="w-4 h-4 text-emerald-700" />
@@ -182,7 +186,7 @@ export default function CartDrawer() {
                           </div>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.cartItemKey)}
                           className="p-2 h-fit rounded-lg hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="w-4 h-4 text-red-400" />
