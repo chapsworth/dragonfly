@@ -1,0 +1,207 @@
+import React, { useState, useMemo } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Search, SlidersHorizontal, X } from 'lucide-react';
+import ProductCard from '@/components/products/ProductCard';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const categories = [
+  { value: 'all', label: 'All Categories' },
+  { value: 'flower', label: 'Flower' },
+  { value: 'pre-rolls', label: 'Pre-Rolls' },
+  { value: 'edibles', label: 'Edibles' },
+  { value: 'concentrates', label: 'Concentrates' },
+  { value: 'vapes', label: 'Vapes' },
+  { value: 'tinctures', label: 'Tinctures' },
+  { value: 'topicals', label: 'Topicals' },
+  { value: 'accessories', label: 'Accessories' }
+];
+
+const strainTypes = [
+  { value: 'all', label: 'All Strains' },
+  { value: 'indica', label: 'Indica' },
+  { value: 'sativa', label: 'Sativa' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'cbd', label: 'CBD' }
+];
+
+export default function Shop() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoryParam = urlParams.get('category');
+
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState(categoryParam || 'all');
+  const [strain, setStrain] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => base44.entities.Product.list()
+  });
+
+  const filteredProducts = useMemo(() => {
+    let filtered = products;
+
+    if (search) {
+      filtered = filtered.filter(p => 
+        p.name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.description?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (category !== 'all') {
+      filtered = filtered.filter(p => p.category === category);
+    }
+
+    if (strain !== 'all') {
+      filtered = filtered.filter(p => p.strain_type === strain);
+    }
+
+    if (sortBy === 'name') {
+      filtered = [...filtered].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortBy === 'price-low') {
+      filtered = [...filtered].sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === 'price-high') {
+      filtered = [...filtered].sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (sortBy === 'thc-high') {
+      filtered = [...filtered].sort((a, b) => (b.thc_level || 0) - (a.thc_level || 0));
+    }
+
+    return filtered;
+  }, [products, search, category, strain, sortBy]);
+
+  const activeFilters = [
+    category !== 'all' && { type: 'category', value: category, label: categories.find(c => c.value === category)?.label },
+    strain !== 'all' && { type: 'strain', value: strain, label: strainTypes.find(s => s.value === strain)?.label }
+  ].filter(Boolean);
+
+  const clearFilter = (type) => {
+    if (type === 'category') setCategory('all');
+    if (type === 'strain') setStrain('all');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-emerald-900 mb-2">Shop</h1>
+          <p className="text-emerald-600">Browse our premium selection of cannabis products</p>
+        </motion.div>
+
+        {/* Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="p-4 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg mb-6"
+        >
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+              <Input
+                placeholder="Search products..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-12 pl-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-40 h-12 rounded-xl bg-white/60 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={strain} onValueChange={setStrain}>
+                <SelectTrigger className="w-36 h-12 rounded-xl bg-white/60 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {strainTypes.map(s => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-40 h-12 rounded-xl bg-white/60 border-emerald-200">
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name A-Z</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="thc-high">THC: High to Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Active Filters */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-emerald-100">
+              {activeFilters.map(filter => (
+                <Badge
+                  key={filter.type}
+                  variant="secondary"
+                  className="pl-3 pr-2 py-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 cursor-pointer"
+                  onClick={() => clearFilter(filter.type)}
+                >
+                  {filter.label}
+                  <X className="w-3 h-3 ml-2" />
+                </Badge>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Results count */}
+        <p className="text-emerald-600 mb-6">
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+        </p>
+
+        {/* Products Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-emerald-600 text-lg">No products found matching your criteria.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            <AnimatePresence>
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
