@@ -45,7 +45,7 @@ export default function Home() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-24">
         {/* Background Image */}
@@ -65,10 +65,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 mb-6">
-              <Leaf className="w-4 h-4 text-emerald-300" />
-              <span className="text-white/90 text-sm font-medium">Premium Quality Cannabis</span>
-            </div>
+
             
             <h1 className="text-5xl sm:text-7xl font-bold text-white mb-6 leading-tight">
               Nature's Finest
