@@ -4,19 +4,34 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Truck, Shield, Clock, Leaf } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Leaf, Settings } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
+import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
 import { motion } from 'framer-motion';
 
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
+  });
+
+  const { data: homeSettings } = useQuery({
+    queryKey: ['homeSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.HomeSettings.list();
+      return settings[0] || null;
+    }
   });
 
   const { data: carouselSettings = [] } = useQuery({
@@ -44,14 +59,16 @@ export default function Home() {
     return acc;
   }, {});
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-24">
+  const heroBackgroundUrl = homeSettings?.hero_background_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80';
+  const sectionOrder = homeSettings?.section_order || ['hero', 'features', 'category_grid', 'carousels'];
+
+  const sections = {
+    hero: (
+      <section key="hero" className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-24">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80"
+            src={heroBackgroundUrl}
             alt=""
             className="w-full h-full object-cover"
           />
@@ -111,9 +128,9 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
-
-      {/* Features */}
-      <section className="py-16 px-4">
+    ),
+    features: (
+      <section key="features" className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
@@ -139,15 +156,16 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Category Grid */}
+    ),
+    category_grid: (
       <CategoryGrid 
+        key="category_grid"
         selectedCategory={selectedCategory} 
         onCategoryChange={setSelectedCategory} 
       />
-
-      {/* Category Carousels */}
-      <section className="py-8 pb-24">
+    ),
+    carousels: (
+      <section key="carousels" className="py-8 pb-24">
         <div className="max-w-full">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -173,6 +191,32 @@ export default function Home() {
           )}
         </div>
       </section>
+    )
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Admin Edit Button */}
+      {user?.role === 'admin' && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          onClick={() => setIsEditModalOpen(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
+        >
+          <Settings className="w-6 h-6 text-white" />
+        </motion.button>
+      )}
+
+      {/* Render sections in order */}
+      {sectionOrder.map(sectionKey => sections[sectionKey])}
+
+      {/* Edit Modal */}
+      <HomeSettingsModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        settings={homeSettings}
+      />
     </div>
   );
 }
