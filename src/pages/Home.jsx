@@ -52,10 +52,10 @@ export default function Home() {
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80"
-            alt="Cannabis products"
+            alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/60 via-emerald-900/40 to-emerald-50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-white" />
         </div>
 
         {/* Hero Content */}
