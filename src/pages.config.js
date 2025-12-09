@@ -2,6 +2,7 @@ import Home from './pages/Home';
 import Shop from './pages/Shop';
 import Contact from './pages/Contact';
 import Orders from './pages/Orders';
+import Rewards from './pages/Rewards';
 import __Layout from './Layout.jsx';
 
 
@@ -10,6 +11,7 @@ export const PAGES = {
     "Shop": Shop,
     "Contact": Contact,
     "Orders": Orders,
+    "Rewards": Rewards,
 }
 
 export const pagesConfig = {

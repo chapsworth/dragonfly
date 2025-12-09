@@ -42,6 +42,39 @@ export default function CartDrawer() {
         ...formData
       });
 
+      // Award loyalty points (1 point per dollar)
+      try {
+        const user = await base44.auth.me();
+        const pointsEarned = Math.floor(cartTotal);
+        const currentPoints = user.loyalty_points || 0;
+        const totalEarned = (user.total_points_earned || 0) + pointsEarned;
+        const newBalance = currentPoints + pointsEarned;
+
+        // Determine tier based on total earned
+        let newTier = 'bronze';
+        if (totalEarned >= 5000) newTier = 'platinum';
+        else if (totalEarned >= 1500) newTier = 'gold';
+        else if (totalEarned >= 500) newTier = 'silver';
+
+        await base44.auth.updateMe({
+          loyalty_points: newBalance,
+          total_points_earned: totalEarned,
+          loyalty_tier: newTier
+        });
+
+        // Create points transaction record
+        await base44.entities.PointsTransaction.create({
+          user_email: user.email,
+          points: pointsEarned,
+          transaction_type: 'earned',
+          description: `Purchase - Order #${order.id.slice(0, 8)}`,
+          order_id: order.id,
+          balance_after: newBalance
+        });
+      } catch (pointsError) {
+        console.error('Points error:', pointsError);
+      }
+
       // Send order confirmation email
       try {
         await base44.functions.invoke('sendOrderEmail', {
