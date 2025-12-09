@@ -92,8 +92,16 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-emerald-900 mb-2">Shop</h1>
-          <p className="text-emerald-600">Browse our premium selection of cannabis products</p>
+          <h1 className="text-4xl font-bold text-emerald-900 mb-2">
+            {category !== 'all' 
+              ? categories.find(c => c.value === category)?.label || 'Shop'
+              : 'Shop'}
+          </h1>
+          <p className="text-emerald-600">
+            {category !== 'all' 
+              ? `Explore our ${categories.find(c => c.value === category)?.label.toLowerCase()} collection`
+              : 'Browse our premium selection of cannabis products'}
+          </p>
         </motion.div>
 
         {/* Filters */}
