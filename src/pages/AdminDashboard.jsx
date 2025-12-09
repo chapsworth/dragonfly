@@ -1,9 +1,14 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboard() {
   const { data: products = [] } = useQuery({
@@ -32,6 +37,25 @@ export default function AdminDashboard() {
     { icon: DollarSign, label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, color: 'from-green-500 to-emerald-600' },
   ];
 
+  const recentOrders = [...orders]
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .slice(0, 5);
+
+  const lowStockProducts = products.filter(p => !p.in_stock || p.stock_quantity < 10).slice(0, 5);
+
+  const recentUsers = [...users]
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .slice(0, 5);
+
+  const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    confirmed: 'bg-blue-100 text-blue-700',
+    preparing: 'bg-purple-100 text-purple-700',
+    out_for_delivery: 'bg-orange-100 text-orange-700',
+    delivered: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-700'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
       {/* Mobile Header */}
@@ -57,7 +81,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
               {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -77,6 +101,213 @@ export default function AdminDashboard() {
                   </div>
                 </motion.div>
               ))}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              <Link to={createPageUrl('AdminProducts')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 flex-col gap-2">
+                  <Package className="w-5 h-5" />
+                  <span className="text-xs">Manage Products</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('AdminOrders')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 flex-col gap-2">
+                  <ShoppingCart className="w-5 h-5" />
+                  <span className="text-xs">View Orders</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('AdminUsers')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 flex-col gap-2">
+                  <Users className="w-5 h-5" />
+                  <span className="text-xs">Manage Users</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('AdminCarousel')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 flex-col gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="text-xs">Carousel</span>
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-20 lg:mb-0">
+              {/* Recent Orders */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-emerald-900">Recent Orders</h2>
+                  <Link to={createPageUrl('AdminOrders')}>
+                    <Button variant="ghost" size="sm" className="text-emerald-600">
+                      View All <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {recentOrders.length === 0 ? (
+                    <p className="text-emerald-600 text-sm text-center py-8">No orders yet</p>
+                  ) : (
+                    recentOrders.map(order => (
+                      <div key={order.id} className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-semibold text-emerald-900 text-sm">Order #{order.id.slice(-8)}</p>
+                            <p className="text-xs text-emerald-600">{format(new Date(order.created_date), 'MMM d, h:mm a')}</p>
+                          </div>
+                          <Badge className={statusColors[order.status]}>
+                            {order.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-emerald-700">{order.items?.length || 0} items</p>
+                          <p className="font-bold text-emerald-900">${order.total?.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Low Stock Alert */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    Stock Alert
+                  </h2>
+                  <Link to={createPageUrl('AdminProducts')}>
+                    <Button variant="ghost" size="sm" className="text-emerald-600">
+                      Manage <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {lowStockProducts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                      <p className="text-emerald-600 text-sm">All products in stock!</p>
+                    </div>
+                  ) : (
+                    lowStockProducts.map(product => (
+                      <div key={product.id} className="p-3 rounded-xl bg-orange-50/50 border border-orange-100">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=100'} 
+                            alt={product.name}
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-emerald-900 text-sm truncate">{product.name}</p>
+                            <p className="text-xs text-orange-600">
+                              {product.in_stock ? 'Low stock' : 'Out of stock'}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="border-orange-300 text-orange-700">
+                            {product.stock_quantity || 0}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Recent Users */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-emerald-900">New Customers</h2>
+                  <Link to={createPageUrl('AdminUsers')}>
+                    <Button variant="ghost" size="sm" className="text-emerald-600">
+                      View All <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {recentUsers.length === 0 ? (
+                    <p className="text-emerald-600 text-sm text-center py-8">No users yet</p>
+                  ) : (
+                    recentUsers.map(user => (
+                      <div key={user.id} className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-emerald-900 text-sm">{user.full_name || 'Anonymous'}</p>
+                            <p className="text-xs text-emerald-600">{user.email}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-emerald-600">{format(new Date(user.created_date), 'MMM d')}</p>
+                            <Badge variant="outline" className="mt-1 border-emerald-300 text-emerald-700 text-xs">
+                              {user.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Activity Summary */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <h2 className="text-lg font-bold text-emerald-900 mb-4">Quick Stats</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/50">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-blue-500" />
+                      <span className="text-sm text-emerald-900">Pending Orders</span>
+                    </div>
+                    <span className="font-bold text-blue-600">{orders.filter(o => o.status === 'pending').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-orange-50/50">
+                    <div className="flex items-center gap-3">
+                      <ShoppingCart className="w-5 h-5 text-orange-500" />
+                      <span className="text-sm text-emerald-900">In Delivery</span>
+                    </div>
+                    <span className="font-bold text-orange-600">{orders.filter(o => o.status === 'out_for_delivery').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-50/50">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-sm text-emerald-900">Completed Today</span>
+                    </div>
+                    <span className="font-bold text-green-600">
+                      {orders.filter(o => 
+                        o.status === 'delivered' && 
+                        new Date(o.created_date).toDateString() === new Date().toDateString()
+                      ).length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50/50">
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-purple-500" />
+                      <span className="text-sm text-emerald-900">New Users Today</span>
+                    </div>
+                    <span className="font-bold text-purple-600">
+                      {users.filter(u => 
+                        new Date(u.created_date).toDateString() === new Date().toDateString()
+                      ).length}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
