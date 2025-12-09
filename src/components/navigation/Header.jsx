@@ -1,0 +1,52 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Menu, ShoppingBag, Leaf } from 'lucide-react';
+import { useCart } from '../cart/CartContext';
+import { motion } from 'framer-motion';
+
+export default function Header({ onMenuClick }) {
+  const { cartCount, setIsCartOpen } = useCart();
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-40">
+      <div className="mx-4 mt-4">
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-lg shadow-emerald-900/5 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={onMenuClick}
+              className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+            >
+              <Menu className="w-6 h-6 text-emerald-700" />
+            </button>
+
+            <Link to={createPageUrl('Home')} className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Leaf className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent hidden sm:block">
+                GreenLeaf
+              </span>
+            </Link>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+            >
+              <ShoppingBag className="w-6 h-6 text-emerald-700" />
+              {cartCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 text-white text-xs font-bold flex items-center justify-center shadow-lg"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
