@@ -31,14 +31,16 @@ export default function Header({ onMenuClick }) {
 
             <button
               onClick={() => setIsCartOpen(true)}
+              data-cart-button
               className="relative p-2 rounded-xl hover:bg-emerald-50 transition-colors"
             >
               <ShoppingBag className="w-6 h-6 text-emerald-700" />
               {cartCount > 0 && (
                 <motion.span
+                  key={cartCount}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 text-white text-xs font-bold flex items-center justify-center shadow-lg"
+                  className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 text-white text-xs font-bold flex items-center justify-center shadow-lg"
                 >
                   {cartCount}
                 </motion.span>
