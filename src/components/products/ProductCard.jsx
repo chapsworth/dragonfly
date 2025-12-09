@@ -20,7 +20,6 @@ export default function ProductCard({ product }) {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
-    setIsCartOpen(true);
   };
 
   return (
