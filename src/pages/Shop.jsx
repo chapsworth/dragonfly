@@ -9,18 +9,6 @@ import ProductCard from '@/components/products/ProductCard';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const categories = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'flower', label: 'Flower' },
-  { value: 'pre-rolls', label: 'Pre-Rolls' },
-  { value: 'edibles', label: 'Edibles' },
-  { value: 'concentrates', label: 'Concentrates' },
-  { value: 'vapes', label: 'Vapes' },
-  { value: 'tinctures', label: 'Tinctures' },
-  { value: 'topicals', label: 'Topicals' },
-  { value: 'accessories', label: 'Accessories' }
-];
-
 const strainTypes = [
   { value: 'all', label: 'All Strains' },
   { value: 'indica', label: 'Indica' },
@@ -42,6 +30,19 @@ export default function Shop() {
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
   });
+
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list()
+  });
+
+  const categories = [
+    { value: 'all', label: 'All Categories' },
+    ...dbCategories
+      .filter(c => c.is_active)
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+      .map(c => ({ value: c.slug, label: c.name }))
+  ];
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
