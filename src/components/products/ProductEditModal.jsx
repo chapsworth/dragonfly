@@ -106,10 +106,9 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Label>
             
             <Tabs defaultValue="url" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="url">URL</TabsTrigger>
                 <TabsTrigger value="upload"><Upload className="w-4 h-4" /></TabsTrigger>
-                <TabsTrigger value="search"><Search className="w-4 h-4" /></TabsTrigger>
                 <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
               </TabsList>
 
