@@ -8,12 +8,14 @@ import { ArrowRight, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
+import PageEditor from '@/components/editor/PageEditor';
 import { motion } from 'framer-motion';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [user, setUser] = React.useState(null);
+  const [pageSections, setPageSections] = React.useState([]);
 
   React.useEffect(() => {
     base44.auth.me().then(setUser).catch(() => setUser(null));
@@ -197,27 +199,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Admin Edit Button */}
-      {user?.role === 'admin' && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          onClick={() => setIsEditModalOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
-        >
-          <Settings className="w-6 h-6 text-white" />
-        </motion.button>
-      )}
+      <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
+        {/* Admin Edit Button */}
+        {user?.role === 'admin' && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => setIsEditModalOpen(true)}
+            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
+          >
+            <Settings className="w-6 h-6 text-white" />
+          </motion.button>
+        )}
 
-      {/* Render sections in order */}
-      {sectionOrder.filter(key => sections[key]).map(sectionKey => sections[sectionKey])}
+        {/* Render sections in order */}
+        {sectionOrder.filter(key => sections[key]).map(sectionKey => sections[sectionKey])}
 
-      {/* Edit Modal */}
-      <HomeSettingsModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        settings={homeSettings}
-      />
+        {/* Edit Modal */}
+        <HomeSettingsModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          settings={homeSettings}
+        />
+      </PageEditor>
     </div>
   );
 }
