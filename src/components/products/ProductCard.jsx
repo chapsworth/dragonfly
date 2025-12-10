@@ -146,7 +146,7 @@ export default function ProductCard({ product }) {
                     : 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
                 }`}
               >
-                {variant.name} - ${variant.price.toFixed(2)}
+                {variant.name}
               </button>
             ))}
           </div>
@@ -156,7 +156,11 @@ export default function ProductCard({ product }) {
 
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-emerald-700">
-            ${(selectedVariant?.price || product.price)?.toFixed(2)}
+            {product.variants?.length > 0 ? (
+              `$${Math.min(...product.variants.map(v => v.price)).toFixed(2)}-$${Math.max(...product.variants.map(v => v.price)).toFixed(2)}`
+            ) : (
+              `$${product.price?.toFixed(2)}`
+            )}
           </span>
         </div>
       </div>
