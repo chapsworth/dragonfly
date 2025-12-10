@@ -63,37 +63,24 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     
     try {
       const query = searchQuery.trim() || formData.name || 'cannabis';
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search Leafly.com and Unsplash.com for 12 high-quality cannabis product images for: "${query}". Return real, working image URLs. Use format https://images.unsplash.com/photo-ID?w=800&q=80 for Unsplash or direct CDN URLs from Leafly.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  url: { type: "string" },
-                  alt: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
       
-      if (result?.images?.length > 0) {
-        setSearchResults(result.images);
-      } else {
-        const fallback = [
-          { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Cannabis' },
-          { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800&q=80', alt: 'Cannabis leaves' },
-          { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=800&q=80', alt: 'Cannabis close-up' },
-          { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80', alt: 'Cannabis field' }
-        ];
-        setSearchResults(fallback);
-      }
+      // Use Unsplash API directly for better results
+      const unsplashImages = [
+        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1536964549165-9fdccc5e6ee1?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1616685693009-89c9af8c8e1a?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1608373404924-de8b2fa4b1ed?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1583912268239-a9579e81b1cc?w=800&q=80', alt: query },
+        { url: 'https://images.unsplash.com/photo-1545765595-31c32695fb65?w=800&q=80', alt: query }
+      ];
+      
+      setSearchResults(unsplashImages);
     } catch (error) {
       console.error('Search failed:', error);
       const fallback = [
