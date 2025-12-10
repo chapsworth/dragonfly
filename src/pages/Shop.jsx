@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
@@ -19,16 +19,24 @@ const strainTypes = [
 
 
 export default function Shop() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const categoryParam = urlParams.get('category');
-
   const [search, setSearch] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [category, setCategory] = useState(categoryParam || 'all');
+  const [category, setCategory] = useState('all');
   const [strain, setStrain] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  // Update category when URL changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+      setCategory(categoryParam);
+    } else {
+      setCategory('all');
+    }
+  }, [window.location.search]);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
