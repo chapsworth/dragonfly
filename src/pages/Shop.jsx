@@ -249,7 +249,7 @@ export default function Shop() {
 
                   THC
                   {sortBy === 'thc' && (
-                  sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)
+                  sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)
                   }
                 </button>
               </div>
