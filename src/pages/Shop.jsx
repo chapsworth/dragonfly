@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X, ArrowUp, ArrowDown } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import CategoryGrid from '@/components/home/CategoryGrid';
+import StickyCategories from '@/components/home/StickyCategories';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const strainTypes = [
@@ -166,8 +166,8 @@ export default function Shop() {
           </div>
         </motion.div>
 
-        {/* Category Grid */}
-        <CategoryGrid
+        {/* Sticky Category Grid */}
+        <StickyCategories
           selectedCategory={category}
           onCategoryChange={setCategory} />
 
