@@ -9,6 +9,7 @@ import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminUsers from './pages/AdminUsers';
 import AdminCarousel from './pages/AdminCarousel';
+import AdminCategories from './pages/AdminCategories';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "AdminOrders": AdminOrders,
     "AdminUsers": AdminUsers,
     "AdminCarousel": AdminCarousel,
+    "AdminCategories": AdminCategories,
 }
 
 export const pagesConfig = {
