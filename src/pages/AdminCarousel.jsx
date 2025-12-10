@@ -147,7 +147,7 @@ export default function AdminCarousel() {
           <AdminNav currentPage="AdminCarousel" />
         </div>
         
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-6 sm:pt-8 pb-20 lg:pb-8">
           <div className="flex flex-col gap-4 mb-6 lg:mb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>

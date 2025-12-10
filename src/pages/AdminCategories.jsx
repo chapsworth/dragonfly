@@ -128,7 +128,7 @@ export default function AdminCategories() {
         <AdminNav currentPage="AdminCategories" />
       </div>
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 pt-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-emerald-900">Categories</h1>
