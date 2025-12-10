@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function Shop() {
   const categoryParam = urlParams.get('category');
 
   const [search, setSearch] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [category, setCategory] = useState(categoryParam || 'all');
   const [strain, setStrain] = useState('all');
   const [sortBy, setSortBy] = useState('name');
@@ -87,23 +89,63 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-12 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto overflow-hidden">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex items-start justify-between gap-4"
         >
-          <h1 className="text-4xl font-bold text-emerald-900 mb-2">
-            {category !== 'all' 
-              ? categories.find(c => c.value === category)?.label || 'Shop'
-              : 'Shop'}
-          </h1>
-          <p className="text-emerald-600">
-            {category !== 'all' 
-              ? `Explore our ${categories.find(c => c.value === category)?.label.toLowerCase()} collection`
-              : 'Browse our premium selection of cannabis products'}
-          </p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-4xl font-bold text-emerald-900 mb-2">
+              {category !== 'all' 
+                ? categories.find(c => c.value === category)?.label || 'Shop'
+                : 'Shop'}
+            </h1>
+            <p className="text-emerald-600">
+              {category !== 'all' 
+                ? `Explore our ${categories.find(c => c.value === category)?.label.toLowerCase()} collection`
+                : 'Browse our premium selection of cannabis products'}
+            </p>
+          </div>
+          
+          {/* Expandable Search */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <AnimatePresence>
+              {isSearchOpen && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 200, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <Input
+                    placeholder="Search..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-10 rounded-lg bg-white/60 border-emerald-200 focus:border-emerald-400"
+                    autoFocus
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen);
+                if (isSearchOpen) setSearch('');
+              }}
+              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white"
+            >
+              {isSearchOpen ? (
+                <X className="w-5 h-5 text-emerald-600" />
+              ) : (
+                <Search className="w-5 h-5 text-emerald-600" />
+              )}
+            </Button>
+          </div>
         </motion.div>
 
         {/* Category Grid */}
@@ -119,17 +161,6 @@ export default function Shop() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
-            <Input
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-12 pl-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
-            />
-          </div>
-
           {/* Filter Badges */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Strain Filters */}
@@ -208,7 +239,7 @@ export default function Shop() {
             <p className="text-emerald-600 text-lg">No products found matching your criteria.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
             <AnimatePresence>
               {filteredProducts.map((product, index) => (
                 <motion.div
@@ -217,6 +248,7 @@ export default function Shop() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.03 }}
+                  className="min-w-0"
                 >
                   <ProductCard product={product} />
                 </motion.div>
