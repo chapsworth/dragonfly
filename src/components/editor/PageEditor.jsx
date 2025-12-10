@@ -28,16 +28,24 @@ export default function PageEditor({ sections, onSectionsChange, children }) {
   };
 
   const handleDeleteSection = (index) => {
-    const newSections = sections.filter((_, i) => i !== index);
-    onSectionsChange(newSections);
+    const childrenCount = React.Children.count(children);
+    // Only delete dynamic sections, not original children
+    if (index >= childrenCount) {
+      const dynamicIndex = index - childrenCount;
+      const newSections = sections.filter((_, i) => i !== dynamicIndex);
+      onSectionsChange(newSections);
+    }
   };
 
   const handleMoveSection = (index, direction) => {
+    const allSections = [...React.Children.toArray(children), ...sections];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= sections.length) return;
+    if (newIndex < 0 || newIndex >= allSections.length) return;
     
-    const newSections = [...sections];
-    [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
+    [allSections[index], allSections[newIndex]] = [allSections[newIndex], allSections[index]];
+    
+    const childrenCount = React.Children.count(children);
+    const newSections = allSections.slice(childrenCount);
     onSectionsChange(newSections);
   };
 
