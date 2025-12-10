@@ -58,7 +58,7 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
                 {selectedCategory === category.value && (
                   <motion.div
                     layoutId="categoryIndicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
+                    className="absolute -bottom-1 left-0 right-0 mx-auto w-full h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
