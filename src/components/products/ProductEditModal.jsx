@@ -98,11 +98,14 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     if (!aiPrompt.trim()) return;
     setIsGenerating(true);
     try {
+      console.log('Starting AI generation with prompt:', aiPrompt);
       const result = await base44.integrations.Core.GenerateImage({ 
         prompt: `High-quality professional product photo of ${aiPrompt}. Cannabis marijuana strain, macro photography, detailed trichomes, studio lighting, white background, professional product shot` 
       });
+      console.log('AI generation result:', result);
       if (result && result.url) {
         setFormData(prev => ({ ...prev, image_url: result.url }));
+        alert('Image generated successfully!');
       } else {
         throw new Error('No image URL returned');
       }
