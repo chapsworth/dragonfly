@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, GripVertical, X, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft } from 'lucide-react';
+import { Plus, GripVertical, X, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
@@ -19,6 +19,7 @@ export default function AdminCarousel() {
   const [editingCarousel, setEditingCarousel] = useState(null);
   const [formData, setFormData] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [viewMode, setViewMode] = useState('list');
   const queryClient = useQueryClient();
 
   const { data: carouselSettings = [] } = useQuery({
@@ -140,47 +141,113 @@ export default function AdminCarousel() {
         </div>
         
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 lg:mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Carousel Settings</h1>
-              <p className="text-sm sm:text-base text-emerald-600">Configure featured products and carousel order</p>
+          <div className="flex flex-col gap-4 mb-6 lg:mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Carousel Settings</h1>
+                <p className="text-sm sm:text-base text-emerald-600">Configure featured products and carousel order</p>
+              </div>
+              <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500 w-full sm:w-auto">
+                <Plus className="w-5 h-5 mr-2" />
+                Add Carousel
+              </Button>
             </div>
-            <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500 w-full sm:w-auto">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Carousel
-            </Button>
+
+            {/* View Toggle */}
+            <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+              >
+                <Grid3x3 className="w-4 h-4 mr-2" />
+                Grid
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+              >
+                <List className="w-4 h-4 mr-2" />
+                List
+              </Button>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {carouselSettings
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-              .map((carousel) => (
-                <div key={carousel.id} className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {carouselSettings
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                .map((carousel) => (
+                  <div key={carousel.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
                         {carousel.display_order}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-emerald-900 text-base sm:text-lg capitalize">{carousel.category}</h3>
-                        <p className="text-xs sm:text-sm text-emerald-600">
-                          {carousel.featured_product_ids?.length || 0} featured products
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-emerald-900 text-base capitalize line-clamp-1">{carousel.category}</h3>
+                        <p className="text-xs text-emerald-600">
+                          {carousel.featured_product_ids?.length || 0} products
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 mb-3">
                       <Badge variant={carousel.is_active ? 'default' : 'secondary'} className="text-xs">
                         {carousel.is_active ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(carousel)} className="flex-1 sm:flex-none">Edit</Button>
-                      <Button variant="outline" size="sm" onClick={() => deleteMutation.mutate(carousel.id)} className="text-red-600 flex-1 sm:flex-none">
-                        Delete
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(carousel)} className="flex-1 h-8 text-xs">
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(carousel.id)} className="h-8 text-xs text-red-600">
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {carouselSettings
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                .map((carousel) => (
+                  <div key={carousel.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
+                        {carousel.display_order}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-bold text-emerald-900 text-sm capitalize line-clamp-1">{carousel.category}</h3>
+                            <p className="text-xs text-emerald-600">
+                              {carousel.featured_product_ids?.length || 0} featured products
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant={carousel.is_active ? 'default' : 'secondary'} className="text-xs">
+                            {carousel.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(carousel)} className="h-7 text-xs">
+                            <Edit2 className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(carousel.id)} className="h-7 text-xs text-red-600">
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
 
           <Dialog open={!!editingCarousel || formData.category} onOpenChange={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
