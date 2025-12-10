@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
-import StickyCategories from '@/components/home/StickyCategories';
+import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
 import { motion } from 'framer-motion';
 
@@ -161,7 +161,7 @@ export default function Home() {
       </section>
     ),
     category_grid: (
-      <StickyCategories 
+      <CategoryGrid 
         key="category_grid"
         selectedCategory={selectedCategory} 
         onCategoryChange={setSelectedCategory} 
