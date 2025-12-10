@@ -117,7 +117,13 @@ export default function AdminProducts() {
       });
   };
 
+  const handleDragStart = () => {
+    document.body.style.overflow = 'hidden';
+  };
+
   const handleDragEnd = (result) => {
+    document.body.style.overflow = '';
+    
     if (!result.destination) return;
     
     const category = result.source.droppableId;
@@ -310,7 +316,7 @@ export default function AdminProducts() {
                       </h2>
                       <Badge variant="secondary">{categoryProducts.length} products</Badge>
                     </div>
-                    <DragDropContext onDragEnd={handleDragEnd}>
+                    <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                       <Droppable droppableId={category}>
                         {(provided) => (
                           <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
