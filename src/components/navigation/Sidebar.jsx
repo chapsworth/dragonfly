@@ -5,13 +5,13 @@ import { base44 } from '@/api/base44Client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
-  Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard 
+  Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const categories = [
-  { name: 'Flower', icon: Leaf, color: 'from-green-400 to-emerald-500' },
-  { name: 'Pre-Rolls', icon: Cannabis, color: 'from-lime-400 to-green-500' },
+  { name: 'Flower', icon: Cannabis, color: 'from-green-400 to-emerald-500' },
+  { name: 'Pre-Rolls', icon: Cigarette, color: 'from-lime-400 to-green-500' },
   { name: 'Edibles', icon: Cookie, color: 'from-amber-400 to-orange-500' },
   { name: 'Concentrates', icon: Droplets, color: 'from-yellow-400 to-amber-500' },
   { name: 'Vapes', icon: Wind, color: 'from-cyan-400 to-blue-500' },
