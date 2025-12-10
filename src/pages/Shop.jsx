@@ -177,15 +177,19 @@ export default function Shop() {
           onCategoryChange={setCategory} />
 
 
-        {/* Filters */}
-        <AnimatePresence>
-          {isFiltersOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mb-6 overflow-hidden">
+        </div>
+
+        {/* Content Area */}
+        <div className="max-w-7xl mx-auto px-4 overflow-hidden">
+          {/* Filters */}
+          <AnimatePresence>
+            {isFiltersOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mb-6 overflow-hidden">
 
               {/* Filter Badges */}
               <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
