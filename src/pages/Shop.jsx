@@ -117,73 +117,97 @@ export default function Shop() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="p-4 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg mb-6"
+          className="mb-6"
         >
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-12 pl-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-40 h-12 rounded-xl bg-white/60 border-emerald-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={strain} onValueChange={setStrain}>
-                <SelectTrigger className="w-36 h-12 rounded-xl bg-white/60 border-emerald-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {strainTypes.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40 h-12 rounded-xl bg-white/60 border-emerald-200">
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Name A-Z</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="thc-high">THC: High to Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-12 pl-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
+            />
           </div>
 
-          {/* Active Filters */}
-          {activeFilters.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-emerald-100">
-              {activeFilters.map(filter => (
-                <Badge
-                  key={filter.type}
-                  variant="secondary"
-                  className="pl-3 pr-2 py-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 cursor-pointer"
-                  onClick={() => clearFilter(filter.type)}
-                >
-                  {filter.label}
-                  <X className="w-3 h-3 ml-2" />
-                </Badge>
-              ))}
-            </div>
-          )}
+          {/* Filter Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Category Filters */}
+            {categories.map(cat => (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  category === cat.value
+                    ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                    : 'bg-white/60 text-emerald-700 hover:bg-white'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+
+            <div className="h-4 w-px bg-emerald-200 mx-1" />
+
+            {/* Strain Filters */}
+            {strainTypes.map(s => (
+              <button
+                key={s.value}
+                onClick={() => setStrain(s.value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  strain === s.value
+                    ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
+                    : 'bg-white/60 text-purple-700 hover:bg-white'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+
+            <div className="h-4 w-px bg-emerald-200 mx-1" />
+
+            {/* Sort Filters */}
+            <button
+              onClick={() => setSortBy('name')}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                sortBy === 'name'
+                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                  : 'bg-white/60 text-blue-700 hover:bg-white'
+              }`}
+            >
+              Name
+            </button>
+            <button
+              onClick={() => setSortBy('price-low')}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                sortBy === 'price-low'
+                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                  : 'bg-white/60 text-blue-700 hover:bg-white'
+              }`}
+            >
+              Price ↑
+            </button>
+            <button
+              onClick={() => setSortBy('price-high')}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                sortBy === 'price-high'
+                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                  : 'bg-white/60 text-blue-700 hover:bg-white'
+              }`}
+            >
+              Price ↓
+            </button>
+            <button
+              onClick={() => setSortBy('thc-high')}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                sortBy === 'thc-high'
+                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                  : 'bg-white/60 text-blue-700 hover:bg-white'
+              }`}
+            >
+              THC ↓
+            </button>
+          </div>
         </motion.div>
 
         {/* Results count */}
