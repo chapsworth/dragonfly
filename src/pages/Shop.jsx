@@ -81,6 +81,19 @@ export default function Shop() {
     return filtered;
   }, [products, search, category, strain, sortBy, sortDirection]);
 
+  const productsByCategory = useMemo(() => {
+    if (category !== 'all') return null;
+    
+    const grouped = {};
+    filteredProducts.forEach(product => {
+      const cat = product.category || 'other';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(product);
+    });
+    
+    return grouped;
+  }, [filteredProducts, category]);
+
   const activeFilters = [
   category !== 'all' && { type: 'category', value: category, label: categories.find((c) => c.value === category)?.label },
   strain !== 'all' && { type: 'strain', value: strain, label: strainTypes.find((s) => s.value === strain)?.label }].
@@ -254,6 +267,36 @@ export default function Shop() {
         filteredProducts.length === 0 ?
         <div className="text-center py-20">
             <p className="text-emerald-600 text-lg">No products found matching your criteria.</p>
+          </div> :
+        
+        category === 'all' && productsByCategory ?
+        <div className="space-y-12">
+            {Object.entries(productsByCategory).map(([cat, products]) => {
+              const categoryData = categories.find(c => c.value === cat);
+              return (
+                <div key={cat}>
+                  <h2 className="text-2xl font-bold text-emerald-900 mb-4 capitalize">
+                    {categoryData?.label || cat.replace('-', ' ')}
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
+                    <AnimatePresence>
+                      {products.map((product, index) =>
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="min-w-0">
+
+                          <ProductCard product={product} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              );
+            })}
           </div> :
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
