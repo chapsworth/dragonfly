@@ -10,13 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import ProductEditModal from '@/components/products/ProductEditModal';
+import CategoryManager from '@/components/admin/CategoryManager';
 
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
 const strainTypes = ['indica', 'sativa', 'hybrid', 'cbd', 'n/a'];
@@ -211,10 +212,13 @@ export default function AdminProducts() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Products</h1>
                 <p className="text-sm sm:text-base text-emerald-600">Manage your product catalog</p>
               </div>
-              <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500 w-full sm:w-auto">
-                <Plus className="w-5 h-5 mr-2" />
-                Add Product
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <CategoryManager />
+                <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500 flex-1 sm:flex-initial">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Product
+                </Button>
+              </div>
             </div>
 
             {/* Filters & Actions */}
