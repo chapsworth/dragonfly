@@ -1,9 +1,11 @@
 import React from 'react';
-import { ShoppingBag, Leaf } from 'lucide-react';
+import { ShoppingBag, Leaf, Pencil } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
+import ProductEditModal from './ProductEditModal';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -31,6 +33,12 @@ export default function ProductCard({ product }) {
     }
     return null;
   });
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -39,6 +47,7 @@ export default function ProductCard({ product }) {
   };
 
   return (
+    <>
     <Link to={`${createPageUrl('ProductDetail')}?id=${product.id}`}>
       <motion.div
         whileHover={{ y: -4 }}
@@ -56,6 +65,19 @@ export default function ProductCard({ product }) {
           <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${strainColors[product.strain_type]} shadow-lg`}>
             {product.strain_type.charAt(0).toUpperCase() + product.strain_type.slice(1)}
           </span>
+        )}
+
+        {user?.role === 'admin' && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsEditOpen(true);
+            }}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-lg hover:bg-white transition-colors z-10"
+          >
+            <Pencil className="w-4 h-4 text-emerald-600" />
+          </button>
         )}
 
         <button
@@ -141,5 +163,14 @@ export default function ProductCard({ product }) {
       </div>
     </motion.div>
     </Link>
+    
+    {isEditOpen && (
+      <ProductEditModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        product={product}
+      />
+    )}
+  </>
   );
 }
