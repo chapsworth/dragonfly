@@ -11,7 +11,7 @@ export default function Header({ onMenuClick }) {
   return (
     <header className="fixed lg:static top-0 left-0 right-0 z-40 lg:z-auto">
       <div className="mx-4 mt-4 lg:mx-0 lg:mt-0">
-        <div className="bg-white/20 backdrop-blur-md rounded-2xl lg:rounded-none border border-white/20 lg:border-b lg:border-x-0 lg:border-t-0 shadow-lg lg:shadow-none shadow-emerald-900/5 px-4 py-3">
+        <div className="backdrop-blur-md rounded-2xl lg:rounded-none px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={onMenuClick}
