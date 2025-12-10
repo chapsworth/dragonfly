@@ -323,7 +323,8 @@ export default function Shop() {
             </AnimatePresence>
           </div>
         }
-      </div>
-    </div>);
+        </div>
+        </div>
+        );
 
-}
+        }
