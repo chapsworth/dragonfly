@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Sparkles, Loader2, X, Leaf } from 'lucide-react';
+import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2 } from 'lucide-react';
 
 export default function ProductEditModal({ isOpen, onClose, product }) {
   const [formData, setFormData] = useState({
@@ -21,7 +21,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     strain_type: 'hybrid',
     image_url: '',
     weight: '',
-    in_stock: true
+    in_stock: true,
+    variants: []
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -45,7 +46,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         strain_type: product.strain_type || 'hybrid',
         image_url: product.image_url || '',
         weight: product.weight || '',
-        in_stock: product.in_stock !== undefined ? product.in_stock : true
+        in_stock: product.in_stock !== undefined ? product.in_stock : true,
+        variants: product.variants || []
       });
     }
   }, [product]);
@@ -128,12 +130,41 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     }
   };
 
+  const handleAddVariant = () => {
+    setFormData(prev => ({
+      ...prev,
+      variants: [...(prev.variants || []), { name: '', price: '' }]
+    }));
+  };
+
+  const handleRemoveVariant = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleVariantChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) => 
+        i === index ? { ...v, [field]: value } : v
+      )
+    }));
+  };
+
   const handleSave = () => {
+    const variants = formData.variants?.map(v => ({
+      name: v.name,
+      price: parseFloat(v.price) || 0
+    })).filter(v => v.name && v.price > 0);
+
     saveMutation.mutate({
       ...formData,
       price: parseFloat(formData.price) || 0,
       thc_level: parseFloat(formData.thc_level) || 0,
-      cbd_level: parseFloat(formData.cbd_level) || 0
+      cbd_level: parseFloat(formData.cbd_level) || 0,
+      variants: variants || []
     });
   };
 
@@ -401,6 +432,56 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                 <span className="text-sm text-emerald-900">In Stock</span>
               </label>
             </div>
+          </div>
+
+          {/* Variants */}
+          <div className="border-t border-emerald-100 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-emerald-900 font-semibold">Variants (Optional)</Label>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAddVariant}
+                className="bg-emerald-600 text-white"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Variant
+              </Button>
+            </div>
+            
+            {formData.variants?.length > 0 && (
+              <div className="space-y-2">
+                {formData.variants.map((variant, index) => (
+                  <div key={index} className="flex gap-2 items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <Input
+                      placeholder="Name (e.g., Eighth, Quarter)"
+                      value={variant.name}
+                      onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
+                      className="flex-1 border-emerald-200 bg-white"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={variant.price}
+                      onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                      className="w-28 border-emerald-200 bg-white"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleRemoveVariant(index)}
+                      className="text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {formData.variants?.length === 0 && (
+              <p className="text-sm text-emerald-600">No variants added. Base price will be used.</p>
+            )}
           </div>
 
           {/* Actions */}
