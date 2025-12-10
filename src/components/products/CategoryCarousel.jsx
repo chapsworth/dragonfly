@@ -25,7 +25,15 @@ const categoryColors = {
   accessories: 'from-slate-400 to-gray-500'
 };
 
+const strainColors = {
+  indica: 'from-purple-400 to-indigo-500',
+  sativa: 'from-orange-400 to-amber-500',
+  hybrid: 'from-emerald-400 to-green-500',
+  cbd: 'from-blue-400 to-cyan-500'
+};
+
 export default function CategoryCarousel({ category, products }) {
+  const [selectedStrain, setSelectedStrain] = React.useState('all');
   const scrollRef = useRef(null);
   const Icon = categoryIcons[category] || Leaf;
   const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
@@ -37,19 +45,68 @@ export default function CategoryCarousel({ category, products }) {
     }
   };
 
+  const filteredProducts = selectedStrain === 'all' 
+    ? products 
+    : products.filter(p => p.strain_type === selectedStrain);
+
   if (products.length === 0) return null;
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4 px-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradientColor} flex items-center justify-center shadow-lg`}>
-            <Icon className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between mb-4 px-4 flex-wrap gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradientColor} flex items-center justify-center shadow-lg`}>
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-emerald-900 capitalize">{category.replace('-', ' ')}</h2>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 text-sm font-medium">
+              {filteredProducts.length}
+            </span>
           </div>
-          <h2 className="text-xl font-bold text-emerald-900 capitalize">{category.replace('-', ' ')}</h2>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 text-sm font-medium">
-            {products.length}
-          </span>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedStrain('all')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                selectedStrain === 'all'
+                  ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                  : 'bg-white/60 text-emerald-700 hover:bg-white'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setSelectedStrain('sativa')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                selectedStrain === 'sativa'
+                  ? 'bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md'
+                  : 'bg-white/60 text-orange-700 hover:bg-white'
+              }`}
+            >
+              Sativa
+            </button>
+            <button
+              onClick={() => setSelectedStrain('hybrid')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                selectedStrain === 'hybrid'
+                  ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                  : 'bg-white/60 text-emerald-700 hover:bg-white'
+              }`}
+            >
+              Hybrid
+            </button>
+            <button
+              onClick={() => setSelectedStrain('indica')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                selectedStrain === 'indica'
+                  ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
+                  : 'bg-white/60 text-purple-700 hover:bg-white'
+              }`}
+            >
+              Indica
+            </button>
+          </div>
         </div>
         
         <div className="flex gap-2">
@@ -73,7 +130,7 @@ export default function CategoryCarousel({ category, products }) {
         className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-4"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {products.map((product, index) => (
+        {filteredProducts.map((product, index) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 20 }}
