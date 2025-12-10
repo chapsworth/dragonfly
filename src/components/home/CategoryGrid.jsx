@@ -1,21 +1,34 @@
 import React from 'react';
-import { Leaf, Cigarette, Cookie, Flame, Wind, Droplets, Sparkles, Box, Grid3x3 } from 'lucide-react';
+import { Package, Leaf, Wind, Candy, Droplet, Heart, ShoppingBag, Grid3x3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
-const categories = [
-  { name: 'All', icon: Grid3x3, gradient: 'from-emerald-400 to-green-500', value: 'all' },
-  { name: 'Flower', icon: Leaf, gradient: 'from-emerald-400 to-green-500', value: 'flower' },
-  { name: 'Pre-Rolls', icon: Cigarette, gradient: 'from-green-400 to-emerald-500', value: 'pre-rolls' },
-  { name: 'Edibles', icon: Cookie, gradient: 'from-orange-400 to-amber-500', value: 'edibles' },
-  { name: 'Concentrates', icon: Flame, gradient: 'from-yellow-400 to-orange-500', value: 'concentrates' },
-  { name: 'Vapes', icon: Wind, gradient: 'from-cyan-400 to-blue-500', value: 'vapes' },
-  { name: 'Tinctures', icon: Droplets, gradient: 'from-purple-400 to-violet-500', value: 'tinctures' },
-  { name: 'Topicals', icon: Sparkles, gradient: 'from-pink-400 to-rose-500', value: 'topicals' },
-  { name: 'Accessories', icon: Box, gradient: 'from-slate-400 to-gray-500', value: 'accessories' }
-];
+const iconMap = {
+  Leaf, Wind, Candy, Droplet, Heart, ShoppingBag, Package
+};
 
 export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list()
+  });
+
+  const activeCategories = dbCategories
+    .filter(c => c.is_active)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+  const categories = [
+    { name: 'All', icon: Grid3x3, gradient: 'from-emerald-400 to-green-500', value: 'all' },
+    ...activeCategories.map(cat => ({
+      name: cat.name,
+      icon: iconMap[cat.icon_name] || Package,
+      gradient: cat.gradient || 'from-emerald-400 to-green-500',
+      value: cat.slug
+    }))
+  ];
+
   return (
     <section className="py-8 px-4">
       <div className="max-w-7xl mx-auto">
