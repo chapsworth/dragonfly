@@ -21,11 +21,9 @@ export default function Header({ onMenuClick }) {
             </button>
 
             <Link to={createPageUrl('Home')} className="flex items-center gap-2">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/dc99250a1_e36432697_logo.png" 
-                alt="Dragonfly" 
-                className="w-10 h-10 rounded-xl object-cover shadow-lg"
-              />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Bug className="w-6 h-6 text-white" />
+              </div>
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent hidden sm:block">
                 Dragonfly
               </span>
