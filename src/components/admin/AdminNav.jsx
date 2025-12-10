@@ -15,25 +15,27 @@ const navItems = [
 export default function AdminNav({ currentPage, mobile }) {
   if (mobile) {
     return (
-      <div className="flex items-center justify-around">
-        {navItems.slice(0, 5).map(item => {
-          const isActive = currentPage === item.page;
-          return (
-            <Link
-              key={item.page}
-              to={createPageUrl(item.page)}
-              className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[60px]",
-                isActive 
-                  ? "text-emerald-600"
-                  : "text-emerald-400"
-              )}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs font-medium">{item.name}</span>
-            </Link>
-          );
-        })}
+      <div className="overflow-x-auto hide-scrollbar">
+        <div className="flex gap-1 px-2 pb-2">
+          {navItems.map(item => {
+            const isActive = currentPage === item.page;
+            return (
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                  isActive 
+                    ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg"
+                    : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                )}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     );
   }

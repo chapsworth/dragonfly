@@ -58,9 +58,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40 px-4 py-4">
-        <h1 className="text-2xl font-bold text-emerald-900">Dashboard</h1>
+      {/* Mobile Top Nav */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40">
+        <div className="px-4 py-3">
+          <h1 className="text-xl font-bold text-emerald-900 mb-3">Admin</h1>
+        </div>
+        <AdminNav currentPage="AdminDashboard" mobile />
       </div>
 
       <div className="flex">
@@ -69,7 +72,7 @@ export default function AdminDashboard() {
           <AdminNav currentPage="AdminDashboard" />
         </div>
         
-        <div className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-6 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,24 +84,20 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <div className="grid grid-cols-3 lg:grid-cols-3 gap-3 lg:gap-6 mb-6">
               {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+                  className="p-3 lg:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
                 >
-                  <div className="flex items-center gap-4 sm:flex-col sm:items-start">
-                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                      <stat.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                    </div>
-                    <div className="sm:mt-4">
-                      <p className="text-xs sm:text-sm text-emerald-600 mb-0.5 sm:mb-1">{stat.label}</p>
-                      <p className="text-2xl sm:text-3xl font-bold text-emerald-900">{stat.value}</p>
-                    </div>
+                  <div className={`w-10 h-10 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg mb-2 lg:mb-4`}>
+                    <stat.icon className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                   </div>
+                  <p className="text-xs lg:text-sm text-emerald-600 mb-0.5 lg:mb-1">{stat.label}</p>
+                  <p className="text-lg lg:text-3xl font-bold text-emerald-900">{stat.value}</p>
                 </motion.div>
               ))}
             </div>
@@ -131,7 +130,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-20 lg:mb-0">
+            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Recent Orders */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -311,11 +310,6 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         </div>
-      </div>
-
-      {/* Mobile Bottom Nav */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/40 px-4 py-3 z-40">
-        <AdminNav currentPage="AdminDashboard" mobile />
       </div>
     </div>
   );
