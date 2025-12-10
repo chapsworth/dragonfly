@@ -37,17 +37,21 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       const user = await base44.auth.me();
-      if (!user) throw new Error('Unauthorized');
+      if (!user || user.role !== 'admin') throw new Error('Admin access required');
       
       if (settings?.id) {
-        return base44.asServiceRole.entities.HomeSettings.update(settings.id, data);
+        return await base44.asServiceRole.entities.HomeSettings.update(settings.id, data);
       } else {
-        return base44.asServiceRole.entities.HomeSettings.create(data);
+        return await base44.asServiceRole.entities.HomeSettings.create(data);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homeSettings'] });
       onClose();
+    },
+    onError: (error) => {
+      console.error('Save failed:', error);
+      alert('Failed to save changes: ' + error.message);
     }
   });
 
