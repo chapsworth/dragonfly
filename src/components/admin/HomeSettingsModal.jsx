@@ -40,9 +40,9 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
       if (!user || user.role !== 'admin') throw new Error('Admin access required');
       
       if (settings?.id) {
-        return await base44.asServiceRole.entities.HomeSettings.update(settings.id, data);
+        return await base44.entities.HomeSettings.update(settings.id, data);
       } else {
-        return await base44.asServiceRole.entities.HomeSettings.create(data);
+        return await base44.entities.HomeSettings.create(data);
       }
     },
     onSuccess: () => {
