@@ -169,7 +169,11 @@ export default function PageEditor({ sections, onSectionsChange, children }) {
                 isEditMode && "border-2 border-dashed border-blue-300 rounded-lg"
               )}>
                 {isTemplate ? (
-                  <div dangerouslySetInnerHTML={{ __html: item.code }} />
+                  item.type === 'spacing' ? (
+                    <div className="py-8"></div>
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: item.code.replace(/className=/g, 'class=') }} />
+                  )
                 ) : (
                   item
                 )}
