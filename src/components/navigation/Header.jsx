@@ -9,9 +9,9 @@ export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40">
-      <div className="mx-4 mt-4">
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-lg shadow-emerald-900/5 px-4 py-3">
+    <header className="fixed lg:static top-0 left-0 right-0 z-40 lg:z-auto">
+      <div className="mx-4 mt-4 lg:mx-0 lg:mt-0">
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-none border border-white/40 lg:border-b lg:border-x-0 lg:border-t-0 shadow-lg lg:shadow-none shadow-emerald-900/5 px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={onMenuClick}
