@@ -13,14 +13,20 @@ import { Plus, GripVertical, X, LayoutDashboard, Package, ShoppingCart, Users, A
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
-const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
-
 export default function AdminCarousel() {
   const [editingCarousel, setEditingCarousel] = useState(null);
   const [formData, setFormData] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [viewMode, setViewMode] = useState('list');
   const queryClient = useQueryClient();
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const cats = await base44.entities.Category.list();
+      return cats.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    }
+  });
 
   const { data: carouselSettings = [] } = useQuery({
     queryKey: ['carouselSettings'],
@@ -95,6 +101,7 @@ export default function AdminCarousel() {
 
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown';
   const categoryProducts = products.filter(p => p.category === formData.category);
+  const categoryOptions = categories.map(c => c.slug);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'AdminDashboard' },
@@ -176,7 +183,12 @@ export default function AdminCarousel() {
             </div>
           </div>
 
-          {viewMode === 'grid' ? (
+          {carouselSettings.length === 0 ? (
+            <div className="text-center py-12 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40">
+              <Package className="w-12 h-12 text-emerald-300 mx-auto mb-3" />
+              <p className="text-emerald-600">No carousel settings yet. Click "Add Carousel" to get started.</p>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {carouselSettings
                 .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
@@ -261,7 +273,7 @@ export default function AdminCarousel() {
                   <Select value={formData.category || ''} onValueChange={(v) => setFormData({...formData, category: v})}>
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
-                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      {categories.map(c => <SelectItem key={c.slug} value={c.slug} className="capitalize">{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
