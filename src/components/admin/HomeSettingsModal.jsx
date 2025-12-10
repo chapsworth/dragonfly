@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Upload, Search, Sparkles, Loader2 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const sectionLabels = {
@@ -18,6 +19,12 @@ const sectionLabels = {
 export default function HomeSettingsModal({ isOpen, onClose, settings }) {
   const [heroBackground, setHeroBackground] = useState('');
   const [sections, setSections] = useState([]);
+  const [unsplashQuery, setUnsplashQuery] = useState('');
+  const [unsplashResults, setUnsplashResults] = useState([]);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -49,6 +56,45 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
     setSections(items);
   };
 
+  const handleUnsplashSearch = async () => {
+    if (!unsplashQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&per_page=12&client_id=nLqjAIMLulH8L7OegP40t-SQBdRJjl0qL8ggOcHOqjM`);
+      const data = await response.json();
+      setUnsplashResults(data.results || []);
+    } catch (error) {
+      console.error('Unsplash search failed:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsGenerating(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({ prompt: aiPrompt });
+      setHeroBackground(result.url);
+    } catch (error) {
+      console.error('AI generation failed:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await base44.integrations.Core.UploadFile({ file });
+      setHeroBackground(result.file_url);
+      setUploadedFile(file.name);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
   const handleSave = () => {
     saveMutation.mutate({
       hero_background_url: heroBackground,
@@ -69,14 +115,94 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
           {/* Hero Background */}
           <div>
             <Label className="text-emerald-900 font-semibold mb-2 block">
-              Hero Background Image URL
+              Hero Background Image
             </Label>
-            <Input
-              value={heroBackground}
-              onChange={(e) => setHeroBackground(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-              className="border-emerald-200"
-            />
+            
+            <Tabs defaultValue="url" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="upload"><Upload className="w-4 h-4" /></TabsTrigger>
+                <TabsTrigger value="unsplash"><Search className="w-4 h-4" /></TabsTrigger>
+                <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="url" className="space-y-3">
+                <Input
+                  value={heroBackground}
+                  onChange={(e) => setHeroBackground(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="border-emerald-200"
+                />
+              </TabsContent>
+
+              <TabsContent value="upload" className="space-y-3">
+                <div className="flex flex-col gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="border-emerald-200"
+                  />
+                  {uploadedFile && (
+                    <p className="text-sm text-emerald-600">Uploaded: {uploadedFile}</p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="unsplash" className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={unsplashQuery}
+                    onChange={(e) => setUnsplashQuery(e.target.value)}
+                    placeholder="Search Unsplash..."
+                    className="border-emerald-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleUnsplashSearch()}
+                  />
+                  <Button 
+                    onClick={handleUnsplashSearch}
+                    disabled={isSearching}
+                    className="bg-emerald-600"
+                  >
+                    {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {unsplashResults.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                    {unsplashResults.map((img) => (
+                      <button
+                        key={img.id}
+                        onClick={() => setHeroBackground(img.urls.regular)}
+                        className="relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors"
+                      >
+                        <img src={img.urls.small} alt={img.alt_description} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="ai" className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Describe the image you want..."
+                    className="border-emerald-200"
+                  />
+                  <Button 
+                    onClick={handleGenerateAI}
+                    disabled={isGenerating}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-emerald-600">
+                  AI generation takes 5-10 seconds
+                </p>
+              </TabsContent>
+            </Tabs>
+
             {heroBackground && (
               <div className="mt-3 rounded-lg overflow-hidden border border-emerald-200">
                 <img 
