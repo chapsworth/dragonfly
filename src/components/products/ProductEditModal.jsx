@@ -259,6 +259,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                     onChange={(e) => setAiPrompt(e.target.value)}
                     placeholder="Describe the product image..."
                     className="border-emerald-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleGenerateAI()}
                   />
                   <Button 
                     onClick={handleGenerateAI}
@@ -268,6 +269,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   </Button>
                 </div>
+                {isGenerating && (
+                  <div className="text-sm text-purple-600 text-center">
+                    Generating image... This may take 5-10 seconds
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
 
