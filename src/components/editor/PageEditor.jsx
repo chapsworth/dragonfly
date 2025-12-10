@@ -111,81 +111,90 @@ export default function PageEditor({ sections, onSectionsChange, children }) {
           </motion.div>
         )}
 
-        {/* Render children with edit controls */}
-        {React.Children.map(children, (child, index) => (
-          <div key={index} className="relative">
-            {isEditMode && (
-              <div className="absolute -left-16 top-4 flex flex-col gap-2 z-40">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => handleMoveSection(index, 'up')}
-                  disabled={index === 0}
-                  className="w-8 h-8"
-                >
-                  <ArrowUp className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="w-8 h-8 cursor-move"
-                >
-                  <GripVertical className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => handleMoveSection(index, 'down')}
-                  disabled={index === React.Children.count(children) - 1}
-                  className="w-8 h-8"
-                >
-                  <ArrowDown className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => handleDeleteSection(index)}
-                  className="w-8 h-8 text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+        {/* Render all sections (children + dynamic sections) */}
+        {[...React.Children.toArray(children), ...sections].map((item, index) => {
+          const isTemplate = item?.type === 'template' || item?.type === 'spacing';
+          const totalSections = React.Children.count(children) + sections.length;
+          
+          return (
+            <div key={item?.id || index} className="relative">
+              {isEditMode && (
+                <div className="absolute -left-16 top-4 flex flex-col gap-2 z-40">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => handleMoveSection(index, 'up')}
+                    disabled={index === 0}
+                    className="w-8 h-8"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="w-8 h-8 cursor-move"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => handleMoveSection(index, 'down')}
+                    disabled={index === totalSections - 1}
+                    className="w-8 h-8"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => handleDeleteSection(index)}
+                    className="w-8 h-8 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              <div className={cn(
+                "relative transition-all",
+                isEditMode && "border-2 border-dashed border-blue-300 rounded-lg"
+              )}>
+                {isTemplate ? (
+                  <div dangerouslySetInnerHTML={{ __html: item.code }} />
+                ) : (
+                  item
+                )}
               </div>
-            )}
 
-            <div className={cn(
-              "relative transition-all",
-              isEditMode && "border-2 border-dashed border-blue-300 rounded-lg"
-            )}>
-              {child}
+              {isEditMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-center gap-2 py-2"
+                >
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAddSection(index + 1)}
+                    className="border-dashed border-2 border-blue-400 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add from Library
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAddSpacing(index + 1)}
+                    className="border-dashed border-2 border-slate-300 text-slate-600 hover:bg-slate-50"
+                  >
+                    Add Spacing
+                  </Button>
+                </motion.div>
+              )}
             </div>
-
-            {isEditMode && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-center gap-2 py-2"
-              >
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleAddSection(index + 1)}
-                  className="border-dashed border-2 border-blue-400 text-blue-600 hover:bg-blue-50"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Section
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleAddSpacing(index + 1)}
-                  className="border-dashed border-2 border-slate-300 text-slate-600 hover:bg-slate-50"
-                >
-                  Add Spacing
-                </Button>
-              </motion.div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Component Library Picker */}
