@@ -60,7 +60,9 @@ export default function Home() {
   }, {});
 
   const heroBackgroundUrl = homeSettings?.hero_background_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80';
-  const sectionOrder = homeSettings?.section_order || ['hero', 'features', 'category_grid', 'carousels'];
+  const sectionOrder = Array.isArray(homeSettings?.section_order) && homeSettings.section_order.length > 0 
+    ? homeSettings.section_order 
+    : ['hero', 'features', 'category_grid', 'carousels'];
 
   const sections = {
     hero: (
@@ -209,7 +211,7 @@ export default function Home() {
       )}
 
       {/* Render sections in order */}
-      {sectionOrder.map(sectionKey => sections[sectionKey])}
+      {sectionOrder.filter(key => sections[key]).map(sectionKey => sections[sectionKey])}
 
       {/* Edit Modal */}
       <HomeSettingsModal
