@@ -165,7 +165,7 @@ export default function Shop() {
           className="mb-6">
 
           {/* Filter Badges */}
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-2">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
             {/* Strain Filters */}
             {strainTypes.map((s) =>
             <button
