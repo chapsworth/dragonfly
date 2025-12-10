@@ -63,28 +63,13 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Find 8 high-quality, direct image URLs for: ${searchQuery}. Return ONLY actual .jpg, .png, or .webp image file URLs that will load in an img tag.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  url: { type: "string" },
-                  alt: { type: "string" }
-                }
-              }
-            }
-          }
-        }
+      const response = await base44.functions.invoke('searchImages', { 
+        query: searchQuery 
       });
-      setSearchResults(result.images || []);
+      setSearchResults(response.data.images || []);
     } catch (error) {
       console.error('Search failed:', error);
+      alert('Search failed: ' + error.message);
     } finally {
       setIsSearching(false);
     }
