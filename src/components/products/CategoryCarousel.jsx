@@ -1,13 +1,13 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown, Cigarette } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { motion } from 'framer-motion';
 
 const categoryIcons = {
-  flower: Leaf,
-  'pre-rolls': Cannabis,
+  flower: Cannabis,
+  'pre-rolls': Cigarette,
   edibles: Cookie,
   concentrates: Droplets,
   vapes: Wind,
