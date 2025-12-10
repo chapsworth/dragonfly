@@ -57,27 +57,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     }
   });
 
-  const cannabisImageGallery = [
-    'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80',
-    'https://images.unsplash.com/photo-1608158024530-23e0ef2f9ff6?w=800&q=80',
-    'https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=800&q=80',
-    'https://images.unsplash.com/photo-1619552103893-8034a9147c8c?w=800&q=80',
-    'https://images.unsplash.com/photo-1615635121529-4e7f3d4c9f7c?w=800&q=80',
-    'https://images.unsplash.com/photo-1589640810-0c2c3f6e0d0f?w=800&q=80',
-    'https://images.unsplash.com/photo-1616951043178-c8e4d8af0037?w=800&q=80',
-    'https://images.unsplash.com/photo-1605550405483-a8b9d5e5f8b4?w=800&q=80',
-    'https://images.unsplash.com/photo-1622657456308-ad5e6e6ebdfd?w=800&q=80',
-    'https://images.unsplash.com/photo-1536181925069-40286f757f37?w=800&q=80',
-    'https://images.unsplash.com/photo-1582305569033-e2d1e8d3b210?w=800&q=80',
-    'https://images.unsplash.com/photo-1605550405486-3a7ad6ae9f5a?w=800&q=80'
-  ];
 
-  const handleSearch = () => {
-    setSearchResults(cannabisImageGallery.map((url, idx) => ({ 
-      url, 
-      alt: `Cannabis Image ${idx + 1}` 
-    })));
-  };
 
   const handleGenerateAI = async () => {
     if (!aiPrompt.trim()) return;
