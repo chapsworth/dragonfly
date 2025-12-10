@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Truck, Shield, Clock, Settings, Phone } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';

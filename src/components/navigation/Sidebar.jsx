@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
-  Home, ShoppingBag, Phone, Bug, Cannabis, Cookie, Droplets, 
+  Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
   Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <SheetHeader className="p-6 border-b border-emerald-100/50">
             <SheetTitle className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
-                <Bug className="w-6 h-6 text-white" />
+                <Leaf className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                 Dragonfly
