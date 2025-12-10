@@ -130,21 +130,19 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {product.weight && (
-          {product.variants?.length > 0 ? (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {product.variants.map((variant, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"
-                >
-                  {variant.name}
-                </span>
-              ))}
-            </div>
-          ) : (
-            product.weight && <p className="text-xs text-emerald-500 mb-2">{product.weight}</p>
-          )}
+        {product.variants?.length > 0 ? (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {product.variants.map((variant, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"
+              >
+                {variant.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          product.weight && <p className="text-xs text-emerald-500 mb-2">{product.weight}</p>
         )}
 
         {/* Variant Selector */}
