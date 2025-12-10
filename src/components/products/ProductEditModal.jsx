@@ -65,11 +65,13 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       const query = searchQuery.trim() || formData.name || 'cannabis';
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Find 12 product images from Leafly.com for the cannabis strain/product: "${query}". 
-        Go to leafly.com and search for this product. Extract the actual image URLs from the page.
-        Return direct image URLs (jpg, png, webp) that can be loaded in an img tag.
-        If you can't find on Leafly, search other cannabis product sites.
-        Format each URL as a complete, working image URL.`,
+        prompt: `Search for "${query}" on Leafly.com. Find the product page and extract ONLY the actual image CDN URLs that are visible on the page.
+        Look for img src attributes that contain direct links to images (ending in .jpg, .png, .webp, etc.).
+        These should be full URLs starting with https:// that point directly to image files.
+        Return 12 different working image URLs.
+        CRITICAL: Only return URLs that are actual direct image links, not page URLs.
+        Example format: https://leafly-cms-production.imgix.net/strains/[id]/[name].jpg
+        If Leafly doesn't have good results, also check dispensaries or other cannabis sites.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -79,8 +81,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               items: {
                 type: "object",
                 properties: {
-                  url: { type: "string" },
-                  source: { type: "string" }
+                  url: { type: "string", description: "Direct image URL" },
+                  alt: { type: "string", description: "Image description" }
                 }
               }
             }
@@ -89,13 +91,29 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       });
       
       if (result?.images?.length > 0) {
-        setSearchResults(result.images.map(img => ({ url: img.url, alt: img.source || query })));
+        const validImages = result.images.filter(img => 
+          img.url && 
+          img.url.startsWith('http') && 
+          (img.url.includes('.jpg') || img.url.includes('.png') || img.url.includes('.webp') || img.url.includes('imgix') || img.url.includes('cloudinary'))
+        );
+        
+        if (validImages.length > 0) {
+          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.alt || query })));
+        } else {
+          throw new Error('No valid images found');
+        }
       } else {
-        setSearchResults([{ url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'No results' }]);
+        throw new Error('No results');
       }
     } catch (error) {
       console.error('Search failed:', error);
-      setSearchResults([{ url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Error' }]);
+      const fallback = [
+        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Cannabis 1' },
+        { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800&q=80', alt: 'Cannabis 2' },
+        { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=800&q=80', alt: 'Cannabis 3' },
+        { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80', alt: 'Cannabis 4' }
+      ];
+      setSearchResults(fallback);
     } finally {
       setIsSearching(false);
     }
