@@ -10,8 +10,6 @@ import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
 import { motion } from 'framer-motion';
 
-const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
-
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
@@ -34,27 +32,37 @@ export default function Home() {
     }
   });
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list()
+  });
+
   const { data: carouselSettings = [] } = useQuery({
     queryKey: ['carouselSettings'],
     queryFn: () => base44.entities.CarouselSettings.list()
   });
+
+  // Get active categories sorted by display order
+  const activeCategories = categories
+    .filter(c => c.is_active)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
   // Sort carousels by display_order and filter active ones
   const activeCarousels = carouselSettings
     .filter(c => c.is_active)
     .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
-  const productsByCategory = categories.reduce((acc, cat) => {
-    const carouselSetting = carouselSettings.find(c => c.category === cat);
+  const productsByCategory = activeCategories.reduce((acc, cat) => {
+    const carouselSetting = carouselSettings.find(c => c.category === cat.slug);
     
     if (carouselSetting?.featured_product_ids?.length > 0) {
       // Use featured products in specified order
-      acc[cat] = carouselSetting.featured_product_ids
+      acc[cat.slug] = carouselSetting.featured_product_ids
         .map(id => products.find(p => p.id === id))
         .filter(Boolean);
     } else {
       // Show all products in category
-      acc[cat] = products.filter(p => p.category === cat);
+      acc[cat.slug] = products.filter(p => p.category === cat.slug);
     }
     return acc;
   }, {});
@@ -174,19 +182,17 @@ export default function Home() {
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : (
-            (activeCarousels.length > 0 ? activeCarousels : categories)
-              .filter(item => {
+            activeCategories
+              .filter(cat => {
                 if (selectedCategory === 'all') return true;
-                const cat = typeof item === 'string' ? item : item.category;
-                return cat === selectedCategory;
+                return cat.slug === selectedCategory;
               })
-              .map(item => {
-                const cat = typeof item === 'string' ? item : item.category;
+              .map(cat => {
                 return (
                   <CategoryCarousel
-                    key={cat}
-                    category={cat}
-                    products={productsByCategory[cat] || []}
+                    key={cat.slug}
+                    category={cat.slug}
+                    products={productsByCategory[cat.slug] || []}
                   />
                 );
               })

@@ -23,6 +23,7 @@ export default function AdminOrders() {
   const [formData, setFormData] = useState({});
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [viewMode, setViewMode] = useState('list');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
@@ -253,6 +254,10 @@ export default function AdminOrders() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Orders</h1>
                 <p className="text-sm sm:text-base text-emerald-600">Manage customer orders</p>
               </div>
+              <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-500 to-green-500">
+                <Plus className="w-5 h-5 mr-2" />
+                Create Order
+              </Button>
               
               {selectedOrders.length > 0 && (
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -473,7 +478,7 @@ export default function AdminOrders() {
             </div>
           )}
 
-          <Dialog open={!!editingOrder} onOpenChange={() => { setEditingOrder(null); setFormData({}); }}>
+          <Dialog open={!!editingOrder || isCreateOpen} onOpenChange={() => { setEditingOrder(null); setFormData({}); setIsCreateOpen(false); }}>
             <DialogContent className="max-w-2xl bg-white/90 backdrop-blur-xl">
               <DialogHeader>
                 <DialogTitle>Update Order</DialogTitle>

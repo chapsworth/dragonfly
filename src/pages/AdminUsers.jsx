@@ -11,12 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, User } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, User, Trash2 } from 'lucide-react';
 
 export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({});
   const [viewMode, setViewMode] = useState('list');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -29,6 +31,15 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditingUser(null);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.User.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
   });
 
@@ -49,6 +60,17 @@ export default function AdminUsers() {
         loyalty_points: parseFloat(formData.loyalty_points) || 0
       }
     });
+  };
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteMutation.mutate(userToDelete.id);
+    }
   };
 
   const tierColors = {
@@ -161,10 +183,15 @@ export default function AdminUsers() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-emerald-600">Joined {format(new Date(user.created_date), 'MMM d, yyyy')}</span>
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs">
-                      <Edit2 className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs">
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600">
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -183,9 +210,14 @@ export default function AdminUsers() {
                           <h3 className="font-bold text-emerald-900 text-sm line-clamp-1">{user.full_name || 'Anonymous'}</h3>
                           <p className="text-xs text-emerald-600 truncate">{user.email}</p>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs flex-shrink-0">
-                          <Edit2 className="w-3 h-3" />
-                        </Button>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs">
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">{user.role}</Badge>
@@ -248,6 +280,29 @@ export default function AdminUsers() {
                   <Button variant="outline" onClick={() => { setEditingUser(null); setFormData({}); }} className="flex-1">Cancel</Button>
                   <Button onClick={handleSave} disabled={updateMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
                     {updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete User</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <p className="text-sm text-emerald-900">
+                  Are you sure you want to delete user <strong>{userToDelete?.full_name || userToDelete?.email}</strong>? This action cannot be undone.
+                </p>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1">Cancel</Button>
+                  <Button 
+                    onClick={confirmDelete} 
+                    disabled={deleteMutation.isPending} 
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </div>
