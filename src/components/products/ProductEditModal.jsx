@@ -64,20 +64,58 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     try {
       const query = searchQuery.trim() || formData.name || 'cannabis';
       
-      // Search Unsplash for cannabis/strain images - most reliable source
-      const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query + ' cannabis strain marijuana')}&per_page=12&client_id=yV06e9DPHgEUDk-XP1z8HB3wF2qWVJnN3s6-HwzKH84`);
-      const data = await response.json();
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find 12 high-quality cannabis/marijuana product images for the strain "${query}".
+        
+        Use Unsplash.com to search for relevant images.
+        Search terms to try: "${query}", "${query} cannabis", "${query} marijuana", "cannabis buds", "marijuana flower"
+        
+        For each image, return the Unsplash photo URL in this format:
+        https://images.unsplash.com/photo-[photo-id]?w=800&q=80
+        
+        IMPORTANT: 
+        - Return actual Unsplash image URLs (images.unsplash.com domain)
+        - Each URL should be a direct link to the image
+        - Make sure the URLs are complete and properly formatted
+        - Include a mix of close-up and product shots
+        
+        Return 12 different image URLs.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  url: { type: "string" },
+                  description: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
       
-      console.log('Unsplash search result:', data);
+      console.log('Image search result:', result);
       
-      if (data.results && data.results.length > 0) {
-        const images = data.results.map(img => ({
-          url: img.urls.regular,
-          alt: img.alt_description || query
-        }));
-        setSearchResults(images);
+      if (result?.images?.length > 0) {
+        const validImages = result.images.filter(img => 
+          img.url && 
+          img.url.startsWith('http') &&
+          img.url.includes('unsplash')
+        );
+        
+        if (validImages.length > 0) {
+          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.description || query })));
+        } else {
+          console.error('No valid Unsplash images found. Received:', result.images);
+          alert('Could not find valid images. Try a different search term.');
+        }
       } else {
-        alert('No images found. Try a different search term like "OG Kush" or "Blue Dream".');
+        console.error('No images in result:', result);
+        alert('No images found. Try a different search term.');
       }
     } catch (error) {
       console.error('Search failed:', error);
