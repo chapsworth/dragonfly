@@ -59,12 +59,31 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
   const handleUnsplashSearch = async () => {
     if (!unsplashQuery.trim()) return;
     setIsSearching(true);
+    setUnsplashResults([]);
     try {
-      const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&per_page=12&client_id=nLqjAIMLulH8L7OegP40t-SQBdRJjl0qL8ggOcHOqjM`);
-      const data = await response.json();
-      setUnsplashResults(data.results || []);
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find and return 12 high-quality Unsplash image URLs for: "${unsplashQuery}". Return direct image URLs from images.unsplash.com.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  url: { type: "string" },
+                  alt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setUnsplashResults(result.images || []);
     } catch (error) {
       console.error('Unsplash search failed:', error);
+      setUnsplashResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -168,13 +187,13 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
                 </div>
                 {unsplashResults.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                    {unsplashResults.map((img) => (
+                    {unsplashResults.map((img, idx) => (
                       <button
-                        key={img.id}
-                        onClick={() => setHeroBackground(img.urls.regular)}
+                        key={idx}
+                        onClick={() => setHeroBackground(img.url)}
                         className="relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors"
                       >
-                        <img src={img.urls.small} alt={img.alt_description} className="w-full h-full object-cover" />
+                        <img src={img.url} alt={img.alt || 'Image'} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
