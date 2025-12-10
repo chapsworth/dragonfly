@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Sparkles, Loader2, X } from 'lucide-react';
+import { Upload, Search, Sparkles, Loader2, X, Leaf } from 'lucide-react';
 
 export default function ProductEditModal({ isOpen, onClose, product }) {
   const [formData, setFormData] = useState({
@@ -26,6 +26,9 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [leaflyQuery, setLeaflyQuery] = useState('');
+  const [leaflyResults, setLeaflyResults] = useState([]);
+  const [isScrapingLeafly, setIsScrapingLeafly] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
@@ -72,6 +75,22 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       alert('Search failed: ' + error.message);
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handleLeaflyScrape = async () => {
+    if (!leaflyQuery.trim()) return;
+    setIsScrapingLeafly(true);
+    try {
+      const response = await base44.functions.invoke('scrapeLeafly', { 
+        query: leaflyQuery 
+      });
+      setLeaflyResults(response.data.strains || []);
+    } catch (error) {
+      console.error('Leafly scrape failed:', error);
+      alert('Leafly search failed: ' + error.message);
+    } finally {
+      setIsScrapingLeafly(false);
     }
   };
 
@@ -128,10 +147,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Label>
             
             <Tabs defaultValue="url" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="url">URL</TabsTrigger>
                 <TabsTrigger value="upload"><Upload className="w-4 h-4" /></TabsTrigger>
                 <TabsTrigger value="search"><Search className="w-4 h-4" /></TabsTrigger>
+                <TabsTrigger value="leafly"><Leaf className="w-4 h-4" /></TabsTrigger>
                 <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
               </TabsList>
 
@@ -183,6 +203,45 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                           alt={img.alt} 
                           className="w-full h-full object-cover"
                         />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="leafly" className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={leaflyQuery}
+                    onChange={(e) => setLeaflyQuery(e.target.value)}
+                    placeholder="Search Leafly strains..."
+                    className="border-emerald-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleLeaflyScrape()}
+                  />
+                  <Button 
+                    onClick={handleLeaflyScrape}
+                    disabled={isScrapingLeafly}
+                    className="bg-emerald-600"
+                  >
+                    {isScrapingLeafly ? <Loader2 className="w-4 h-4 animate-spin" /> : <Leaf className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {leaflyResults.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+                    {leaflyResults.map((strain, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setFormData(prev => ({ ...prev, image_url: strain.image_url }))}
+                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors bg-emerald-50"
+                      >
+                        <img 
+                          src={strain.image_url} 
+                          alt={strain.name} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 text-center">
+                          {strain.name}
+                        </div>
                       </button>
                     ))}
                   </div>
