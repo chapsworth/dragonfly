@@ -130,53 +130,6 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                 />
               </TabsContent>
 
-              <TabsContent value="search" className="space-y-3">
-                <div className="flex gap-2">
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Leafly..."
-                    className="border-emerald-200"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button 
-                    onClick={handleSearch}
-                    disabled={isSearching}
-                    className="bg-emerald-600"
-                  >
-                    {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  </Button>
-                </div>
-                {searchResults.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-                    {searchResults.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          console.log('Selected image URL:', img.url);
-                          setFormData(prev => ({ ...prev, image_url: img.url }));
-                        }}
-                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors bg-emerald-50"
-                      >
-                        <img 
-                          src={img.url} 
-                          alt={img.alt} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error('Failed to load image:', img.url);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = `<div class="flex items-center justify-center h-full p-2 text-xs text-emerald-600 text-center">${img.alt}<br/>❌ Failed</div>`;
-                          }}
-                          onLoad={(e) => {
-                            console.log('Successfully loaded:', img.url);
-                          }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
               <TabsContent value="ai" className="space-y-3">
                 <div className="flex gap-2">
                   <Input
