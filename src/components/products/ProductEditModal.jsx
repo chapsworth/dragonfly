@@ -23,10 +23,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     weight: '',
     in_stock: true
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
   const [aiPrompt, setAiPrompt] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
 
