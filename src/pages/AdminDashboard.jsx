@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
@@ -56,14 +59,56 @@ export default function AdminDashboard() {
     cancelled: 'bg-red-100 text-red-700'
   };
 
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'orders', label: 'Orders', icon: ShoppingCart },
+    { id: 'users', label: 'Users', icon: Users },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-      {/* Mobile Top Nav */}
+      {/* Mobile Header with Tabs */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40">
-        <div className="px-4 py-3">
-          <h1 className="text-xl font-bold text-emerald-900 mb-3">Admin</h1>
+        <div className="px-4 py-3 flex items-center gap-3">
+          <Link to={createPageUrl('Home')}>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold text-emerald-900">Admin</h1>
         </div>
-        <AdminNav currentPage="AdminDashboard" mobile />
+        <div className="overflow-x-auto scrollbar-hide px-4 pb-2">
+          <div className="flex gap-2 min-w-max">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    if (tab.id === 'dashboard') {
+                      setActiveTab('dashboard');
+                    } else if (tab.id === 'products') {
+                      window.location.href = createPageUrl('AdminProducts');
+                    } else if (tab.id === 'orders') {
+                      window.location.href = createPageUrl('AdminOrders');
+                    } else if (tab.id === 'users') {
+                      window.location.href = createPageUrl('AdminUsers');
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg'
+                      : 'bg-white/60 text-emerald-700 hover:bg-white'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="flex">
@@ -72,7 +117,7 @@ export default function AdminDashboard() {
           <AdminNav currentPage="AdminDashboard" />
         </div>
         
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-6 lg:pb-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -83,21 +128,21 @@ export default function AdminDashboard() {
               <p className="text-emerald-600">Welcome to your admin panel</p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 lg:grid-cols-3 gap-3 lg:gap-6 mb-6">
+            {/* Stats Grid - 3 columns on mobile */}
+            <div className="grid grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6">
               {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-3 lg:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+                  className="p-3 sm:p-4 lg:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
                 >
-                  <div className={`w-10 h-10 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg mb-2 lg:mb-4`}>
-                    <stat.icon className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg mb-2 sm:mb-3 lg:mb-4`}>
+                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
                   </div>
-                  <p className="text-xs lg:text-sm text-emerald-600 mb-0.5 lg:mb-1">{stat.label}</p>
-                  <p className="text-lg lg:text-3xl font-bold text-emerald-900">{stat.value}</p>
+                  <p className="text-xs text-emerald-600 mb-1 line-clamp-1">{stat.label}</p>
+                  <p className="text-lg sm:text-xl lg:text-3xl font-bold text-emerald-900 truncate">{stat.value}</p>
                 </motion.div>
               ))}
             </div>
@@ -130,7 +175,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-20 lg:mb-0">
               {/* Recent Orders */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -311,6 +356,7 @@ export default function AdminDashboard() {
           </motion.div>
         </div>
       </div>
+
     </div>
   );
 }
