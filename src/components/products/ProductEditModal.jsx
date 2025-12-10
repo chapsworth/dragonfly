@@ -64,29 +64,38 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     try {
       const query = searchQuery.trim() || formData.name || 'cannabis';
       
-      // Use Unsplash API directly for better results
-      const unsplashImages = [
-        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1536964549165-9fdccc5e6ee1?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1616685693009-89c9af8c8e1a?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1608373404924-de8b2fa4b1ed?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1583912268239-a9579e81b1cc?w=800&q=80', alt: query },
-        { url: 'https://images.unsplash.com/photo-1545765595-31c32695fb65?w=800&q=80', alt: query }
-      ];
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find 12 product images from Leafly.com for the cannabis strain/product: "${query}". 
+        Go to leafly.com and search for this product. Extract the actual image URLs from the page.
+        Return direct image URLs (jpg, png, webp) that can be loaded in an img tag.
+        If you can't find on Leafly, search other cannabis product sites.
+        Format each URL as a complete, working image URL.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  url: { type: "string" },
+                  source: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
       
-      setSearchResults(unsplashImages);
+      if (result?.images?.length > 0) {
+        setSearchResults(result.images.map(img => ({ url: img.url, alt: img.source || query })));
+      } else {
+        setSearchResults([{ url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'No results' }]);
+      }
     } catch (error) {
       console.error('Search failed:', error);
-      const fallback = [
-        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Cannabis' }
-      ];
-      setSearchResults(fallback);
+      setSearchResults([{ url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Error' }]);
     } finally {
       setIsSearching(false);
     }
