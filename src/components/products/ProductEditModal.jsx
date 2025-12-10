@@ -63,7 +63,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const response = await base44.functions.invoke('searchImages', { 
+      const response = await base44.functions.invoke('searchUnsplash', { 
         query: searchQuery 
       });
       setSearchResults(response.data.images || []);
@@ -158,7 +158,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search for strain images..."
+                    placeholder="Search Unsplash..."
                     className="border-emerald-200"
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
@@ -179,10 +179,9 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                         className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors bg-emerald-50"
                       >
                         <img 
-                          src={img.url} 
+                          src={img.thumb || img.url} 
                           alt={img.alt} 
                           className="w-full h-full object-cover"
-                          onError={(e) => e.target.parentElement.classList.add('opacity-30')}
                         />
                       </button>
                     ))}
