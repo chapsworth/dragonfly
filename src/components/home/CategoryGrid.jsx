@@ -44,7 +44,7 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
   return (
     <section className="">
       <div className="max-w-7xl mx-auto">
-        <div className="pb-3 flex items-center gap-3 overflow-x-auto md:overflow-visible md:justify-evenly md:flex-wrap scrollbar-hide">
+        <div className="pb-4 flex items-center gap-3 overflow-x-auto md:overflow-visible md:justify-evenly md:flex-wrap scrollbar-hide">
           {categories.map((category, i) =>
           <motion.button
             key={category.value}
