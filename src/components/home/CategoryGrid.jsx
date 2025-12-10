@@ -1,12 +1,19 @@
 import React from 'react';
-import { Package, Leaf, Wind, Candy, Droplet, Heart, ShoppingBag, Grid3x3 } from 'lucide-react';
+import { Package, Cannabis, Cigarette, Cookie, Droplets, Wind, Sparkles, Flame, Grid3x3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const iconMap = {
-  Leaf, Wind, Candy, Droplet, Heart, ShoppingBag, Package
+  Cannabis,
+  Cigarette,
+  Cookie,
+  Droplets,
+  Wind,
+  Sparkles,
+  Flame,
+  Package
 };
 
 export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
