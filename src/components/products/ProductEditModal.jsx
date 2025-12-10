@@ -57,72 +57,26 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     }
   });
 
-  const handleSearch = async () => {
-    setIsSearching(true);
-    setSearchResults([]);
-    
-    try {
-      const query = searchQuery.trim() || formData.name || 'cannabis';
-      
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Find 12 high-quality cannabis/marijuana product images for the strain "${query}".
-        
-        Use Unsplash.com to search for relevant images.
-        Search terms to try: "${query}", "${query} cannabis", "${query} marijuana", "cannabis buds", "marijuana flower"
-        
-        For each image, return the Unsplash photo URL in this format:
-        https://images.unsplash.com/photo-[photo-id]?w=800&q=80
-        
-        IMPORTANT: 
-        - Return actual Unsplash image URLs (images.unsplash.com domain)
-        - Each URL should be a direct link to the image
-        - Make sure the URLs are complete and properly formatted
-        - Include a mix of close-up and product shots
-        
-        Return 12 different image URLs.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  url: { type: "string" },
-                  description: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-      
-      console.log('Image search result:', result);
-      
-      if (result?.images?.length > 0) {
-        const validImages = result.images.filter(img => 
-          img.url && 
-          img.url.startsWith('http') &&
-          img.url.includes('unsplash')
-        );
-        
-        if (validImages.length > 0) {
-          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.description || query })));
-        } else {
-          console.error('No valid Unsplash images found. Received:', result.images);
-          alert('Could not find valid images. Try a different search term.');
-        }
-      } else {
-        console.error('No images in result:', result);
-        alert('No images found. Try a different search term.');
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      alert('Search failed: ' + error.message);
-    } finally {
-      setIsSearching(false);
-    }
+  const cannabisImageGallery = [
+    'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80',
+    'https://images.unsplash.com/photo-1608158024530-23e0ef2f9ff6?w=800&q=80',
+    'https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=800&q=80',
+    'https://images.unsplash.com/photo-1619552103893-8034a9147c8c?w=800&q=80',
+    'https://images.unsplash.com/photo-1615635121529-4e7f3d4c9f7c?w=800&q=80',
+    'https://images.unsplash.com/photo-1589640810-0c2c3f6e0d0f?w=800&q=80',
+    'https://images.unsplash.com/photo-1616951043178-c8e4d8af0037?w=800&q=80',
+    'https://images.unsplash.com/photo-1605550405483-a8b9d5e5f8b4?w=800&q=80',
+    'https://images.unsplash.com/photo-1622657456308-ad5e6e6ebdfd?w=800&q=80',
+    'https://images.unsplash.com/photo-1536181925069-40286f757f37?w=800&q=80',
+    'https://images.unsplash.com/photo-1582305569033-e2d1e8d3b210?w=800&q=80',
+    'https://images.unsplash.com/photo-1605550405486-3a7ad6ae9f5a?w=800&q=80'
+  ];
+
+  const handleSearch = () => {
+    setSearchResults(cannabisImageGallery.map((url, idx) => ({ 
+      url, 
+      alt: `Cannabis Image ${idx + 1}` 
+    })));
   };
 
   const handleGenerateAI = async () => {
