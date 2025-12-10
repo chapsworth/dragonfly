@@ -49,20 +49,21 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
                 )}>
                   <category.icon className="w-6 h-6 text-white" strokeWidth={2} />
                 </div>
-                <p className={cn(
-                  "text-xs font-semibold transition-colors whitespace-nowrap",
-                  selectedCategory === category.value ? "text-emerald-700" : "text-emerald-600"
-                )}>
-                  {category.name}
-                </p>
-                {selectedCategory === category.value && (
-                  <motion.div
-                    layoutId="categoryIndicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
-                    style={{ width: `${category.name.length * 0.6}rem` }}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
+                <div className="relative">
+                  <p className={cn(
+                    "text-xs font-semibold transition-colors whitespace-nowrap",
+                    selectedCategory === category.value ? "text-emerald-700" : "text-emerald-600"
+                  )}>
+                    {category.name}
+                  </p>
+                  {selectedCategory === category.value && (
+                    <motion.div
+                      layoutId="categoryIndicator"
+                      className="absolute -bottom-1.5 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                </div>
               </div>
             </motion.button>
           ))}
