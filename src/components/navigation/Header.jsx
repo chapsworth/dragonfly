@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Menu, ShoppingBag, Leaf } from 'lucide-react';
+import { Menu, ShoppingBag, Leaf, Phone } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 
@@ -29,23 +29,31 @@ export default function Header({ onMenuClick }) {
               </span>
             </Link>
 
-            <button
-              onClick={() => setIsCartOpen(true)}
-              data-cart-button
-              className="relative p-2 rounded-xl hover:bg-emerald-50 transition-colors"
-            >
-              <ShoppingBag className="w-6 h-6 text-emerald-700" />
-              {cartCount > 0 && (
-                <motion.span
-                  key={cartCount}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 text-white text-xs font-bold flex items-center justify-center shadow-lg"
-                >
-                  {cartCount}
-                </motion.span>
-              )}
-            </button>
+            <div className="flex items-center gap-1">
+              <Link to={createPageUrl('Contact')}>
+                <button className="p-2 rounded-xl hover:bg-green-50 transition-colors">
+                  <Phone className="w-6 h-6 text-green-600" />
+                </button>
+              </Link>
+
+              <button
+                onClick={() => setIsCartOpen(true)}
+                data-cart-button
+                className="relative p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+              >
+                <ShoppingBag className="w-6 h-6 text-emerald-700" />
+                {cartCount > 0 && (
+                  <motion.span
+                    key={cartCount}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 text-white text-xs font-bold flex items-center justify-center shadow-lg"
+                  >
+                    {cartCount}
+                  </motion.span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
