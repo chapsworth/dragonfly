@@ -4,28 +4,18 @@ import { createPageUrl } from '@/utils';
 import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown, Cigarette } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
-const categoryIcons = {
-  flower: Cannabis,
-  prerolls: Cigarette,
-  'pre-rolls': Cigarette,
-  edibles: Cookie,
-  concentrates: Droplets,
-  vapes: Wind,
-  tinctures: Sparkles,
-  topicals: Flame,
-  accessories: Package
-};
-
-const categoryColors = {
-  flower: 'from-green-400 to-emerald-500',
-  'pre-rolls': 'from-lime-400 to-green-500',
-  edibles: 'from-amber-400 to-orange-500',
-  concentrates: 'from-yellow-400 to-amber-500',
-  vapes: 'from-cyan-400 to-blue-500',
-  tinctures: 'from-purple-400 to-violet-500',
-  topicals: 'from-pink-400 to-rose-500',
-  accessories: 'from-slate-400 to-gray-500'
+const iconMap = {
+  Cannabis,
+  Cigarette,
+  Cookie,
+  Droplets,
+  Wind,
+  Sparkles,
+  Flame,
+  Package
 };
 
 const strainColors = {
