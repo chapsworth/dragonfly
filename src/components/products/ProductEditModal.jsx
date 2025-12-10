@@ -65,13 +65,25 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       const query = searchQuery.trim() || formData.name || 'cannabis';
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search for "${query}" on Leafly.com. Find the product page and extract ONLY the actual image CDN URLs that are visible on the page.
-        Look for img src attributes that contain direct links to images (ending in .jpg, .png, .webp, etc.).
-        These should be full URLs starting with https:// that point directly to image files.
-        Return 12 different working image URLs.
-        CRITICAL: Only return URLs that are actual direct image links, not page URLs.
-        Example format: https://leafly-cms-production.imgix.net/strains/[id]/[name].jpg
-        If Leafly doesn't have good results, also check dispensaries or other cannabis sites.`,
+        prompt: `Go to Leafly.com and search for the cannabis strain "${query}". 
+        
+        YOUR TASK: Extract 12 actual, working, direct image URLs from Leafly product pages.
+        
+        CRITICAL INSTRUCTIONS:
+        1. Navigate to leafly.com/strains or use their search
+        2. Find the strain page for "${query}"
+        3. Extract the ACTUAL img src URLs from the HTML
+        4. These must be DIRECT image URLs that end in .jpg, .png, .webp, or contain CDN domains like imgix.net, cloudinary.com
+        5. Return the full URLs exactly as they appear in the img src attributes
+        6. Do NOT return page URLs or relative URLs
+        7. Each URL must start with https:// and be a complete, working image link
+        
+        EXAMPLE of valid URLs:
+        - https://leafly-cms-production.imgix.net/strains/blue-dream/primary-photo.jpg
+        - https://leafly-public.imgix.net/strains/og-kush.png
+        - https://d3ix816x6wuc0d.cloudfront.net/strains/image.webp
+        
+        Return 12 different image URLs from Leafly strain pages.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -81,8 +93,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               items: {
                 type: "object",
                 properties: {
-                  url: { type: "string", description: "Direct image URL" },
-                  alt: { type: "string", description: "Image description" }
+                  url: { type: "string" },
+                  strain_name: { type: "string" }
                 }
               }
             }
@@ -90,30 +102,28 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         }
       });
       
+      console.log('Leafly search result:', result);
+      
       if (result?.images?.length > 0) {
         const validImages = result.images.filter(img => 
           img.url && 
           img.url.startsWith('http') && 
-          (img.url.includes('.jpg') || img.url.includes('.png') || img.url.includes('.webp') || img.url.includes('imgix') || img.url.includes('cloudinary'))
+          (img.url.includes('leafly') || img.url.includes('imgix') || img.url.includes('cloudinary') || img.url.includes('cloudfront'))
         );
         
         if (validImages.length > 0) {
-          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.alt || query })));
+          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.strain_name || query })));
         } else {
-          throw new Error('No valid images found');
+          console.error('No valid Leafly images found. Received:', result.images);
+          alert('Could not find valid Leafly images. Check console for details.');
         }
       } else {
-        throw new Error('No results');
+        console.error('No images in result:', result);
+        alert('No images returned from Leafly search.');
       }
     } catch (error) {
       console.error('Search failed:', error);
-      const fallback = [
-        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=800&q=80', alt: 'Cannabis 1' },
-        { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800&q=80', alt: 'Cannabis 2' },
-        { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=800&q=80', alt: 'Cannabis 3' },
-        { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80', alt: 'Cannabis 4' }
-      ];
-      setSearchResults(fallback);
+      alert('Search failed: ' + error.message);
     } finally {
       setIsSearching(false);
     }
