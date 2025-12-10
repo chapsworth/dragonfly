@@ -7,6 +7,13 @@ import { motion } from 'framer-motion';
 
 export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me()
+      .then(setUser)
+      .catch(() => setUser(null));
+  }, []);
 
   return (
     <header className="fixed lg:static top-0 left-0 right-0 z-40 lg:z-auto">
