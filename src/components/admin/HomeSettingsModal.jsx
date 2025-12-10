@@ -62,7 +62,7 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
     setUnsplashResults([]);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Find and return 12 high-quality Unsplash image URLs for: "${unsplashQuery}". Return direct image URLs from images.unsplash.com.`,
+        prompt: `Search Unsplash for "${unsplashQuery}" images. Return 12 valid, working image URLs. Each URL must be a complete, valid Unsplash image URL in the format: https://images.unsplash.com/photo-[id]?w=800&q=80 - make sure these are REAL, WORKING URLs from actual Unsplash photos that exist. Include a descriptive alt text for each.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
