@@ -4,18 +4,28 @@ import { createPageUrl } from '@/utils';
 import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown, Cigarette } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 
-const iconMap = {
-  Cannabis,
-  Cigarette,
-  Cookie,
-  Droplets,
-  Wind,
-  Sparkles,
-  Flame,
-  Package
+const categoryIcons = {
+  flower: Cannabis,
+  prerolls: Cigarette,
+  'pre-rolls': Cigarette,
+  edibles: Cookie,
+  concentrates: Droplets,
+  vapes: Wind,
+  tinctures: Sparkles,
+  topicals: Flame,
+  accessories: Package
+};
+
+const categoryColors = {
+  flower: 'from-green-400 to-emerald-500',
+  'pre-rolls': 'from-lime-400 to-green-500',
+  edibles: 'from-amber-400 to-orange-500',
+  concentrates: 'from-yellow-400 to-amber-500',
+  vapes: 'from-cyan-400 to-blue-500',
+  tinctures: 'from-purple-400 to-violet-500',
+  topicals: 'from-pink-400 to-rose-500',
+  accessories: 'from-slate-400 to-gray-500'
 };
 
 const strainColors = {
@@ -30,15 +40,8 @@ export default function CategoryCarousel({ category, products }) {
   const [sortBy, setSortBy] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('asc');
   const scrollRef = useRef(null);
-  
-  const { data: dbCategories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list()
-  });
-  
-  const categoryData = dbCategories.find(c => c.slug === category);
-  const Icon = categoryData ? (iconMap[categoryData.icon_name] || Package) : Leaf;
-  const gradientColor = categoryData?.gradient || 'from-emerald-400 to-green-500';
+  const Icon = categoryIcons[category] || Leaf;
+  const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
 
   const scroll = (direction) => {
     if (scrollRef.current) {
