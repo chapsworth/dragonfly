@@ -457,73 +457,17 @@ export default function AdminProducts() {
             </div>
           )}
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? 'Edit Product' : 'New Product'}</DialogTitle>
-              </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label>Name</Label>
-                <Input value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Category</Label>
-                  <Select value={formData.category || 'flower'} onValueChange={(v) => setFormData({...formData, category: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Strain Type</Label>
-                  <Select value={formData.strain_type || 'hybrid'} onValueChange={(v) => setFormData({...formData, strain_type: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {strainTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={3} />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Price ($)</Label>
-                  <Input type="number" step="0.01" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} />
-                </div>
-                <div>
-                  <Label>THC (%)</Label>
-                  <Input type="number" step="0.1" value={formData.thc_level || ''} onChange={(e) => setFormData({...formData, thc_level: e.target.value})} />
-                </div>
-                <div>
-                  <Label>CBD (%)</Label>
-                  <Input type="number" step="0.1" value={formData.cbd_level || ''} onChange={(e) => setFormData({...formData, cbd_level: e.target.value})} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Weight/Size</Label>
-                  <Input value={formData.weight || ''} onChange={(e) => setFormData({...formData, weight: e.target.value})} placeholder="e.g. 3.5g" />
-                </div>
-                <div>
-                  <Label>Image URL</Label>
-                  <Input value={formData.image_url || ''} onChange={(e) => setFormData({...formData, image_url: e.target.value})} />
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleSave} disabled={saveMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
-                  {saveMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <ProductEditModal
+            isOpen={isDialogOpen}
+            onClose={() => {
+              setIsDialogOpen(false);
+              setEditingProduct(null);
+            }}
+            product={editingProduct}
+            onSave={(updatedProduct) => {
+              saveMutation.mutate(updatedProduct);
+            }}
+          />
         </div>
       </div>
     </div>
