@@ -146,7 +146,7 @@ export default function ProductCard({ product }) {
                     : 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
                 }`}
               >
-                {variant.name}
+                {variant.name} - ${variant.price.toFixed(2)}
               </button>
             ))}
           </div>
