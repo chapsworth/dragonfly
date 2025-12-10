@@ -105,68 +105,73 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-12 px-4">
-      <div className="max-w-7xl mx-auto overflow-hidden">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center justify-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-12">
+      {/* Header Section */}
+      <div className="pt-28 px-4 pb-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Title & Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center justify-center gap-4">
 
-          <h1 className="text-4xl font-bold text-emerald-900 text-center">
-            {category !== 'all' ?
-            categories.find((c) => c.value === category)?.label || 'Shop' :
-            'Shop'}
-          </h1>
-          
-          {/* Expandable Search & Filters */}
-          <div className="flex items-center gap-2 absolute right-4">
-            <AnimatePresence>
-              {isSearchOpen &&
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 200, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden">
+            <h1 className="text-4xl font-bold text-emerald-900 text-center">
+              {category !== 'all' ?
+              categories.find((c) => c.value === category)?.label || 'Shop' :
+              'Shop'}
+            </h1>
 
-                  <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-10 rounded-lg bg-white/60 border-emerald-200 focus:border-emerald-400"
-                  autoFocus />
+            {/* Expandable Search & Filters */}
+            <div className="flex items-center gap-2 absolute right-4">
+              <AnimatePresence>
+                {isSearchOpen &&
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 200, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden">
 
-                </motion.div>
-              }
-            </AnimatePresence>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen);
-                if (isSearchOpen) setSearch('');
-              }}
-              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+                    <Input
+                    placeholder="Search..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-10 rounded-lg bg-white/60 border-emerald-200 focus:border-emerald-400"
+                    autoFocus />
 
-              {isSearchOpen ?
-              <X className="w-5 h-5 text-emerald-600" /> :
+                  </motion.div>
+                }
+              </AnimatePresence>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsSearchOpen(!isSearchOpen);
+                  if (isSearchOpen) setSearch('');
+                }}
+                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
 
-              <Search className="w-5 h-5 text-emerald-600" />
-              }
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+                {isSearchOpen ?
+                <X className="w-5 h-5 text-emerald-600" /> :
 
-              <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
-            </Button>
-          </div>
-        </motion.div>
+                <Search className="w-5 h-5 text-emerald-600" />
+                }
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
 
-        {/* Category Grid */}
+                <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Sticky Category Grid */}
+      <div className="sticky top-0 lg:top-0 z-30 bg-gradient-to-br from-emerald-50 via-white to-green-50 backdrop-blur-sm pb-2">
         <CategoryGrid
           selectedCategory={category}
           onCategoryChange={setCategory} />
