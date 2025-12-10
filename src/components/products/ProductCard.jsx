@@ -156,11 +156,7 @@ export default function ProductCard({ product }) {
 
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-emerald-700">
-            {product.variants?.length > 0 ? (
-              `$${Math.min(...product.variants.map(v => v.price)).toFixed(2)}-$${Math.max(...product.variants.map(v => v.price)).toFixed(2)}`
-            ) : (
-              `$${product.price?.toFixed(2)}`
-            )}
+            ${(selectedVariant?.price || product.price)?.toFixed(2)}
           </span>
         </div>
       </div>
