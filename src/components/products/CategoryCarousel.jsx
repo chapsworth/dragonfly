@@ -30,8 +30,15 @@ export default function CategoryCarousel({ category, products }) {
   const [sortBy, setSortBy] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('asc');
   const scrollRef = useRef(null);
-  const Icon = categoryIcons[category] || Leaf;
-  const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
+  
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list()
+  });
+  
+  const categoryData = dbCategories.find(c => c.slug === category);
+  const Icon = categoryData ? (iconMap[categoryData.icon_name] || Package) : Leaf;
+  const gradientColor = categoryData?.gradient || 'from-emerald-400 to-green-500';
 
   const scroll = (direction) => {
     if (scrollRef.current) {
