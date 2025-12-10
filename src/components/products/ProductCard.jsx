@@ -131,39 +131,27 @@ export default function ProductCard({ product }) {
         )}
 
         {product.variants?.length > 0 ? (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.preventDefault()}>
             {product.variants.map((variant, idx) => (
-              <span
+              <button
                 key={idx}
-                className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedVariant(variant);
+                }}
+                className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                  selectedVariant?.name === variant.name
+                    ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                    : 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
+                }`}
               >
-                {variant.name}
-              </span>
+                {variant.name} - ${variant.price.toFixed(2)}
+              </button>
             ))}
           </div>
         ) : (
           product.weight && <p className="text-xs text-emerald-500 mb-2">{product.weight}</p>
-        )}
-
-        {/* Variant Selector */}
-        {product.variants && product.variants.length > 0 && (
-          <div className="mb-3" onClick={(e) => e.preventDefault()}>
-            <select
-              value={selectedVariant?.name || ''}
-              onChange={(e) => {
-                e.stopPropagation();
-                const variant = product.variants.find(v => v.name === e.target.value);
-                setSelectedVariant(variant);
-              }}
-              className="w-full px-2 py-1.5 text-xs rounded-lg border border-emerald-200 bg-white text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              {product.variants.map((variant) => (
-                <option key={variant.name} value={variant.name}>
-                  {variant.name} - ${variant.price.toFixed(2)}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
 
         <div className="flex items-center justify-between">
