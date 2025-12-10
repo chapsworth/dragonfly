@@ -2,23 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
-  Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette 
+  Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette,
+  ShoppingCart, Heart, Candy
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const categories = [
-  { name: 'Flower', icon: Cannabis, color: 'from-green-400 to-emerald-500' },
-  { name: 'Pre-Rolls', icon: Cigarette, color: 'from-lime-400 to-green-500' },
-  { name: 'Edibles', icon: Cookie, color: 'from-amber-400 to-orange-500' },
-  { name: 'Concentrates', icon: Droplets, color: 'from-yellow-400 to-amber-500' },
-  { name: 'Vapes', icon: Wind, color: 'from-cyan-400 to-blue-500' },
-  { name: 'Tinctures', icon: Sparkles, color: 'from-purple-400 to-violet-500' },
-  { name: 'Topicals', icon: Flame, color: 'from-pink-400 to-rose-500' },
-  { name: 'Accessories', icon: Package, color: 'from-slate-400 to-gray-500' },
-];
+const iconMap = {
+  Cannabis,
+  Cigarette,
+  Cookie,
+  Droplets,
+  Droplet: Droplets,
+  Wind,
+  Sparkles,
+  Flame,
+  Package,
+  Leaf: Cannabis,
+  ShoppingBag: Package,
+  Heart: Flame,
+  Candy: Cookie
+};
 
 const navItems = [
   { name: 'Home', page: 'Home', icon: Home },
@@ -37,6 +44,21 @@ export default function Sidebar({ isOpen, onClose }) {
       .then(setUser)
       .catch(() => setUser(null));
   }, []);
+
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list()
+  });
+
+  const categories = dbCategories
+    .filter(c => c.is_active)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+    .map(c => ({
+      name: c.name,
+      slug: c.slug,
+      icon: iconMap[c.icon_name] || Package,
+      color: c.gradient || 'from-emerald-400 to-green-500'
+    }));
 
   const isAdmin = user?.role === 'admin';
 
@@ -110,7 +132,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     transition={{ delay: 0.15 + i * 0.05 }}
                   >
                     <Link
-                      to={`${createPageUrl('Shop')}?category=${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      to={`${createPageUrl('Shop')}?category=${cat.slug}`}
                       onClick={onClose}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
                     >
