@@ -52,7 +52,7 @@ export default function CategoryCarousel({ category, products }) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(type);
-      setSortDirection('asc');
+      setSortDirection('desc');
     }
   };
 
@@ -135,7 +135,7 @@ export default function CategoryCarousel({ category, products }) {
             >
               THC
               {sortBy === 'thc' && (
-                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
               )}
             </button>
             <button
@@ -148,7 +148,7 @@ export default function CategoryCarousel({ category, products }) {
             >
               CBD
               {sortBy === 'cbd' && (
-                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
               )}
             </button>
           </div>
