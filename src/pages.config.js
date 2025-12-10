@@ -11,6 +11,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminCarousel from './pages/AdminCarousel';
 import AdminCategories from './pages/AdminCategories';
 import ComponentLibrary from './pages/ComponentLibrary';
+import Radio from './pages/Radio';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "AdminCarousel": AdminCarousel,
     "AdminCategories": AdminCategories,
     "ComponentLibrary": ComponentLibrary,
+    "Radio": Radio,
 }
 
 export const pagesConfig = {

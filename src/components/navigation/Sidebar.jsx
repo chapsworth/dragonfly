@@ -23,6 +23,7 @@ const categories = [
 const navItems = [
   { name: 'Home', page: 'Home', icon: Home },
   { name: 'Shop', page: 'Shop', icon: ShoppingBag },
+  { name: 'Radio', page: 'Radio', icon: Wind },
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
   { name: 'Contact', page: 'Contact', icon: Phone },

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CartProvider } from '@/components/cart/CartContext';
+import { RadioProvider } from '@/components/radio/RadioContext';
 import CartDrawer from '@/components/cart/CartDrawer';
+import RadioPlayer from '@/components/radio/RadioPlayer';
 import Header from '@/components/navigation/Header';
 import Sidebar from '@/components/navigation/Sidebar';
 
@@ -38,14 +40,17 @@ export default function Layout({ children }) {
 
   return (
     <CartProvider>
-      <div className="min-h-screen">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <CartDrawer />
-        <main>
-          {children}
-        </main>
-      </div>
+      <RadioProvider>
+        <div className="min-h-screen">
+          <Header onMenuClick={() => setIsSidebarOpen(true)} />
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          <CartDrawer />
+          <RadioPlayer />
+          <main>
+            {children}
+          </main>
+        </div>
+      </RadioProvider>
     </CartProvider>
   );
 }
