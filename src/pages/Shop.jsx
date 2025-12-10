@@ -273,7 +273,7 @@ export default function Shop() {
               const categoryData = categories.find(c => c.value === cat);
               return (
                 <div key={cat}>
-                  <h2 className="text-2xl font-bold text-emerald-900 mb-4 capitalize">
+                  <h2 className="text-2xl font-bold text-emerald-900 mb-4 capitalize text-center">
                     {categoryData?.label || cat.replace('-', ' ')}
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
