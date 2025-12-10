@@ -281,12 +281,16 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Tabs>
 
             {formData.image_url && (
-              <div className="mt-3 rounded-lg overflow-hidden border border-emerald-200">
+              <div className="mt-3 rounded-lg overflow-hidden border border-emerald-200 bg-emerald-50">
                 <img 
+                  key={formData.image_url}
                   src={formData.image_url} 
                   alt="Preview" 
                   className="w-full h-40 object-cover"
-                  onError={(e) => e.target.style.display = 'none'}
+                  onError={(e) => {
+                    console.error('Image failed to load:', formData.image_url);
+                    e.target.src = 'https://via.placeholder.com/400x160?text=Image+Load+Failed';
+                  }}
                 />
               </div>
             )}
