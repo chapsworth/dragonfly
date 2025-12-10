@@ -25,7 +25,7 @@ export default function Header({ onMenuClick }) {
                 <Leaf className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent hidden sm:block">
-                GreenLeaf
+                Dragonfly
               </span>
             </Link>
 
