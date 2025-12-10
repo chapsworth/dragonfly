@@ -41,7 +41,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-80 bg-white/80 backdrop-blur-xl border-r border-white/20 p-0">
+      <SheetContent side="left" className="w-80 bg-white border-r border-white/20 p-0">
         <div className="h-full flex flex-col">
           <SheetHeader className="p-6 border-b border-emerald-100/50">
             <SheetTitle className="flex items-center gap-3">
