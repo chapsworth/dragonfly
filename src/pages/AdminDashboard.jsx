@@ -117,7 +117,7 @@ export default function AdminDashboard() {
           <AdminNav currentPage="AdminDashboard" />
         </div>
         
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-24 sm:pt-24 lg:pt-8 pb-20 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -107,7 +107,7 @@ export default function AdminUsers() {
           <AdminNav currentPage="AdminUsers" />
         </div>
         
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-24 sm:pt-24 lg:pt-8 pb-20 lg:pb-8">
           <div className="flex flex-col gap-4 mb-6 lg:mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Users</h1>
