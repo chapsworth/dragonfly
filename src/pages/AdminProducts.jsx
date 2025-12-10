@@ -10,9 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2 } from 'lucide-react';
+import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { toast } from 'sonner';
 
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
 const strainTypes = ['indica', 'sativa', 'hybrid', 'cbd', 'n/a'];
@@ -22,6 +25,9 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({});
   const [viewMode, setViewMode] = useState('grid');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
@@ -71,6 +77,76 @@ export default function AdminProducts() {
       cbd_level: parseFloat(formData.cbd_level) || 0,
     });
   };
+
+  const toggleProductSelection = (productId) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const toggleAllProducts = () => {
+    const filteredIds = filteredProducts.map(p => p.id);
+    if (selectedProducts.length === filteredIds.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(filteredIds);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (confirm(`Delete ${selectedProducts.length} products?`)) {
+      Promise.all(selectedProducts.map(id => deleteMutation.mutateAsync(id)))
+        .then(() => {
+          setSelectedProducts([]);
+          toast.success('Products deleted');
+        });
+    }
+  };
+
+  const handleBulkEdit = (field, value) => {
+    Promise.all(selectedProducts.map(id => {
+      const product = products.find(p => p.id === id);
+      return base44.entities.Product.update(id, { ...product, [field]: value });
+    }))
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        setSelectedProducts([]);
+        toast.success('Products updated');
+      });
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const category = result.source.droppableId;
+    const items = productsByCategory[category];
+    const reordered = Array.from(items);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    
+    // Update display_order for each product
+    reordered.forEach((product, index) => {
+      base44.entities.Product.update(product.id, { display_order: index });
+    });
+    
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    toast.success('Order updated');
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+    const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const productsByCategory = categories.reduce((acc, cat) => {
+    acc[cat] = products
+      .filter(p => p.category === cat)
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    return acc;
+  }, {});
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'AdminDashboard' },
@@ -134,26 +210,84 @@ export default function AdminProducts() {
               </Button>
             </div>
 
-            {/* View Toggle */}
-            <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
-              >
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                Grid
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
-              >
-                <List className="w-4 h-4 mr-2" />
-                List
-              </Button>
+            {/* Filters & Actions */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-white/60"
+                />
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full sm:w-48 bg-white/60">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map(c => (
+                      <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedProducts.length > 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-white/60 backdrop-blur-xl border border-white/40">
+                  <Badge variant="secondary" className="px-3 py-1">{selectedProducts.length} selected</Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">Bulk Actions</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', true)}>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Mark In Stock
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', false)}>
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Mark Out of Stock
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleBulkDelete} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Selected
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedProducts([])}>Clear</Button>
+                </div>
+              )}
+
+              <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  <Grid3x3 className="w-4 h-4 mr-2" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  <List className="w-4 h-4 mr-2" />
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === 'category' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('category')}
+                  className={viewMode === 'category' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  By Category
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -161,10 +295,85 @@ export default function AdminProducts() {
             <div className="flex justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
+          ) : viewMode === 'category' ? (
+            <div className="space-y-6">
+              {categories.map((category) => {
+                const categoryProducts = productsByCategory[category] || [];
+                if (categoryProducts.length === 0) return null;
+                
+                return (
+                  <div key={category} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold text-emerald-900 capitalize flex items-center gap-2">
+                        <Package className="w-5 h-5" />
+                        {category}
+                      </h2>
+                      <Badge variant="secondary">{categoryProducts.length} products</Badge>
+                    </div>
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId={category}>
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                            {categoryProducts.map((product, index) => (
+                              <Draggable key={product.id} draggableId={product.id} index={index}>
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-3"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                        <GripVertical className="w-5 h-5 text-emerald-400" />
+                                      </div>
+                                      <Checkbox
+                                        checked={selectedProducts.includes(product.id)}
+                                        onCheckedChange={() => toggleProductSelection(product.id)}
+                                      />
+                                      <div className="w-12 h-12 rounded-lg bg-emerald-100 flex-shrink-0 overflow-hidden">
+                                        {product.image_url ? (
+                                          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center">
+                                            <Package className="w-5 h-5 text-emerald-300" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-emerald-900 text-sm line-clamp-1">{product.name}</h3>
+                                        <p className="text-xs text-emerald-600">${product.price?.toFixed(2)} • THC: {product.thc_level}%</p>
+                                      </div>
+                                      <div className="flex gap-1">
+                                        <Button size="sm" variant="ghost" onClick={() => handleEdit(product)} className="h-8 w-8 p-0">
+                                          <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(product.id)} className="h-8 w-8 p-0 text-red-600">
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  </div>
+                );
+              })}
+            </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {products.map((product) => (
-                <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
+                  <Checkbox
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={() => toggleProductSelection(product.id)}
+                    className="absolute top-2 left-2 z-10 bg-white"
+                  />
                   <div className="aspect-square bg-emerald-100 relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
@@ -198,9 +407,13 @@ export default function AdminProducts() {
             </div>
           ) : (
             <div className="space-y-3">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
                   <div className="flex gap-3">
+                    <Checkbox
+                      checked={selectedProducts.includes(product.id)}
+                      onCheckedChange={() => toggleProductSelection(product.id)}
+                    />
                     <div className="w-16 h-16 rounded-lg bg-emerald-100 flex-shrink-0 overflow-hidden">
                       {product.image_url ? (
                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
