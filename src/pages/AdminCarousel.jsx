@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, GripVertical, X } from 'lucide-react';
+import { Plus, GripVertical, X, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
@@ -93,58 +95,98 @@ export default function AdminCarousel() {
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown';
   const categoryProducts = products.filter(p => p.category === formData.category);
 
-  return (
-    <div className="flex min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-      <AdminNav currentPage="AdminCarousel" />
-      
-      <div className="flex-1 p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-emerald-900 mb-2">Carousel Settings</h1>
-            <p className="text-emerald-600">Configure featured products and carousel order</p>
-          </div>
-          <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500">
-            <Plus className="w-5 h-5 mr-2" />
-            Add Carousel
-          </Button>
-        </div>
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'AdminDashboard' },
+    { id: 'products', label: 'Products', icon: Package, page: 'AdminProducts' },
+    { id: 'orders', label: 'Orders', icon: ShoppingCart, page: 'AdminOrders' },
+    { id: 'users', label: 'Users', icon: Users, page: 'AdminUsers' },
+  ];
 
-        <div className="space-y-4">
-          {carouselSettings
-            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-            .map((carousel) => (
-              <div key={carousel.id} className="p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700">
-                      {carousel.display_order}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+      {/* Mobile Header with Tabs */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40">
+        <div className="px-4 py-3 flex items-center gap-3">
+          <Link to={createPageUrl('Home')}>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold text-emerald-900">Admin</h1>
+        </div>
+        <div className="overflow-x-auto scrollbar-hide px-4 pb-2">
+          <div className="flex gap-2 min-w-max">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <Link key={tab.id} to={createPageUrl(tab.page)}>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all bg-white/60 text-emerald-700 hover:bg-white"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex">
+        {/* Desktop Nav */}
+        <div className="hidden lg:block">
+          <AdminNav currentPage="AdminCarousel" />
+        </div>
+        
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Carousel Settings</h1>
+              <p className="text-sm sm:text-base text-emerald-600">Configure featured products and carousel order</p>
+            </div>
+            <Button onClick={handleNew} className="bg-gradient-to-r from-emerald-500 to-green-500 w-full sm:w-auto">
+              <Plus className="w-5 h-5 mr-2" />
+              Add Carousel
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {carouselSettings
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+              .map((carousel) => (
+                <div key={carousel.id} className="p-4 sm:p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
+                        {carousel.display_order}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-emerald-900 text-base sm:text-lg capitalize">{carousel.category}</h3>
+                        <p className="text-xs sm:text-sm text-emerald-600">
+                          {carousel.featured_product_ids?.length || 0} featured products
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-emerald-900 text-lg capitalize">{carousel.category}</h3>
-                      <p className="text-sm text-emerald-600">
-                        {carousel.featured_product_ids?.length || 0} featured products
-                      </p>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Badge variant={carousel.is_active ? 'default' : 'secondary'} className="text-xs">
+                        {carousel.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(carousel)} className="flex-1 sm:flex-none">Edit</Button>
+                      <Button variant="outline" size="sm" onClick={() => deleteMutation.mutate(carousel.id)} className="text-red-600 flex-1 sm:flex-none">
+                        Delete
+                      </Button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={carousel.is_active ? 'default' : 'secondary'}>
-                      {carousel.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(carousel)}>Edit</Button>
-                    <Button variant="outline" size="sm" onClick={() => deleteMutation.mutate(carousel.id)} className="text-red-600">
-                      Delete
-                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
-        </div>
+              ))}
+          </div>
 
-        <Dialog open={!!editingCarousel || formData.category} onOpenChange={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
-            <DialogHeader>
-              <DialogTitle>{editingCarousel ? 'Edit Carousel' : 'New Carousel'}</DialogTitle>
-            </DialogHeader>
+          <Dialog open={!!editingCarousel || formData.category} onOpenChange={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
+              <DialogHeader>
+                <DialogTitle>{editingCarousel ? 'Edit Carousel' : 'New Carousel'}</DialogTitle>
+              </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -210,9 +252,10 @@ export default function AdminCarousel() {
                   {saveMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );

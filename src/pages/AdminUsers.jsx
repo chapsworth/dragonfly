@@ -160,9 +160,10 @@ export default function AdminUsers() {
                   {updateMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );
