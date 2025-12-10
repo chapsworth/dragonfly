@@ -64,78 +64,23 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     try {
       const query = searchQuery.trim() || formData.name || 'cannabis';
       
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search for high-quality product images of the cannabis strain "${query}".
-        
-        SEARCH THESE SOURCES (in order):
-        1. Leafly.com - strain pages
-        2. Weedmaps.com - product listings
-        3. AllBud.com - strain database
-        4. Google Images - cannabis strain photos
-        
-        YOUR TASK: Find and extract 12 direct image URLs
-        
-        CRITICAL REQUIREMENTS:
-        - Each URL must be a DIRECT link to an image file
-        - URLs must start with https://
-        - URLs must contain actual image file paths (.jpg, .png, .webp) OR be from known CDN services (imgix, cloudinary, cloudfront)
-        - DO NOT return webpage URLs or broken links
-        - Test that the URLs are actual images
-        
-        VALID URL EXAMPLES:
-        ✓ https://leafly-cms-production.imgix.net/strains/blue-dream.jpg
-        ✓ https://images.weedmaps.com/products/og-kush.png
-        ✓ https://www.allbud.com/marijuana-strains/img/image.webp
-        ✓ https://cdn.shopify.com/s/files/cannabis.jpg
-        
-        Return 12 working image URLs with their source.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  url: { type: "string" },
-                  source: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
+      // Search Unsplash for cannabis/strain images - most reliable source
+      const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query + ' cannabis strain marijuana')}&per_page=12&client_id=yV06e9DPHgEUDk-XP1z8HB3wF2qWVJnN3s6-HwzKH84`);
+      const data = await response.json();
       
-      console.log('Image search result:', result);
+      console.log('Unsplash search result:', data);
       
-      if (result?.images?.length > 0) {
-        const validImages = result.images.filter(img => 
-          img.url && 
-          img.url.startsWith('http') &&
-          (img.url.match(/\.(jpg|jpeg|png|webp)/) || 
-           img.url.includes('imgix') || 
-           img.url.includes('cloudinary') || 
-           img.url.includes('cloudfront') ||
-           img.url.includes('weedmaps') ||
-           img.url.includes('leafly'))
-        );
-        
-        if (validImages.length > 0) {
-          setSearchResults(validImages.map(img => ({ url: img.url, alt: img.source || query })));
-        } else {
-          console.error('No valid images found. Received:', result.images);
-          setSearchResults([]);
-          alert(`Found ${result.images.length} results but none were valid image URLs. Try a different search term.`);
-        }
+      if (data.results && data.results.length > 0) {
+        const images = data.results.map(img => ({
+          url: img.urls.regular,
+          alt: img.alt_description || query
+        }));
+        setSearchResults(images);
       } else {
-        console.error('No images in result:', result);
-        setSearchResults([]);
-        alert('No images found. Try searching for a specific strain name like "OG Kush" or "Blue Dream".');
+        alert('No images found. Try a different search term like "OG Kush" or "Blue Dream".');
       }
     } catch (error) {
       console.error('Search failed:', error);
-      setSearchResults([]);
       alert('Search failed: ' + error.message);
     } finally {
       setIsSearching(false);
