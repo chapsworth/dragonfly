@@ -106,11 +106,6 @@ export default function Shop() {
               categories.find((c) => c.value === category)?.label || 'Shop' :
               'Shop'}
             </h1>
-            <p className="text-emerald-600">
-              {category !== 'all' ?
-              `Explore our ${categories.find((c) => c.value === category)?.label.toLowerCase()} collection` :
-              'Browse our premium selection of cannabis products'}
-            </p>
           </div>
           
           {/* Expandable Search & Filters */}
