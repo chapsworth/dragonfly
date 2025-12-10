@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List } from 'lucide-react';
+import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
@@ -55,7 +55,8 @@ export default function AdminOrders() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setEditingOrder(null);
       setFormData({});
-      toast.success('Order updated successfully');
+      setIsCreateOpen(false);
+      toast.success('Order saved successfully');
     }
   });
 
@@ -117,6 +118,20 @@ export default function AdminOrders() {
     });
   };
 
+  const handleCreate = () => {
+    setEditingOrder(null);
+    setFormData({
+      items: [],
+      total: 0,
+      status: 'pending',
+      delivery_address: '',
+      customer_name: '',
+      customer_phone: '',
+      customer_email: ''
+    });
+    setIsCreateOpen(true);
+  };
+
   const handleSave = () => {
     const updateData = { 
       status: formData.status,
@@ -131,7 +146,7 @@ export default function AdminOrders() {
       updateData.delivery_lng = parseFloat(formData.delivery_lng);
     }
     
-    updateMutation.mutate({ id: editingOrder.id, data: updateData });
+    updateMutation.mutate({ id: editingOrder?.id, data: updateData });
   };
 
   const handleQuickStatusUpdate = (order, newStatus) => {
@@ -481,7 +496,7 @@ export default function AdminOrders() {
           <Dialog open={!!editingOrder || isCreateOpen} onOpenChange={() => { setEditingOrder(null); setFormData({}); setIsCreateOpen(false); }}>
             <DialogContent className="max-w-2xl bg-white/90 backdrop-blur-xl">
               <DialogHeader>
-                <DialogTitle>Update Order</DialogTitle>
+                <DialogTitle>{editingOrder ? 'Update Order' : 'Create Order'}</DialogTitle>
               </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">

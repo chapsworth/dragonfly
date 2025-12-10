@@ -20,13 +20,15 @@ export default function AdminCarousel() {
   const [viewMode, setViewMode] = useState('list');
   const queryClient = useQueryClient();
 
-  const { data: categories = [] } = useQuery({
+  const { data: categoryData = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => {
-      const cats = await base44.entities.Category.list();
-      return cats.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-    }
+    queryFn: () => base44.entities.Category.list()
   });
+
+  const categories = categoryData
+    .filter(c => c.is_active)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+    .map(c => ({ value: c.slug, label: c.name }));
 
   const { data: carouselSettings = [] } = useQuery({
     queryKey: ['carouselSettings'],
@@ -101,7 +103,6 @@ export default function AdminCarousel() {
 
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown';
   const categoryProducts = products.filter(p => p.category === formData.category);
-  const categoryOptions = categories.map(c => c.slug);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'AdminDashboard' },
@@ -273,7 +274,7 @@ export default function AdminCarousel() {
                   <Select value={formData.category || ''} onValueChange={(v) => setFormData({...formData, category: v})}>
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
-                      {categories.map(c => <SelectItem key={c.slug} value={c.slug} className="capitalize">{c.name}</SelectItem>)}
+                      {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
