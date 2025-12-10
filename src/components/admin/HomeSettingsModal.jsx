@@ -36,6 +36,9 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      const user = await base44.auth.me();
+      if (!user) throw new Error('Unauthorized');
+      
       if (settings?.id) {
         return base44.asServiceRole.entities.HomeSettings.update(settings.id, data);
       } else {
@@ -56,27 +59,65 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
     setSections(items);
   };
 
-  const handleUnsplashSearch = () => {
+  const handleUnsplashSearch = async () => {
     setIsSearching(true);
+    setUnsplashResults([]);
     
-    // Curated cannabis and nature-themed Unsplash images
-    const cannabisImages = [
-      { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80', alt: 'Cannabis plant' },
-      { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=1600&q=80', alt: 'Green cannabis leaves' },
-      { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=1600&q=80', alt: 'Cannabis leaf close-up' },
-      { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&q=80', alt: 'Cannabis field' },
-      { url: 'https://images.unsplash.com/photo-1536964549738-9124d0f1e6d8?w=1600&q=80', alt: 'Green plant background' },
-      { url: 'https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=1600&q=80', alt: 'Tropical leaves' },
-      { url: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1600&q=80', alt: 'Forest nature' },
-      { url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80', alt: 'Green nature' },
-      { url: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1600&q=80', alt: 'Misty forest' },
-      { url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80', alt: 'Mountain landscape' },
-      { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80', alt: 'Nature sunset' },
-      { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=80', alt: 'Nature landscape' }
-    ];
-    
-    setUnsplashResults(cannabisImages);
-    setIsSearching(false);
+    try {
+      const query = unsplashQuery.trim() || 'cannabis nature plants';
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Go to Leafly.com and Unsplash.com and find 12 real, working cannabis-related image URLs for: "${query}". Return actual image URLs that exist and work. Use the format https://images.unsplash.com/photo-ID?w=1600&q=80 for Unsplash or direct image URLs from Leafly's CDN.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  url: { type: "string" },
+                  alt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      if (result?.images?.length > 0) {
+        setUnsplashResults(result.images);
+      } else {
+        // Fallback to curated images if search fails
+        const cannabisImages = [
+          { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80', alt: 'Cannabis plant' },
+          { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=1600&q=80', alt: 'Green cannabis leaves' },
+          { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=1600&q=80', alt: 'Cannabis leaf close-up' },
+          { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&q=80', alt: 'Cannabis field' },
+          { url: 'https://images.unsplash.com/photo-1536964549738-9124d0f1e6d8?w=1600&q=80', alt: 'Green plant background' },
+          { url: 'https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=1600&q=80', alt: 'Tropical leaves' },
+          { url: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1600&q=80', alt: 'Forest nature' },
+          { url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80', alt: 'Green nature' },
+          { url: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1600&q=80', alt: 'Misty forest' },
+          { url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80', alt: 'Mountain landscape' },
+          { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80', alt: 'Nature sunset' },
+          { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=80', alt: 'Nature landscape' }
+        ];
+        setUnsplashResults(cannabisImages);
+      }
+    } catch (error) {
+      console.error('Image search failed:', error);
+      // Use fallback on error
+      const cannabisImages = [
+        { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80', alt: 'Cannabis plant' },
+        { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=1600&q=80', alt: 'Green cannabis leaves' },
+        { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=1600&q=80', alt: 'Cannabis leaf close-up' },
+        { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&q=80', alt: 'Cannabis field' }
+      ];
+      setUnsplashResults(cannabisImages);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleGenerateAI = async () => {
