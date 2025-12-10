@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { motion } from 'framer-motion';
 
@@ -34,6 +34,8 @@ const strainColors = {
 
 export default function CategoryCarousel({ category, products }) {
   const [selectedStrain, setSelectedStrain] = React.useState('all');
+  const [sortBy, setSortBy] = React.useState(null);
+  const [sortDirection, setSortDirection] = React.useState('asc');
   const scrollRef = useRef(null);
   const Icon = categoryIcons[category] || Leaf;
   const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
@@ -45,9 +47,26 @@ export default function CategoryCarousel({ category, products }) {
     }
   };
 
-  const filteredProducts = selectedStrain === 'all' 
+  const handleSort = (type) => {
+    if (sortBy === type) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(type);
+      setSortDirection('asc');
+    }
+  };
+
+  let filteredProducts = selectedStrain === 'all' 
     ? products 
     : products.filter(p => p.strain_type === selectedStrain);
+
+  if (sortBy) {
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+      const aVal = sortBy === 'thc' ? (a.thc_level || 0) : (a.cbd_level || 0);
+      const bVal = sortBy === 'thc' ? (b.thc_level || 0) : (b.cbd_level || 0);
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }
 
   if (products.length === 0) return null;
 
@@ -105,6 +124,32 @@ export default function CategoryCarousel({ category, products }) {
               }`}
             >
               Indica
+            </button>
+            <button
+              onClick={() => handleSort('thc')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                sortBy === 'thc'
+                  ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                  : 'bg-white/60 text-red-700 hover:bg-white'
+              }`}
+            >
+              THC
+              {sortBy === 'thc' && (
+                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+              )}
+            </button>
+            <button
+              onClick={() => handleSort('cbd')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                sortBy === 'cbd'
+                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                  : 'bg-white/60 text-blue-700 hover:bg-white'
+              }`}
+            >
+              CBD
+              {sortBy === 'cbd' && (
+                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+              )}
             </button>
           </div>
         </div>
