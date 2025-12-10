@@ -239,10 +239,25 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                     {searchResults.map((img, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setFormData(prev => ({ ...prev, image_url: img.url }))}
-                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors"
+                        onClick={() => {
+                          console.log('Selected image URL:', img.url);
+                          setFormData(prev => ({ ...prev, image_url: img.url }));
+                        }}
+                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors bg-emerald-50"
                       >
-                        <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
+                        <img 
+                          src={img.url} 
+                          alt={img.alt} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('Failed to load image:', img.url);
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = `<div class="flex items-center justify-center h-full p-2 text-xs text-emerald-600 text-center">${img.alt}<br/>❌ Failed</div>`;
+                          }}
+                          onLoad={(e) => {
+                            console.log('Successfully loaded:', img.url);
+                          }}
+                        />
                       </button>
                     ))}
                   </div>
