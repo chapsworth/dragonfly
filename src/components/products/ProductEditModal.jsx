@@ -23,6 +23,9 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     weight: '',
     in_stock: true
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
@@ -56,14 +59,48 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
 
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find 8 high-quality, direct image URLs for: ${searchQuery}. Return ONLY actual .jpg, .png, or .webp image file URLs that will load in an img tag.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  url: { type: "string" },
+                  alt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setSearchResults(result.images || []);
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleGenerateAI = async () => {
     if (!aiPrompt.trim()) return;
     setIsGenerating(true);
     try {
-      const result = await base44.integrations.Core.GenerateImage({ prompt: aiPrompt });
+      const result = await base44.integrations.Core.GenerateImage({ 
+        prompt: `High-quality professional product photo: ${aiPrompt}. Cannabis strain, detailed, studio lighting, white background` 
+      });
       setFormData(prev => ({ ...prev, image_url: result.url }));
     } catch (error) {
       console.error('AI generation failed:', error);
+      alert('AI generation failed: ' + error.message);
     } finally {
       setIsGenerating(false);
     }
@@ -106,9 +143,10 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Label>
             
             <Tabs defaultValue="url" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="url">URL</TabsTrigger>
                 <TabsTrigger value="upload"><Upload className="w-4 h-4" /></TabsTrigger>
+                <TabsTrigger value="search"><Search className="w-4 h-4" /></TabsTrigger>
                 <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
               </TabsList>
 
@@ -128,6 +166,43 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                   onChange={handleFileUpload}
                   className="border-emerald-200"
                 />
+              </TabsContent>
+
+              <TabsContent value="search" className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for strain images..."
+                    className="border-emerald-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <Button 
+                    onClick={handleSearch}
+                    disabled={isSearching}
+                    className="bg-emerald-600"
+                  >
+                    {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {searchResults.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+                    {searchResults.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setFormData(prev => ({ ...prev, image_url: img.url }))}
+                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-400 transition-colors bg-emerald-50"
+                      >
+                        <img 
+                          src={img.url} 
+                          alt={img.alt} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => e.target.parentElement.classList.add('opacity-30')}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="ai" className="space-y-3">
