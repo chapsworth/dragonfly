@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Truck, Shield, Clock, Leaf, Settings } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
@@ -106,16 +106,16 @@ export default function Home() {
               Fast delivery, exceptional quality, always discreet.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-row gap-4 justify-center">
               <Link to={createPageUrl('Shop')}>
-                <Button className="h-14 px-8 rounded-2xl bg-white text-emerald-700 hover:bg-emerald-50 font-semibold text-lg shadow-xl shadow-black/20">
+                <Button className="h-14 px-8 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg shadow-xl shadow-black/20">
                   Order Now
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link to={createPageUrl('Contact')}>
-                <Button variant="outline" className="h-14 px-8 rounded-2xl border-2 border-white/40 text-white hover:bg-white/10 font-semibold text-lg backdrop-blur">
-                  Contact Us
+                <Button className="h-14 w-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-black/20 p-0 flex items-center justify-center">
+                  <Phone className="w-5 h-5" />
                 </Button>
               </Link>
             </div>
