@@ -28,6 +28,7 @@ export default function Shop() {
   const [strain, setStrain] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -112,7 +113,7 @@ export default function Shop() {
             </p>
           </div>
           
-          {/* Expandable Search */}
+          {/* Expandable Search & Filters */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <AnimatePresence>
               {isSearchOpen &&
@@ -148,6 +149,14 @@ export default function Shop() {
               <Search className="w-5 h-5 text-emerald-600" />
               }
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+
+              <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
+            </Button>
           </div>
         </motion.div>
 
@@ -158,89 +167,89 @@ export default function Shop() {
 
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6">
+        <AnimatePresence>
+          {isFiltersOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mb-6 overflow-hidden">
 
-          {/* Filter Badges */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-            {/* Strain Filters */}
-            {strainTypes.map((s) =>
-            <button
-              key={s.value}
-              onClick={() => setStrain(s.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              strain === s.value ?
-              'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md' :
-              'bg-white/60 text-purple-700 hover:bg-white'}`
-              }>
+              {/* Filter Badges */}
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                {/* Strain Filters */}
+                {strainTypes.map((s) =>
+                <button
+                  key={s.value}
+                  onClick={() => setStrain(s.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  strain === s.value ?
+                  'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md' :
+                  'bg-white/60 text-purple-700 hover:bg-white'}`
+                  }>
 
-                {s.label}
-              </button>
-            )}
+                    {s.label}
+                  </button>
+                )}
 
-            <div className="h-4 w-px bg-emerald-200 mx-1" />
+                <div className="h-4 w-px bg-emerald-200 mx-1" />
 
-            {/* Sort Filters */}
-            <button
-              onClick={() => setSortBy('name')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              sortBy === 'name' ?
-              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
-              'bg-white/60 text-blue-700 hover:bg-white'}`
-              }>
+                {/* Sort Filters */}
+                <button
+                  onClick={() => setSortBy('name')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  sortBy === 'name' ?
+                  'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+                  'bg-white/60 text-blue-700 hover:bg-white'}`
+                  }>
 
-              Name
-            </button>
-            <button
-              onClick={() => {
-                if (sortBy === 'price') {
-                  setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                } else {
-                  setSortBy('price');
-                  setSortDirection('asc');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-              sortBy === 'price' ?
-              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
-              'bg-white/60 text-blue-700 hover:bg-white'}`
-              }>
+                  Name
+                </button>
+                <button
+                  onClick={() => {
+                    if (sortBy === 'price') {
+                      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('price');
+                      setSortDirection('asc');
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                  sortBy === 'price' ?
+                  'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+                  'bg-white/60 text-blue-700 hover:bg-white'}`
+                  }>
 
-              Price
-              {sortBy === 'price' && (
-              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)
-              }
-            </button>
-            <button
-              onClick={() => {
-                if (sortBy === 'thc') {
-                  setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
-                } else {
-                  setSortBy('thc');
-                  setSortDirection('desc');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-              sortBy === 'thc' ?
-              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
-              'bg-white/60 text-blue-700 hover:bg-white'}`
-              }>
+                  Price
+                  {sortBy === 'price' && (
+                  sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)
+                  }
+                </button>
+                <button
+                  onClick={() => {
+                    if (sortBy === 'thc') {
+                      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+                    } else {
+                      setSortBy('thc');
+                      setSortDirection('desc');
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                  sortBy === 'thc' ?
+                  'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+                  'bg-white/60 text-blue-700 hover:bg-white'}`
+                  }>
 
-              THC
-              {sortBy === 'thc' && (
-              sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)
-              }
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Results count */}
-        <p className="text-emerald-600 mb-6">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
-        </p>
+                  THC
+                  {sortBy === 'thc' && (
+                  sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)
+                  }
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Products Grid */}
         {isLoading ?
