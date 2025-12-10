@@ -111,18 +111,16 @@ export default function Shop() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between gap-4">
+          className="mb-8 flex items-center justify-center gap-4">
 
-          <div className="flex-1 min-w-0">
-            <h1 className="text-4xl font-bold text-emerald-900 mb-2">
-              {category !== 'all' ?
-              categories.find((c) => c.value === category)?.label || 'Shop' :
-              'Shop'}
-            </h1>
-          </div>
+          <h1 className="text-4xl font-bold text-emerald-900 text-center">
+            {category !== 'all' ?
+            categories.find((c) => c.value === category)?.label || 'Shop' :
+            'Shop'}
+          </h1>
           
           {/* Expandable Search & Filters */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 absolute right-4">
             <AnimatePresence>
               {isSearchOpen &&
               <motion.div
