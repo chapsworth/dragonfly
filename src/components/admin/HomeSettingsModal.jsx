@@ -56,37 +56,27 @@ export default function HomeSettingsModal({ isOpen, onClose, settings }) {
     setSections(items);
   };
 
-  const handleUnsplashSearch = async () => {
-    if (!unsplashQuery.trim()) return;
+  const handleUnsplashSearch = () => {
     setIsSearching(true);
-    setUnsplashResults([]);
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search Unsplash for "${unsplashQuery}" images. Return 12 valid, working image URLs. Each URL must be a complete, valid Unsplash image URL in the format: https://images.unsplash.com/photo-[id]?w=800&q=80 - make sure these are REAL, WORKING URLs from actual Unsplash photos that exist. Include a descriptive alt text for each.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  url: { type: "string" },
-                  alt: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-      setUnsplashResults(result.images || []);
-    } catch (error) {
-      console.error('Unsplash search failed:', error);
-      setUnsplashResults([]);
-    } finally {
-      setIsSearching(false);
-    }
+    
+    // Curated cannabis and nature-themed Unsplash images
+    const cannabisImages = [
+      { url: 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80', alt: 'Cannabis plant' },
+      { url: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=1600&q=80', alt: 'Green cannabis leaves' },
+      { url: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=1600&q=80', alt: 'Cannabis leaf close-up' },
+      { url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&q=80', alt: 'Cannabis field' },
+      { url: 'https://images.unsplash.com/photo-1536964549738-9124d0f1e6d8?w=1600&q=80', alt: 'Green plant background' },
+      { url: 'https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=1600&q=80', alt: 'Tropical leaves' },
+      { url: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1600&q=80', alt: 'Forest nature' },
+      { url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80', alt: 'Green nature' },
+      { url: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1600&q=80', alt: 'Misty forest' },
+      { url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80', alt: 'Mountain landscape' },
+      { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80', alt: 'Nature sunset' },
+      { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=80', alt: 'Nature landscape' }
+    ];
+    
+    setUnsplashResults(cannabisImages);
+    setIsSearching(false);
   };
 
   const handleGenerateAI = async () => {
