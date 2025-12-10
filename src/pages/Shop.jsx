@@ -132,23 +132,6 @@ export default function Shop() {
 
           {/* Filter Badges */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Category Filters */}
-            {categories.map(cat => (
-              <button
-                key={cat.value}
-                onClick={() => setCategory(cat.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  category === cat.value
-                    ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
-                    : 'bg-white/60 text-emerald-700 hover:bg-white'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-
-            <div className="h-4 w-px bg-emerald-200 mx-1" />
-
             {/* Strain Filters */}
             {strainTypes.map(s => (
               <button
