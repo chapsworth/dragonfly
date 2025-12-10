@@ -11,12 +11,12 @@ import CategoryGrid from '@/components/home/CategoryGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const strainTypes = [
-  { value: 'all', label: 'All Strains' },
-  { value: 'indica', label: 'Indica' },
-  { value: 'sativa', label: 'Sativa' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'cbd', label: 'CBD' }
-];
+{ value: 'all', label: 'All Strains' },
+{ value: 'indica', label: 'Indica' },
+{ value: 'sativa', label: 'Sativa' },
+{ value: 'hybrid', label: 'Hybrid' },
+{ value: 'cbd', label: 'CBD' }];
+
 
 export default function Shop() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -40,40 +40,40 @@ export default function Shop() {
   });
 
   const categories = [
-    { value: 'all', label: 'All Categories' },
-    ...dbCategories
-      .filter(c => c.is_active)
-      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-      .map(c => ({ value: c.slug, label: c.name }))
-  ];
+  { value: 'all', label: 'All Categories' },
+  ...dbCategories.
+  filter((c) => c.is_active).
+  sort((a, b) => (a.display_order || 0) - (b.display_order || 0)).
+  map((c) => ({ value: c.slug, label: c.name }))];
+
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
     if (search) {
-      filtered = filtered.filter(p => 
-        p.name?.toLowerCase().includes(search.toLowerCase()) ||
-        p.description?.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter((p) =>
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     if (category !== 'all') {
-      filtered = filtered.filter(p => p.category === category);
+      filtered = filtered.filter((p) => p.category === category);
     }
 
     if (strain !== 'all') {
-      filtered = filtered.filter(p => p.strain_type === strain);
+      filtered = filtered.filter((p) => p.strain_type === strain);
     }
 
     if (sortBy === 'name') {
       filtered = [...filtered].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else if (sortBy === 'price') {
-      filtered = [...filtered].sort((a, b) => 
-        sortDirection === 'asc' ? (a.price || 0) - (b.price || 0) : (b.price || 0) - (a.price || 0)
+      filtered = [...filtered].sort((a, b) =>
+      sortDirection === 'asc' ? (a.price || 0) - (b.price || 0) : (b.price || 0) - (a.price || 0)
       );
     } else if (sortBy === 'thc') {
-      filtered = [...filtered].sort((a, b) => 
-        sortDirection === 'desc' ? (b.thc_level || 0) - (a.thc_level || 0) : (a.thc_level || 0) - (b.thc_level || 0)
+      filtered = [...filtered].sort((a, b) =>
+      sortDirection === 'desc' ? (b.thc_level || 0) - (a.thc_level || 0) : (a.thc_level || 0) - (b.thc_level || 0)
       );
     }
 
@@ -81,9 +81,9 @@ export default function Shop() {
   }, [products, search, category, strain, sortBy, sortDirection]);
 
   const activeFilters = [
-    category !== 'all' && { type: 'category', value: category, label: categories.find(c => c.value === category)?.label },
-    strain !== 'all' && { type: 'strain', value: strain, label: strainTypes.find(s => s.value === strain)?.label }
-  ].filter(Boolean);
+  category !== 'all' && { type: 'category', value: category, label: categories.find((c) => c.value === category)?.label },
+  strain !== 'all' && { type: 'strain', value: strain, label: strainTypes.find((s) => s.value === strain)?.label }].
+  filter(Boolean);
 
   const clearFilter = (type) => {
     if (type === 'category') setCategory('all');
@@ -97,41 +97,41 @@ export default function Shop() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between gap-4"
-        >
+          className="mb-8 flex items-start justify-between gap-4">
+
           <div className="flex-1 min-w-0">
             <h1 className="text-4xl font-bold text-emerald-900 mb-2">
-              {category !== 'all' 
-                ? categories.find(c => c.value === category)?.label || 'Shop'
-                : 'Shop'}
+              {category !== 'all' ?
+              categories.find((c) => c.value === category)?.label || 'Shop' :
+              'Shop'}
             </h1>
             <p className="text-emerald-600">
-              {category !== 'all' 
-                ? `Explore our ${categories.find(c => c.value === category)?.label.toLowerCase()} collection`
-                : 'Browse our premium selection of cannabis products'}
+              {category !== 'all' ?
+              `Explore our ${categories.find((c) => c.value === category)?.label.toLowerCase()} collection` :
+              'Browse our premium selection of cannabis products'}
             </p>
           </div>
           
           {/* Expandable Search */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <AnimatePresence>
-              {isSearchOpen && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
+              {isSearchOpen &&
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 200, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden">
+
                   <Input
-                    placeholder="Search..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="h-10 rounded-lg bg-white/60 border-emerald-200 focus:border-emerald-400"
-                    autoFocus
-                  />
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-10 rounded-lg bg-white/60 border-emerald-200 focus:border-emerald-400"
+                  autoFocus />
+
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
             <Button
               variant="ghost"
@@ -140,46 +140,46 @@ export default function Shop() {
                 setIsSearchOpen(!isSearchOpen);
                 if (isSearchOpen) setSearch('');
               }}
-              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white"
-            >
-              {isSearchOpen ? (
-                <X className="w-5 h-5 text-emerald-600" />
-              ) : (
-                <Search className="w-5 h-5 text-emerald-600" />
-              )}
+              className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+
+              {isSearchOpen ?
+              <X className="w-5 h-5 text-emerald-600" /> :
+
+              <Search className="w-5 h-5 text-emerald-600" />
+              }
             </Button>
           </div>
         </motion.div>
 
         {/* Category Grid */}
-        <CategoryGrid 
+        <CategoryGrid
           selectedCategory={category}
-          onCategoryChange={setCategory}
-        />
+          onCategoryChange={setCategory} />
+
 
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
+          className="mb-6">
+
           {/* Filter Badges */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="pt-8 flex flex-wrap items-center gap-2">
             {/* Strain Filters */}
-            {strainTypes.map(s => (
-              <button
-                key={s.value}
-                onClick={() => setStrain(s.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  strain === s.value
-                    ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
-                    : 'bg-white/60 text-purple-700 hover:bg-white'
-                }`}
-              >
+            {strainTypes.map((s) =>
+            <button
+              key={s.value}
+              onClick={() => setStrain(s.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              strain === s.value ?
+              'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md' :
+              'bg-white/60 text-purple-700 hover:bg-white'}`
+              }>
+
                 {s.label}
               </button>
-            ))}
+            )}
 
             <div className="h-4 w-px bg-emerald-200 mx-1" />
 
@@ -187,11 +187,11 @@ export default function Shop() {
             <button
               onClick={() => setSortBy('name')}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                sortBy === 'name'
-                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
-                  : 'bg-white/60 text-blue-700 hover:bg-white'
-              }`}
-            >
+              sortBy === 'name' ?
+              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+              'bg-white/60 text-blue-700 hover:bg-white'}`
+              }>
+
               Name
             </button>
             <button
@@ -204,15 +204,15 @@ export default function Shop() {
                 }
               }}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                sortBy === 'price'
-                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
-                  : 'bg-white/60 text-blue-700 hover:bg-white'
-              }`}
-            >
+              sortBy === 'price' ?
+              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+              'bg-white/60 text-blue-700 hover:bg-white'}`
+              }>
+
               Price
               {sortBy === 'price' && (
-                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-              )}
+              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)
+              }
             </button>
             <button
               onClick={() => {
@@ -224,15 +224,15 @@ export default function Shop() {
                 }
               }}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                sortBy === 'thc'
-                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
-                  : 'bg-white/60 text-blue-700 hover:bg-white'
-              }`}
-            >
+              sortBy === 'thc' ?
+              'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md' :
+              'bg-white/60 text-blue-700 hover:bg-white'}`
+              }>
+
               THC
               {sortBy === 'thc' && (
-                sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />
-              )}
+              sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)
+              }
             </button>
           </div>
         </motion.div>
@@ -243,33 +243,33 @@ export default function Shop() {
         </p>
 
         {/* Products Grid */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
+        {isLoading ?
+        <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
+          </div> :
+        filteredProducts.length === 0 ?
+        <div className="text-center py-20">
             <p className="text-emerald-600 text-lg">No products found matching your criteria.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
+          </div> :
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
             <AnimatePresence>
-              {filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="min-w-0"
-                >
+              {filteredProducts.map((product, index) =>
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: index * 0.03 }}
+              className="min-w-0">
+
                   <ProductCard product={product} />
                 </motion.div>
-              ))}
+            )}
             </AnimatePresence>
           </div>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
