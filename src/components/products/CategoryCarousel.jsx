@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 
 const categoryIcons = {
   flower: Cannabis,
+  prerolls: Cigarette,
   'pre-rolls': Cigarette,
   edibles: Cookie,
   concentrates: Droplets,
