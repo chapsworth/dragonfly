@@ -99,12 +99,16 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     setIsGenerating(true);
     try {
       const result = await base44.integrations.Core.GenerateImage({ 
-        prompt: `High-quality professional product photo: ${aiPrompt}. Cannabis strain, detailed, studio lighting, white background` 
+        prompt: `High-quality professional product photo of ${aiPrompt}. Cannabis marijuana strain, macro photography, detailed trichomes, studio lighting, white background, professional product shot` 
       });
-      setFormData(prev => ({ ...prev, image_url: result.url }));
+      if (result && result.url) {
+        setFormData(prev => ({ ...prev, image_url: result.url }));
+      } else {
+        throw new Error('No image URL returned');
+      }
     } catch (error) {
       console.error('AI generation failed:', error);
-      alert('AI generation failed: ' + error.message);
+      alert('AI generation failed: ' + (error.message || 'Unknown error'));
     } finally {
       setIsGenerating(false);
     }
