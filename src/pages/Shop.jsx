@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ArrowUp, ArrowDown } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +27,7 @@ export default function Shop() {
   const [category, setCategory] = useState(categoryParam || 'all');
   const [strain, setStrain] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -66,16 +67,18 @@ export default function Shop() {
 
     if (sortBy === 'name') {
       filtered = [...filtered].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    } else if (sortBy === 'price-low') {
-      filtered = [...filtered].sort((a, b) => (a.price || 0) - (b.price || 0));
-    } else if (sortBy === 'price-high') {
-      filtered = [...filtered].sort((a, b) => (b.price || 0) - (a.price || 0));
-    } else if (sortBy === 'thc-high') {
-      filtered = [...filtered].sort((a, b) => (b.thc_level || 0) - (a.thc_level || 0));
+    } else if (sortBy === 'price') {
+      filtered = [...filtered].sort((a, b) => 
+        sortDirection === 'asc' ? (a.price || 0) - (b.price || 0) : (b.price || 0) - (a.price || 0)
+      );
+    } else if (sortBy === 'thc') {
+      filtered = [...filtered].sort((a, b) => 
+        sortDirection === 'desc' ? (b.thc_level || 0) - (a.thc_level || 0) : (a.thc_level || 0) - (b.thc_level || 0)
+      );
     }
 
     return filtered;
-  }, [products, search, category, strain, sortBy]);
+  }, [products, search, category, strain, sortBy, sortDirection]);
 
   const activeFilters = [
     category !== 'all' && { type: 'category', value: category, label: categories.find(c => c.value === category)?.label },
@@ -192,34 +195,44 @@ export default function Shop() {
               Name
             </button>
             <button
-              onClick={() => setSortBy('price-low')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                sortBy === 'price-low'
+              onClick={() => {
+                if (sortBy === 'price') {
+                  setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setSortBy('price');
+                  setSortDirection('asc');
+                }
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                sortBy === 'price'
                   ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
                   : 'bg-white/60 text-blue-700 hover:bg-white'
               }`}
             >
-              Price ↑
+              Price
+              {sortBy === 'price' && (
+                sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+              )}
             </button>
             <button
-              onClick={() => setSortBy('price-high')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                sortBy === 'price-high'
+              onClick={() => {
+                if (sortBy === 'thc') {
+                  setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+                } else {
+                  setSortBy('thc');
+                  setSortDirection('desc');
+                }
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                sortBy === 'thc'
                   ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
                   : 'bg-white/60 text-blue-700 hover:bg-white'
               }`}
             >
-              Price ↓
-            </button>
-            <button
-              onClick={() => setSortBy('thc-high')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                sortBy === 'thc-high'
-                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
-                  : 'bg-white/60 text-blue-700 hover:bg-white'
-              }`}
-            >
-              THC ↓
+              THC
+              {sortBy === 'thc' && (
+                sortDirection === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />
+              )}
             </button>
           </div>
         </motion.div>
