@@ -104,6 +104,7 @@ export default function AdminCategories() {
   };
 
   const handleDragEnd = (result) => {
+    document.body.style.overflow = '';
     if (!result.destination) return;
 
     const items = Array.from(sortedCategories);
@@ -142,7 +143,7 @@ export default function AdminCategories() {
           </div>
 
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl p-6">
-            <DragDropContext onDragEnd={handleDragEnd}>
+            <DragDropContext onDragStart={() => document.body.style.overflow = 'hidden'} onDragEnd={handleDragEnd}>
               <Droppable droppableId="categories">
                 {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
@@ -154,7 +155,7 @@ export default function AdminCategories() {
                             {...provided.draggableProps}
                             className="flex items-center gap-3 p-4 bg-white rounded-xl border border-emerald-100 hover:border-emerald-300 transition-colors"
                           >
-                            <div {...provided.dragHandleProps}>
+                            <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
                               <GripVertical className="w-5 h-5 text-gray-400" />
                             </div>
 

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, GripVertical, X, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 export default function AdminCarousel() {
   const [editingCarousel, setEditingCarousel] = useState(null);
@@ -100,6 +101,47 @@ export default function AdminCarousel() {
       setSelectedProducts(newList);
     }
   };
+
+  const updateOrderMutation = useMutation({
+    mutationFn: async (updates) => {
+      await Promise.all(
+        updates.map(({ id, display_order }) =>
+          base44.entities.CarouselSettings.update(id, { display_order })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carouselSettings'] });
+    }
+  });
+
+  const handleDragEnd = (result) => {
+    document.body.style.overflow = '';
+    if (!result.destination) return;
+
+    const items = Array.from(sortedCarousels);
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+
+    const updates = items.map((item, index) => ({
+      id: item.id,
+      display_order: index
+    }));
+
+    updateOrderMutation.mutate(updates);
+  };
+
+  const handleProductDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const newList = Array.from(selectedProducts);
+    const [removed] = newList.splice(result.source.index, 1);
+    newList.splice(result.destination.index, 0, removed);
+    setSelectedProducts(newList);
+  };
+
+  const sortedCarousels = carouselSettings
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown';
   const categoryProducts = products.filter(p => p.category === formData.category);
@@ -224,42 +266,58 @@ export default function AdminCarousel() {
                 ))}
             </div>
           ) : (
-            <div className="space-y-3">
-              {carouselSettings
-                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-                .map((carousel) => (
-                  <div key={carousel.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
-                        {carousel.display_order}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-emerald-900 text-sm capitalize line-clamp-1">{carousel.category}</h3>
-                            <p className="text-xs text-emerald-600">
-                              {carousel.featured_product_ids?.length || 0} featured products
-                            </p>
+            <DragDropContext onDragStart={() => document.body.style.overflow = 'hidden'} onDragEnd={handleDragEnd}>
+              <Droppable droppableId="carousels">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                    {sortedCarousels.map((carousel, index) => (
+                      <Draggable key={carousel.id} draggableId={carousel.id} index={index}>
+                        {(provided) => (
+                          <div 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                <GripVertical className="w-5 h-5 text-emerald-400 mt-2" />
+                              </div>
+                              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 flex-shrink-0">
+                                {carousel.display_order}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-bold text-emerald-900 text-sm capitalize line-clamp-1">{carousel.category}</h3>
+                                    <p className="text-xs text-emerald-600">
+                                      {carousel.featured_product_ids?.length || 0} featured products
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge variant={carousel.is_active ? 'default' : 'secondary'} className="text-xs">
+                                    {carousel.is_active ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                  <Button size="sm" variant="outline" onClick={() => handleEdit(carousel)} className="h-7 text-xs">
+                                    <Edit2 className="w-3 h-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(carousel.id)} className="h-7 text-xs text-red-600">
+                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant={carousel.is_active ? 'default' : 'secondary'} className="text-xs">
-                            {carousel.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(carousel)} className="h-7 text-xs">
-                            <Edit2 className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(carousel.id)} className="h-7 text-xs text-red-600">
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
                   </div>
-                ))}
-            </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
 
           <Dialog open={!!editingCarousel || formData.category} onOpenChange={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }}>
@@ -290,22 +348,32 @@ export default function AdminCarousel() {
 
               <div>
                 <Label>Featured Products (in order)</Label>
-                <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                  {selectedProducts.map((productId, index) => (
-                    <motion.div
-                      key={productId}
-                      className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200"
-                    >
-                      <GripVertical className="w-4 h-4 text-emerald-400" />
-                      <span className="flex-1 text-sm text-emerald-900">{getProductName(productId)}</span>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => moveProduct(index, -1)} disabled={index === 0}>↑</Button>
-                        <Button size="sm" variant="ghost" onClick={() => moveProduct(index, 1)} disabled={index === selectedProducts.length - 1}>↓</Button>
-                        <Button size="sm" variant="ghost" onClick={() => removeProduct(productId)}><X className="w-4 h-4" /></Button>
+                <DragDropContext onDragEnd={handleProductDragEnd}>
+                  <Droppable droppableId="products">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps} className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                        {selectedProducts.map((productId, index) => (
+                          <Draggable key={productId} draggableId={productId} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200"
+                              >
+                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                  <GripVertical className="w-4 h-4 text-emerald-400" />
+                                </div>
+                                <span className="flex-1 text-sm text-emerald-900">{getProductName(productId)}</span>
+                                <Button size="sm" variant="ghost" onClick={() => removeProduct(productId)}><X className="w-4 h-4" /></Button>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
               </div>
 
               {formData.category && (
