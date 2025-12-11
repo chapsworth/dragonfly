@@ -49,13 +49,13 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
           <button
             key={category.value}
             onClick={() => onCategoryChange(category.value)}
-            className="flex-shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all hover:bg-white/30 min-w-[70px]">
+            className="flex-shrink-0 flex flex-col items-center gap-2 p-2 md:p-3 rounded-xl transition-all hover:bg-white/30 min-w-[70px] md:min-w-[90px]">
 
             <div className={cn(
-              "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-sm transition-all",
+              "w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br flex items-center justify-center shadow-sm transition-all",
               category.gradient
             )}>
-              <category.icon className="w-5 h-5 text-white" strokeWidth={2} />
+              <category.icon className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={2} />
             </div>
             <div className="relative">
               <p className={cn(
