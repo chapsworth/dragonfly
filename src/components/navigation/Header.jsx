@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, ShoppingBag, Leaf, Phone } from 'lucide-react';
+import { Menu, ShoppingBag, Leaf } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 
@@ -48,12 +48,6 @@ export default function Header({ onMenuClick }) {
             </Link>
 
             <div className="flex items-center gap-1">
-              <Link to={createPageUrl('Contact')}>
-                <button className="p-2 rounded-xl hover:bg-green-50 transition-colors">
-                  <Phone className="w-6 h-6 text-green-600" />
-                </button>
-              </Link>
-
               <button
                 onClick={() => setIsCartOpen(true)}
                 data-cart-button
