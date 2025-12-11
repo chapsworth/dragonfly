@@ -3,8 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Fingerprint, Loader2, Mail, Lock, Leaf, UserPlus } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Fingerprint, Loader2, Mail, Lock, Leaf } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
@@ -104,20 +104,20 @@ export default function BiometricLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-6">
-      <div className="w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-100 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-green-50">
+      <div className="w-full max-w-md px-6">
+        <div className="bg-white rounded-3xl shadow-2xl border-2 border-emerald-100 p-8">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 flex items-center justify-center shadow-xl">
-              <Leaf className="w-10 h-10 text-white" />
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg">
+              <Leaf className="w-8 h-8 text-white" />
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
             Welcome Back
           </h1>
-          <p className="text-center text-emerald-600 mb-8 text-lg">
+          <p className="text-center text-emerald-600 mb-8">
             Sign in to continue to Dragonfly
           </p>
 
@@ -126,7 +126,7 @@ export default function BiometricLogin() {
             <Button
               onClick={handleBiometricLogin}
               disabled={isBiometricLoading}
-              className="w-full h-14 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white text-lg mb-6 shadow-lg hover:shadow-xl transition-all rounded-xl font-semibold"
+              className="w-full h-14 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-lg mb-6 shadow-lg hover:shadow-xl transition-all"
             >
               {isBiometricLoading ? (
                 <>
@@ -142,44 +142,42 @@ export default function BiometricLogin() {
             </Button>
           )}
 
-          {isSupported && (
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t-2 border-emerald-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white/80 text-emerald-600 font-medium">Or sign in with email</span>
-              </div>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-emerald-200"></div>
             </div>
-          )}
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-emerald-500">Or sign in with email</span>
+            </div>
+          </div>
 
           {/* Traditional Login Form */}
-          <form onSubmit={handleTraditionalLogin} className="space-y-5">
+          <form onSubmit={handleTraditionalLogin} className="space-y-4">
             <div>
-              <Label className="text-emerald-800 font-semibold">Email</Label>
-              <div className="relative mt-2">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+              <Label className="text-emerald-700">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="pl-12 h-14 border-2 border-emerald-200 focus:border-emerald-400 rounded-xl text-lg"
+                  className="pl-10 h-12 border-emerald-200 focus:border-emerald-400"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-emerald-800 font-semibold">Password</Label>
-              <div className="relative mt-2">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+              <Label className="text-emerald-700">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-12 h-14 border-2 border-emerald-200 focus:border-emerald-400 rounded-xl text-lg"
+                  className="pl-10 h-12 border-emerald-200 focus:border-emerald-400"
                   required
                 />
               </div>
@@ -188,11 +186,11 @@ export default function BiometricLogin() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Signing in...
                 </>
               ) : (
@@ -201,34 +199,14 @@ export default function BiometricLogin() {
             </Button>
           </form>
 
-          {/* Sign Up Link */}
-          <div className="mt-8 text-center">
-            <p className="text-emerald-700">
-              Don't have an account?{' '}
-              <button 
-                onClick={() => base44.auth.redirectToLogin(createPageUrl('Home'))}
-                className="font-semibold text-emerald-600 hover:text-emerald-700 underline"
-              >
-                Sign Up
-              </button>
-            </p>
-          </div>
-
           {/* Info */}
           {isSupported && (
-            <div className="mt-6 p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200">
-              <p className="text-sm text-emerald-700 text-center leading-relaxed">
-                💡 Face ID is <span className="font-semibold">optional</span> and can be set up after signing in
+            <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+              <p className="text-xs text-emerald-700 text-center">
+                💡 After logging in with email, you can set up Face ID for quick access next time
               </p>
             </div>
           )}
-        </div>
-
-        {/* Trust Badge */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-emerald-600">
-            🔒 Your data is encrypted and secure
-          </p>
         </div>
       </div>
     </div>
