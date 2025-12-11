@@ -35,7 +35,7 @@ const strainColors = {
   cbd: 'from-blue-400 to-cyan-500'
 };
 
-export default function CategoryCarousel({ category, products, selectedStrain = 'all', sortBy = null, sortDirection = 'desc' }) {
+export default function CategoryCarousel({ category, products, selectedStrain = 'all', sortBy = null, sortDirection = 'desc', search = '' }) {
   const scrollRef = useRef(null);
   const Icon = categoryIcons[category] || Leaf;
   const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';

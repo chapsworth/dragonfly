@@ -4,7 +4,8 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone, SlidersHorizontal, ArrowUp, ArrowDown, Search, X } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
@@ -20,6 +21,8 @@ export default function Home() {
   const [selectedStrain, setSelectedStrain] = React.useState('all');
   const [sortBy, setSortBy] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('desc');
+  const [search, setSearch] = React.useState('');
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
   React.useEffect(() => {
     base44.auth.me().then(setUser).catch(() => setUser(null));
@@ -174,6 +177,38 @@ export default function Home() {
             <div className="flex items-center justify-center relative">
               <h1 className="text-3xl font-bold text-emerald-900">Shop</h1>
               <div className="absolute right-0 flex items-center gap-2">
+                <AnimatePresence>
+                  {isSearchOpen && (
+                    <motion.div
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 200, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <Input
+                        placeholder="Search..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="h-9 rounded-lg bg-white border-gray-200 focus:border-emerald-400"
+                        autoFocus
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(!isSearchOpen);
+                    if (isSearchOpen) setSearch('');
+                  }}
+                  className="h-9 w-9 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center"
+                >
+                  {isSearchOpen ? (
+                    <X className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <Search className="w-4 h-4 text-emerald-600" />
+                  )}
+                </button>
                 <button
                   onClick={() => setIsFiltersOpen(!isFiltersOpen)}
                   className="h-9 w-9 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center"
@@ -338,6 +373,7 @@ export default function Home() {
                     selectedStrain={selectedStrain}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
+                    search={search}
                   />
                 );
               })
