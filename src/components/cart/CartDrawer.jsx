@@ -9,9 +9,11 @@ import { ShoppingBag, Plus, Minus, Trash2, X, ArrowRight, Check } from 'lucide-r
 import { useCart } from './CartContext';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState('cart');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -101,6 +103,7 @@ export default function CartDrawer() {
 
       setOrderComplete(true);
       clearCart();
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       setTimeout(() => {
         setIsCartOpen(false);
         setOrderComplete(false);
