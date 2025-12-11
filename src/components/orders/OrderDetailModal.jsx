@@ -1,110 +1,202 @@
-import React from 'react';
-import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, MapPin, User, Mail, Phone, MessageSquare } from 'lucide-react';
-import OrderStatusTracker from './OrderStatusTracker';
-import LiveMapTracking from '../tracking/LiveMapTracking';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Phone, Mail, MessageSquare, Navigation, MapPin, Package, DollarSign, User } from 'lucide-react';
+import { toast } from 'sonner';
+import NavigationModal from './NavigationModal';
 
 export default function OrderDetailModal({ order, isOpen, onClose }) {
+  const [showNavigation, setShowNavigation] = useState(false);
+
   if (!order) return null;
 
+  const statusColors = {
+    pending: 'bg-yellow-500',
+    confirmed: 'bg-blue-500',
+    preparing: 'bg-purple-500',
+    out_for_delivery: 'bg-orange-500',
+    delivered: 'bg-green-500',
+    cancelled: 'bg-red-500'
+  };
+
+  const handleCall = () => {
+    if (order.customer_phone) {
+      window.location.href = `tel:${order.customer_phone}`;
+    } else {
+      toast.error('No phone number available');
+    }
+  };
+
+  const handleEmail = () => {
+    if (order.customer_email) {
+      window.location.href = `mailto:${order.customer_email}`;
+    } else {
+      toast.error('No email available');
+    }
+  };
+
+  const handleSMS = () => {
+    if (order.customer_phone) {
+      window.location.href = `sms:${order.customer_phone}`;
+    } else {
+      toast.error('No phone number available');
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl border-white/40">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-emerald-900">
-            Order Details
-          </DialogTitle>
-          <p className="text-emerald-600">
-            Order #{order.id.slice(0, 8)} • {format(new Date(order.created_date), 'MMMM d, yyyy')}
-          </p>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Order #{order.id.slice(0, 8)}</span>
+              <Badge className={`${statusColors[order.status]} text-white`}>
+                {order.status.replace('_', ' ')}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6 mt-4">
-          {/* Live Map Tracking */}
-          {order.status === 'out_for_delivery' && (
-            <LiveMapTracking order={order} />
-          )}
-
-          {/* Status Tracker */}
-          <OrderStatusTracker status={order.status} />
-
-          {/* Customer Information */}
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-            <h3 className="font-bold text-emerald-900 mb-3">Customer Information</h3>
-            <div className="space-y-2">
-              {order.customer_name && (
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">{order.customer_name}</span>
+          <div className="space-y-6">
+            {/* Customer Info */}
+            <div className="p-4 bg-emerald-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <User className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-emerald-900">Customer Information</h3>
+              </div>
+              <div className="space-y-2">
+                <p className="font-semibold text-lg">{order.customer_name}</p>
+                <div className="flex flex-wrap gap-2">
+                  <a 
+                    href={`tel:${order.customer_phone}`}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg hover:bg-emerald-100 transition-colors"
+                  >
+                    <Phone className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm">{order.customer_phone}</span>
+                  </a>
+                  <a 
+                    href={`mailto:${order.customer_email}`}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg hover:bg-emerald-100 transition-colors"
+                  >
+                    <Mail className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm">{order.customer_email}</span>
+                  </a>
                 </div>
-              )}
-              {order.customer_email && (
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm">{order.customer_email}</span>
-                </div>
-              )}
-              {order.customer_phone && (
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <Phone className="w-4 h-4" />
-                  <span className="text-sm">{order.customer_phone}</span>
-                </div>
-              )}
-              {order.delivery_address && (
-                <div className="flex items-start gap-2 text-emerald-700">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{order.delivery_address}</span>
-                </div>
-              )}
-              {order.notes && (
-                <div className="flex items-start gap-2 text-emerald-700 mt-3 pt-3 border-t border-emerald-200">
-                  <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-emerald-500 mb-1">Notes</p>
-                    <span className="text-sm">{order.notes}</span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Order Items */}
-          <div>
-            <h3 className="font-bold text-emerald-900 mb-3">Order Items</h3>
-            <div className="space-y-3">
-              {order.items?.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 p-3 rounded-xl bg-white/60 border border-white/40"
-                >
-                  <img
-                    src={item.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=100'}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <p className="font-semibold text-emerald-900 text-sm">{item.name}</p>
-                    <p className="text-emerald-600 text-sm">Qty: {item.quantity}</p>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Button onClick={handleCall} className="bg-gradient-to-r from-green-500 to-emerald-500">
+                <Phone className="w-4 h-4 mr-2" />
+                Call
+              </Button>
+              <Button onClick={handleEmail} className="bg-gradient-to-r from-blue-500 to-cyan-500">
+                <Mail className="w-4 h-4 mr-2" />
+                Email
+              </Button>
+              <Button onClick={handleSMS} className="bg-gradient-to-r from-purple-500 to-pink-500">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                SMS
+              </Button>
+              <Button 
+                onClick={() => setShowNavigation(true)}
+                className="bg-gradient-to-r from-orange-500 to-red-500"
+              >
+                <Navigation className="w-4 h-4 mr-2" />
+                Navigate
+              </Button>
+            </div>
+
+            {/* Delivery Address */}
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-blue-900">Delivery Address</h3>
+              </div>
+              <a 
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {order.delivery_address}
+              </a>
+            </div>
+
+            {/* Order Items */}
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Package className="w-5 h-5 text-gray-600" />
+                <h3 className="font-bold text-gray-900">Order Items</h3>
+              </div>
+              <div className="space-y-2">
+                {order.items?.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-white rounded">
+                    <div className="flex items-center gap-3">
+                      {item.image_url && (
+                        <img 
+                          src={item.image_url} 
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold">{item.name}</p>
+                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+                    <p className="font-bold text-emerald-600">${(item.price * item.quantity).toFixed(2)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-emerald-700">${(item.price * item.quantity).toFixed(2)}</p>
-                    <p className="text-xs text-emerald-500">${item.price.toFixed(2)} each</p>
-                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Order Total */}
+            <div className="p-4 bg-emerald-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-emerald-900">Order Total</h3>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>${order.subtotal?.toFixed(2) || order.total.toFixed(2)}</span>
                 </div>
-              ))}
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Discount</span>
+                    <span>-${order.discount.toFixed(2)}</span>
+                  </div>
+                )}
+                {order.fees > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Fees</span>
+                    <span>${order.fees.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-emerald-600">${order.total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Order Summary */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold">Total</span>
-              <span className="text-2xl font-bold">${order.total?.toFixed(2)}</span>
-            </div>
+            {order.notes && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-bold mb-2">Notes</h3>
+                <p className="text-gray-700">{order.notes}</p>
+              </div>
+            )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <NavigationModal
+        isOpen={showNavigation}
+        onClose={() => setShowNavigation(false)}
+        order={order}
+      />
+    </>
   );
 }
