@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus, Clipboard } from 'lucide-react';
+import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus, Clipboard, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StrainEditModal({ strain, isOpen, onClose }) {
@@ -334,10 +334,26 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Name</Label>
-              <Input
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+              <div className="relative">
+                <Input
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => {
+                    navigator.clipboard.writeText(formData.name || '');
+                    toast.success('Strain name copied to clipboard');
+                  }}
+                  title="Copy strain name"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Type</Label>
