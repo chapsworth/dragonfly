@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, ShoppingBag, Leaf, Grid2x2 } from 'lucide-react';
+import { PanelLeft, ShoppingBag, Leaf, Grid2x2 } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 
@@ -28,7 +28,7 @@ export default function Header({ onMenuClick }) {
                 onClick={onMenuClick}
                 className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
               >
-                <Menu className="w-6 h-6 text-emerald-700" />
+                <PanelLeft className="w-6 h-6 text-emerald-700" />
               </button>
               <Link to={createPageUrl('AdminLauncher')}>
                 <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
