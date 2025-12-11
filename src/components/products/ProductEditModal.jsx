@@ -223,6 +223,25 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   };
 
   const handleSave = () => {
+    // Validate required fields
+    const errors = [];
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      errors.push('Price is required and must be greater than 0');
+    }
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <div className="font-bold mb-1">Cannot save product:</div>
+          {errors.map((err, i) => (
+            <div key={i}>• {err}</div>
+          ))}
+        </div>,
+        { duration: 5000 }
+      );
+      return;
+    }
+
     const variants = formData.variants?.map(v => ({
       name: v.name,
       price: parseFloat(v.price) || 0,
@@ -546,12 +565,13 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
           <div className="grid grid-cols-4 gap-4">
             <div>
-              <Label>Price ($)</Label>
+              <Label>Price ($) *</Label>
               <Input
                 type="number"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 className="border-emerald-200"
+                placeholder="Required"
               />
             </div>
             <div>

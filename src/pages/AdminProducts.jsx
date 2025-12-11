@@ -67,7 +67,7 @@ export default function AdminProducts() {
 
   const handleNew = () => {
     setEditingProduct(null);
-    setFormData({ in_stock: true, category: 'flower', strain_type: 'hybrid' });
+    setFormData({ in_stock: true, category: 'flower', strain_type: 'hybrid', price: '' });
     setIsDialogOpen(true);
   };
 
