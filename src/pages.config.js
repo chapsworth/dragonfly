@@ -23,6 +23,7 @@ import CRMCalendar from './pages/CRMCalendar';
 import CRMBookmarks from './pages/CRMBookmarks';
 import CRMDocuments from './pages/CRMDocuments';
 import OrderTracking from './pages/OrderTracking';
+import AdminLauncher from './pages/AdminLauncher';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "CRMBookmarks": CRMBookmarks,
     "CRMDocuments": CRMDocuments,
     "OrderTracking": OrderTracking,
+    "AdminLauncher": AdminLauncher,
 }
 
 export const pagesConfig = {
