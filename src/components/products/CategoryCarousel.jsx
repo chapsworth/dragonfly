@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown, Cigarette } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, ArrowUp, ArrowDown, Cigarette, SlidersHorizontal } from 'lucide-react';
 import ProductCard from './ProductCard';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const categoryIcons = {
   flower: Cannabis,
@@ -39,6 +39,7 @@ export default function CategoryCarousel({ category, products }) {
   const [selectedStrain, setSelectedStrain] = React.useState('all');
   const [sortBy, setSortBy] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('asc');
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const scrollRef = useRef(null);
   const Icon = categoryIcons[category] || Leaf;
   const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
@@ -87,74 +88,90 @@ export default function CategoryCarousel({ category, products }) {
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedStrain('all')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
-                selectedStrain === 'all'
-                  ? 'bg-white text-black border-black'
-                  : 'bg-white text-black border-black'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setSelectedStrain('sativa')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                selectedStrain === 'sativa'
-                  ? 'bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md'
-                  : 'bg-white/60 text-orange-700 hover:bg-white'
-              }`}
-            >
-              Sativa
-            </button>
-            <button
-              onClick={() => setSelectedStrain('hybrid')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                selectedStrain === 'hybrid'
-                  ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
-                  : 'bg-white/60 text-emerald-700 hover:bg-white'
-              }`}
-            >
-              Hybrid
-            </button>
-            <button
-              onClick={() => setSelectedStrain('indica')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                selectedStrain === 'indica'
-                  ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
-                  : 'bg-white/60 text-purple-700 hover:bg-white'
-              }`}
-            >
-              Indica
-            </button>
-            <button
-              onClick={() => handleSort('thc')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                sortBy === 'thc'
-                  ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
-                  : 'bg-white/60 text-red-700 hover:bg-white'
-              }`}
-            >
-              THC
-              {sortBy === 'thc' && (
-                sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-              )}
-            </button>
-            <button
-              onClick={() => handleSort('cbd')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                sortBy === 'cbd'
-                  ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
-                  : 'bg-white/60 text-blue-700 hover:bg-white'
-              }`}
-            >
-              CBD
-              {sortBy === 'cbd' && (
-                sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
+          >
+            <SlidersHorizontal className="w-5 h-5 text-emerald-700" />
+          </button>
+
+          <AnimatePresence>
+            {isFilterOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 flex-wrap w-full"
+              >
+                <button
+                  onClick={() => setSelectedStrain('all')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
+                    selectedStrain === 'all'
+                      ? 'bg-white text-black border-black'
+                      : 'bg-white text-black border-black'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('sativa')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'sativa'
+                      ? 'bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md'
+                      : 'bg-white/60 text-orange-700 hover:bg-white'
+                  }`}
+                >
+                  Sativa
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('hybrid')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'hybrid'
+                      ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                      : 'bg-white/60 text-emerald-700 hover:bg-white'
+                  }`}
+                >
+                  Hybrid
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('indica')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'indica'
+                      ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
+                      : 'bg-white/60 text-purple-700 hover:bg-white'
+                  }`}
+                >
+                  Indica
+                </button>
+                <button
+                  onClick={() => handleSort('thc')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                    sortBy === 'thc'
+                      ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                      : 'bg-white/60 text-red-700 hover:bg-white'
+                  }`}
+                >
+                  THC
+                  {sortBy === 'thc' && (
+                    sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('cbd')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                    sortBy === 'cbd'
+                      ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                      : 'bg-white/60 text-blue-700 hover:bg-white'
+                  }`}
+                >
+                  CBD
+                  {sortBy === 'cbd' && (
+                    sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="flex gap-2">
             <button

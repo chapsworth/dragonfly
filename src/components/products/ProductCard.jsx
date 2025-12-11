@@ -51,9 +51,9 @@ export default function ProductCard({ product }) {
     <Link to={`${createPageUrl('ProductDetail')}?id=${product.id}`}>
       <motion.div
         whileHover={{ y: -4 }}
-        className="min-w-[200px] sm:min-w-[240px] bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-lg shadow-emerald-900/5 overflow-hidden group"
+        className="min-w-[200px] sm:min-w-[240px] w-[200px] sm:w-[240px] bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-lg shadow-emerald-900/5 overflow-hidden group"
       >
-        <div className="relative aspect-square overflow-hidden">
+        <div className="relative w-full h-[200px] sm:h-[240px] overflow-hidden">
         <img
           src={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=400'}
           alt={product.name}
