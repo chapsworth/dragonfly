@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { CartProvider } from '@/components/cart/CartContext';
 import { RadioProvider } from '@/components/radio/RadioContext';
 import CartDrawer from '@/components/cart/CartDrawer';
@@ -9,6 +11,19 @@ import Sidebar from '@/components/navigation/Sidebar';
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Intercept logout to redirect to BiometricLogin
+  useEffect(() => {
+    const originalLogout = base44.auth.logout;
+    base44.auth.logout = function(...args) {
+      originalLogout.apply(this, args);
+      navigate(createPageUrl('BiometricLogin'));
+    };
+    return () => {
+      base44.auth.logout = originalLogout;
+    };
+  }, [navigate]);
 
   // Check for referral code in URL
   useEffect(() => {
