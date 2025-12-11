@@ -22,17 +22,27 @@ export default function AddressAutocomplete({ value, onChange, placeholder, clas
     if (scriptLoaded.current) return;
     scriptLoaded.current = true;
 
-    // Load Google Maps script
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    
-    script.onload = () => {
+    // Define callback function
+    window.initGoogleMaps = () => {
       setIsLoaded(true);
       setLoadError(false);
     };
+
+    // Load Google Maps script with callback
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMaps&v=weekly`;
+    script.async = true;
+    script.defer = true;
     
     script.onerror = () => {
+      console.error('Failed to load Google Maps script');
+      setLoadError(true);
+      setIsLoaded(false);
+    };
+
+    // Listen for Google Maps errors
+    window.gm_authFailure = () => {
+      console.error('Google Maps authentication failed');
       setLoadError(true);
       setIsLoaded(false);
     };
