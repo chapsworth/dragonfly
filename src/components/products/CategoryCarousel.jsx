@@ -90,10 +90,10 @@ export default function CategoryCarousel({ category, products }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedStrain('all')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
                 selectedStrain === 'all'
-                  ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
-                  : 'bg-white/60 text-emerald-700 hover:bg-white'
+                  ? 'bg-white text-black border-black'
+                  : 'bg-white text-black border-black'
               }`}
             >
               All
@@ -158,11 +158,6 @@ export default function CategoryCarousel({ category, products }) {
         </div>
         
         <div className="flex gap-2">
-          <Link to={`${createPageUrl('Shop')}?category=${category}`}>
-            <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-white text-sm font-semibold hover:shadow-lg transition-all">
-              Show All
-            </button>
-          </Link>
           <button
             onClick={() => scroll('left')}
             className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
@@ -175,6 +170,11 @@ export default function CategoryCarousel({ category, products }) {
           >
             <ChevronRight className="w-5 h-5 text-emerald-700" />
           </button>
+          <Link to={`${createPageUrl('Shop')}?category=${category}`}>
+            <button className="px-4 py-2 rounded-xl bg-white text-black border border-black text-sm font-semibold hover:shadow-lg transition-all">
+              Show All
+            </button>
+          </Link>
         </div>
       </div>
 
