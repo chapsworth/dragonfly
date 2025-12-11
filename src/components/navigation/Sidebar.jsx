@@ -35,6 +35,7 @@ const navItems = [
   { name: 'Radio', page: 'Radio', icon: Wind },
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
+  { name: 'My Profile', page: 'Profile', icon: User },
   { name: 'Contact', page: 'Contact', icon: Phone },
 ];
 
