@@ -160,7 +160,7 @@ export default function Sidebar({ isOpen, onClose }) {
             </Collapsible>
           </div>
 
-          <div className="p-4 border-t border-emerald-100/50 space-y-3">
+          <div className="p-4 pb-20 border-t border-emerald-100/50 space-y-3">
             {user && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50">
