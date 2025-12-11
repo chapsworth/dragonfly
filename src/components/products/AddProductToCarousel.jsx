@@ -12,7 +12,7 @@ import { Upload, Search, Sparkles, Loader2, Plus, Trash2, Leaf } from 'lucide-re
 
 export default function AddProductToCarousel({ isOpen, onClose, category }) {
   const [mode, setMode] = useState('select'); // 'select' or 'create'
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     category: category,
@@ -99,10 +99,41 @@ export default function AddProductToCarousel({ isOpen, onClose, category }) {
     }
   };
 
-  const handleSelectProduct = () => {
-    if (selectedProduct) {
-      updateCarouselSetting(selectedProduct);
+  const handleSelectProducts = () => {
+    if (selectedProducts.length > 0) {
+      const existingSetting = carouselSettings.find(c => c.category === category);
+      const featuredIds = existingSetting?.featured_product_ids || [];
+      
+      // Add all selected products that aren't already in the carousel
+      const newIds = [...featuredIds];
+      selectedProducts.forEach(id => {
+        if (!newIds.includes(id)) {
+          newIds.push(id);
+        }
+      });
+
+      if (existingSetting) {
+        updateCarouselMutation.mutate({
+          id: existingSetting.id,
+          data: { featured_product_ids: newIds }
+        });
+      } else {
+        createCarouselMutation.mutate({
+          category: category,
+          display_order: carouselSettings.length,
+          is_active: true,
+          featured_product_ids: newIds
+        });
+      }
     }
+  };
+
+  const toggleProductSelection = (productId) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   const handleCreateProduct = () => {
@@ -204,7 +235,6 @@ export default function AddProductToCarousel({ isOpen, onClose, category }) {
   const categoryProducts = products.filter(p => p.category === category);
   const existingSetting = carouselSettings.find(c => c.category === category);
   const featuredIds = existingSetting?.featured_product_ids || [];
-  const availableProducts = categoryProducts.filter(p => !featuredIds.includes(p.id));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -222,42 +252,64 @@ export default function AddProductToCarousel({ isOpen, onClose, category }) {
           </TabsList>
 
           <TabsContent value="select" className="space-y-4 mt-4">
-            {availableProducts.length === 0 ? (
+            {categoryProducts.length === 0 ? (
               <div className="text-center py-8 text-emerald-600">
-                No available products in this category. Create a new one instead.
+                No products in this category. Create a new one instead.
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                  {availableProducts.map(product => (
-                    <button
-                      key={product.id}
-                      onClick={() => setSelectedProduct(product.id)}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        selectedProduct === product.id
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-emerald-200 hover:border-emerald-300'
-                      }`}
-                    >
-                      <img
-                        src={product.image_url || 'https://via.placeholder.com/150'}
-                        alt={product.name}
-                        className="w-full h-24 object-cover rounded-lg mb-2"
-                      />
-                      <p className="text-sm font-semibold text-emerald-900 truncate">{product.name}</p>
-                      <p className="text-xs text-emerald-600">${product.price}</p>
-                    </button>
-                  ))}
+                  {categoryProducts.map(product => {
+                    const isInCarousel = featuredIds.includes(product.id);
+                    const isSelected = selectedProducts.includes(product.id);
+                    
+                    return (
+                      <button
+                        key={product.id}
+                        onClick={() => toggleProductSelection(product.id)}
+                        className={`relative p-3 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-emerald-200 hover:border-emerald-300'
+                        }`}
+                      >
+                        {isInCarousel && (
+                          <div className="absolute top-2 right-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-semibold">
+                            In Carousel
+                          </div>
+                        )}
+                        {isSelected && (
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                              <path d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        )}
+                        <img
+                          src={product.image_url || 'https://via.placeholder.com/150'}
+                          alt={product.name}
+                          className="w-full h-24 object-cover rounded-lg mb-2"
+                        />
+                        <p className="text-sm font-semibold text-emerald-900 truncate">{product.name}</p>
+                        <p className="text-xs text-emerald-600">${product.price}</p>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={onClose}>Cancel</Button>
-                  <Button 
-                    onClick={handleSelectProduct}
-                    disabled={!selectedProduct || updateCarouselMutation.isPending || createCarouselMutation.isPending}
-                    className="bg-emerald-600"
-                  >
-                    Add to Carousel
-                  </Button>
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <p className="text-sm text-emerald-600">
+                    {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected
+                  </p>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button 
+                      onClick={handleSelectProducts}
+                      disabled={selectedProducts.length === 0 || updateCarouselMutation.isPending || createCarouselMutation.isPending}
+                      className="bg-emerald-600"
+                    >
+                      Add {selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''} to Carousel
+                    </Button>
+                  </div>
                 </div>
               </>
             )}
