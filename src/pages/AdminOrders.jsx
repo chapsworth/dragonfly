@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
@@ -779,10 +780,18 @@ export default function AdminOrders() {
                     </div>
                     <div className="mt-3">
                       <Label>Delivery Address</Label>
-                      <Input 
+                      <AddressAutocomplete
                         value={formData.delivery_address || ''} 
-                        onChange={(e) => setFormData({...formData, delivery_address: e.target.value})}
+                        onChange={(val) => setFormData({...formData, delivery_address: val})}
                         placeholder="123 Main St, City, State"
+                        onPlaceSelect={(details) => {
+                          setFormData({
+                            ...formData, 
+                            delivery_address: details.address,
+                            delivery_lat: details.lat,
+                            delivery_lng: details.lng
+                          });
+                        }}
                       />
                     </div>
                     <div className="mt-3">
