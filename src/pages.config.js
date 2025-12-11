@@ -25,6 +25,7 @@ import CRMDocuments from './pages/CRMDocuments';
 import OrderTracking from './pages/OrderTracking';
 import AdminLauncher from './pages/AdminLauncher';
 import DeliveryNavigation from './pages/DeliveryNavigation';
+import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "OrderTracking": OrderTracking,
     "AdminLauncher": AdminLauncher,
     "DeliveryNavigation": DeliveryNavigation,
+    "Profile": Profile,
 }
 
 export const pagesConfig = {
