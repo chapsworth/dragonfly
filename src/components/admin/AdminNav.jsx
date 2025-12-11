@@ -17,8 +17,8 @@ const navItems = [
 export default function AdminNav({ currentPage, mobile }) {
   if (mobile) {
     return (
-      <div className="flex items-center justify-around">
-        {navItems.slice(0, 5).map(item => {
+      <div className="flex items-center justify-around overflow-x-auto">
+        {navItems.map(item => {
           const isActive = currentPage === item.page;
           return (
             <Link
