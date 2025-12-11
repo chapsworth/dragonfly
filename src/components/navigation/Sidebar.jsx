@@ -31,6 +31,7 @@ const iconMap = {
 const navItems = [
   { name: 'Home', page: 'Home', icon: Home },
   { name: 'Shop', page: 'Shop', icon: ShoppingBag },
+  { name: 'Strain Library', page: 'StrainLibrary', icon: Leaf },
   { name: 'Radio', page: 'Radio', icon: Wind },
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
