@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import polyline from 'npm:@mapbox/polyline@1.2.1';
+import ChatModal from '@/components/delivery/ChatModal';
+import ChatButton from '@/components/delivery/ChatButton';
 
 export default function DeliveryNavigation() {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ export default function DeliveryNavigation() {
   const [currentRouteIndex, setCurrentRouteIndex] = useState(0);
   const [completedOrders, setCompletedOrders] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [chatOrder, setChatOrder] = useState(null);
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['delivery-orders', orderIds],
@@ -89,6 +92,20 @@ export default function DeliveryNavigation() {
     enabled: !!currentLocation,
     refetchInterval: 300000 // 5 minutes
   });
+
+  const { data: unreadMessages = [] } = useQuery({
+    queryKey: ['unread-messages'],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      const allMessages = await base44.entities.ChatMessage.list();
+      return allMessages.filter(m => !m.is_read && m.sender_email !== user.email);
+    },
+    refetchInterval: 5000
+  });
+
+  const getUnreadCountForOrder = (orderId) => {
+    return unreadMessages.filter(m => m.order_id === orderId).length;
+  };
 
   const updateLocationMutation = useMutation({
     mutationFn: async (location) => {
@@ -394,6 +411,10 @@ export default function DeliveryNavigation() {
                       <MessageSquare className="w-4 h-4" />
                     </Button>
                   </a>
+                  <ChatButton 
+                    onClick={() => setChatOrder(currentOrder)}
+                    unreadCount={getUnreadCountForOrder(currentOrder.id)}
+                  />
                 </div>
               </div>
 
@@ -471,17 +492,23 @@ export default function DeliveryNavigation() {
                 <p className="font-semibold">Upcoming Deliveries</p>
               </div>
               {pendingOrders.slice(1).map((order, idx) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">
-                      {idx + 2}
+                <div key={order.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">
+                        {idx + 2}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{order.customer_name}</p>
+                        <p className="text-xs text-gray-600">{order.delivery_address}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm">{order.customer_name}</p>
-                      <p className="text-xs text-gray-600">{order.delivery_address}</p>
-                    </div>
+                    <p className="font-bold text-emerald-600">${order.total.toFixed(2)}</p>
                   </div>
-                  <p className="font-bold text-emerald-600">${order.total.toFixed(2)}</p>
+                  <ChatButton 
+                    onClick={() => setChatOrder(order)}
+                    unreadCount={getUnreadCountForOrder(order.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -521,7 +548,13 @@ export default function DeliveryNavigation() {
             </div>
           )}
         </div>
-      </Card>
-    </div>
-  );
-}
+        </Card>
+
+        <ChatModal 
+        order={chatOrder}
+        isOpen={!!chatOrder}
+        onClose={() => setChatOrder(null)}
+        />
+        </div>
+        );
+        }
