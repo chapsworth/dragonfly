@@ -1,16 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft, FolderTree, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { name: 'Dashboard', page: 'AdminDashboard', icon: LayoutDashboard },
   { name: 'Products', page: 'AdminProducts', icon: Package },
-  { name: 'Categories', page: 'AdminCategories', icon: Settings },
+  { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
   { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
   { name: 'Users', page: 'AdminUsers', icon: Users },
-  { name: 'Carousel', page: 'AdminCarousel', icon: Settings },
+  { name: 'Carousel', page: 'AdminCarousel', icon: Image },
+  { name: 'Settings', page: 'AdminSettings', icon: Settings },
 ];
 
 export default function AdminNav({ currentPage, mobile }) {
