@@ -36,6 +36,7 @@ export default function StrainLibrary() {
   const [editingStrain, setEditingStrain] = useState(null);
   const [aiSearch, setAiSearch] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
+  const [batchCount, setBatchCount] = useState(10);
   const queryClient = useQueryClient();
 
   const { data: strains = [], isLoading } = useQuery({
@@ -52,34 +53,58 @@ export default function StrainLibrary() {
 
   const popularStrains = strains.filter(s => s.popular).slice(0, 3);
 
-  const handleAiDiscover = async () => {
-    if (!aiSearch.trim()) {
-      toast.error('Please enter a strain name');
+  const handleAiDiscover = async (mode = 'single') => {
+    if (mode === 'single' && !aiSearch.trim()) {
+      toast.error('Please enter strain name(s)');
       return;
     }
 
     setIsDiscovering(true);
     try {
-      const response = await base44.functions.invoke('discoverStrain', {
-        strainName: aiSearch.trim()
-      });
+      let payload;
+      
+      if (mode === 'surprise' || mode === 'teachme') {
+        // First get suggestions
+        toast.info(`Finding ${batchCount} ${mode === 'teachme' ? 'educational' : 'interesting'} strains...`);
+        const suggestResponse = await base44.functions.invoke('discoverStrain', {
+          mode,
+          count: batchCount
+        });
+        
+        if (!suggestResponse.data.success || !suggestResponse.data.strainNames?.length) {
+          toast.error('No new strains found');
+          setIsDiscovering(false);
+          return;
+        }
+        
+        toast.success(`Found ${suggestResponse.data.strainNames.length} strains to discover!`);
+        payload = { strainNames: suggestResponse.data.strainNames };
+      } else {
+        // Parse comma-separated strain names
+        const names = aiSearch.split(',').map(n => n.trim()).filter(Boolean);
+        if (names.length > 20) {
+          toast.error('Maximum 20 strains at a time');
+          setIsDiscovering(false);
+          return;
+        }
+        payload = { strainNames: names };
+      }
+
+      toast.info('Discovering strains... This may take a minute.');
+      const response = await base44.functions.invoke('discoverStrain', payload);
 
       if (response.data.success) {
         queryClient.invalidateQueries({ queryKey: ['strains'] });
-        setSelectedStrain(response.data.strain);
         setAiSearch('');
         
-        if (response.data.isNew) {
-          toast.success('New strain discovered and added to library!');
-        } else {
-          toast.info('Strain already exists in library');
-        }
+        const { new: newCount, existing, failed } = response.data;
+        toast.success(`Added ${newCount} new strains! (${existing} already existed, ${failed} failed)`);
       } else {
-        toast.error(response.data.error || 'Strain not found');
+        toast.error(response.data.error || 'Discovery failed');
       }
     } catch (error) {
       console.error('Discovery error:', error);
-      toast.error('Failed to discover strain. Please try again.');
+      toast.error('Failed to discover strains');
     } finally {
       setIsDiscovering(false);
     }
@@ -162,34 +187,66 @@ export default function StrainLibrary() {
               <h3 className="font-bold text-purple-900">AI Strain Discovery</h3>
             </div>
             <p className="text-sm text-purple-700 mb-4">
-              Search for any cannabis strain and let AI compile comprehensive information and images for you
+              Enter strain name(s) separated by commas (max 20), or let AI surprise you with new strains!
             </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter strain name to discover..."
-                value={aiSearch}
-                onChange={(e) => setAiSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAiDiscover()}
-                className="flex-1 bg-white border-purple-300 focus:border-purple-500"
-                disabled={isDiscovering}
-              />
-              <Button 
-                onClick={handleAiDiscover}
-                disabled={isDiscovering || !aiSearch.trim()}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-              >
-                {isDiscovering ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Discovering...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Discover
-                  </>
-                )}
-              </Button>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter strain name(s) or use buttons below..."
+                  value={aiSearch}
+                  onChange={(e) => setAiSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAiDiscover('single')}
+                  className="flex-1 bg-white border-purple-300 focus:border-purple-500"
+                  disabled={isDiscovering}
+                />
+                <Button 
+                  onClick={() => handleAiDiscover('single')}
+                  disabled={isDiscovering || !aiSearch.trim()}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  {isDiscovering ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Discovering...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Discover
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleAiDiscover('teachme')}
+                  disabled={isDiscovering}
+                  variant="outline"
+                  className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  Teach Me ({batchCount})
+                </Button>
+                <Button
+                  onClick={() => handleAiDiscover('surprise')}
+                  disabled={isDiscovering}
+                  variant="outline"
+                  className="flex-1 border-pink-300 text-pink-700 hover:bg-pink-50"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Surprise Me ({batchCount})
+                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={batchCount}
+                  onChange={(e) => setBatchCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 10)))}
+                  className="w-20 border-purple-300"
+                  disabled={isDiscovering}
+                />
+              </div>
             </div>
           </div>
         </motion.div>
