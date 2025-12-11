@@ -9,24 +9,9 @@ import RadioPlayer from '@/components/radio/RadioPlayer';
 import Header from '@/components/navigation/Header';
 import Sidebar from '@/components/navigation/Sidebar';
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-
-  // Check authentication and redirect to BiometricLogin if not authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (currentPageName === 'BiometricLogin') return; // Don't redirect if already on login page
-      
-      try {
-        await base44.auth.me();
-      } catch {
-        // Not authenticated, redirect to login
-        navigate(createPageUrl('BiometricLogin'));
-      }
-    };
-    checkAuth();
-  }, [currentPageName, navigate]);
 
   // Intercept logout to redirect to BiometricLogin
   useEffect(() => {
