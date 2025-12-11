@@ -34,6 +34,7 @@ export default function CartDrawer() {
 
     setIsSubmitting(true);
     try {
+      const user = await base44.auth.me();
       const order = await base44.entities.Order.create({
         items: cartItems.map(item => ({
           product_id: item.id,
@@ -44,12 +45,12 @@ export default function CartDrawer() {
           image_url: item.image_url
         })),
         total: cartTotal,
-        ...formData
+        ...formData,
+        customer_email: formData.customer_email || user.email
       });
 
       // Award loyalty points (1 point per dollar)
       try {
-        const user = await base44.auth.me();
         const pointsEarned = Math.floor(cartTotal);
         const currentPoints = user.loyalty_points || 0;
         const totalEarned = (user.total_points_earned || 0) + pointsEarned;
