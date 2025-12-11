@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
         }
 
         // If driver role, verify they can only update orders assigned to them
+        // Admins can update any order without restrictions
         if (user.role === 'driver' && order.driver_email !== user.email) {
             return Response.json({ error: 'Unauthorized - Can only update your own orders' }, { status: 403 });
         }
