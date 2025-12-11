@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2 } from 'lucide-react';
+import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ProductEditModal({ isOpen, onClose, product }) {
   const [formData, setFormData] = useState({
@@ -107,13 +108,31 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       console.log('AI generation result:', result);
       if (result && result.url) {
         setFormData(prev => ({ ...prev, image_url: result.url }));
-        alert('Image generated successfully!');
+        toast.success('Image generated successfully!');
       } else {
         throw new Error('No image URL returned');
       }
     } catch (error) {
       console.error('AI generation failed:', error);
-      alert('AI generation failed: ' + (error.message || 'Unknown error'));
+      toast.error('AI generation failed: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerateImage = async () => {
+    setIsGenerating(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({ 
+        prompt: `High-quality professional product photo of ${formData.name}. Cannabis marijuana strain, macro photography, detailed trichomes, studio lighting, white background, professional product shot` 
+      });
+      if (result && result.url) {
+        setFormData(prev => ({ ...prev, image_url: result.url }));
+        toast.success('Image regenerated successfully!');
+      }
+    } catch (error) {
+      console.error('Regeneration failed:', error);
+      toast.error('Failed to regenerate image');
     } finally {
       setIsGenerating(false);
     }
@@ -312,7 +331,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Tabs>
 
             {formData.image_url && (
-              <div className="mt-3 rounded-lg overflow-hidden border border-emerald-200 bg-emerald-50">
+              <div className="mt-3 rounded-lg overflow-hidden border border-emerald-200 bg-emerald-50 relative group">
                 <img 
                   key={formData.image_url}
                   src={formData.image_url} 
@@ -323,6 +342,20 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                     e.target.src = 'https://via.placeholder.com/400x160?text=Image+Load+Failed';
                   }}
                 />
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={handleRegenerateImage}
+                  disabled={isGenerating}
+                  title="Regenerate image with AI"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             )}
           </div>
