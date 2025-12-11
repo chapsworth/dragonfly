@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
-import { Fingerprint, Loader2, Mail, Leaf, Chrome } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Fingerprint, Loader2, Mail, Lock, Leaf, UserPlus, Chrome } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
 export default function BiometricLogin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasBiometric, setHasBiometric] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const navigate = useNavigate();
@@ -33,13 +39,27 @@ export default function BiometricLogin() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // Base44 Google OAuth - redirects to Google sign-in
-    window.location.href = `${window.location.origin}/api/auth/google`;
+  const handleGoogleSignIn = async () => {
+    try {
+      await base44.auth.loginWithGoogle();
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      toast.error('Google sign-in failed');
+    }
   };
 
-  const handleEmailLogin = () => {
-    base44.auth.redirectToLogin(createPageUrl('Home'));
+  const handleTraditionalLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await base44.auth.login(email, password);
+      toast.success('Logged in successfully!');
+      navigate(createPageUrl('Home'));
+    } catch (error) {
+      toast.error('Login failed: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBiometricLogin = async () => {
@@ -151,14 +171,53 @@ export default function BiometricLogin() {
             </div>
           )}
 
-          {/* Email Login Button */}
-          <Button
-            onClick={handleEmailLogin}
-            className="w-full h-14 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <Mail className="w-5 h-5 mr-2" />
-            Continue with Email
-          </Button>
+          {/* Traditional Login Form */}
+          <form onSubmit={handleTraditionalLogin} className="space-y-5">
+            <div>
+              <Label className="text-emerald-800 font-semibold">Email</Label>
+              <div className="relative mt-2">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="pl-12 h-14 border-2 border-emerald-200 focus:border-emerald-400 rounded-xl text-lg"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-emerald-800 font-semibold">Password</Label>
+              <div className="relative mt-2">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pl-12 h-14 border-2 border-emerald-200 focus:border-emerald-400 rounded-xl text-lg"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-14 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+          </form>
 
           {/* Sign Up Link */}
           <div className="mt-8 text-center">
