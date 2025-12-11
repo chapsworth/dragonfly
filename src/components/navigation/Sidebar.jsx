@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
   Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette,
-  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User
+  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User, Users, FolderTree, Settings, Image
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -35,6 +35,16 @@ const navItems = [
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
   { name: 'Contact', page: 'Contact', icon: Phone },
+];
+
+const adminNavItems = [
+  { name: 'Dashboard', page: 'AdminDashboard', icon: LayoutDashboard },
+  { name: 'Products', page: 'AdminProducts', icon: Package },
+  { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
+  { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
+  { name: 'Users', page: 'AdminUsers', icon: Users },
+  { name: 'Carousel', page: 'AdminCarousel', icon: Image },
+  { name: 'Settings', page: 'AdminSettings', icon: Settings },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -109,20 +119,24 @@ export default function Sidebar({ isOpen, onClose }) {
                   </h3>
                   <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform ${isAdminOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                  >
-                    <Link
-                      to={createPageUrl('AdminDashboard')}
-                      onClick={onClose}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
+                <CollapsibleContent className="mt-2 space-y-1">
+                  {adminNavItems.map((item, i) => (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
-                      <LayoutDashboard className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
-                      <span className="font-medium text-emerald-800">Dashboard</span>
-                    </Link>
-                  </motion.div>
+                      <Link
+                        to={createPageUrl(item.page)}
+                        onClick={onClose}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
+                      >
+                        <item.icon className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                        <span className="font-medium text-emerald-800">{item.name}</span>
+                      </Link>
+                    </motion.div>
+                  ))}
                 </CollapsibleContent>
               </Collapsible>
             )}
