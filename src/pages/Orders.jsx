@@ -20,7 +20,8 @@ export default function Orders() {
         { customer_email: user.email },
         '-created_date'
       );
-    }
+    },
+    refetchInterval: 5000
   });
 
   const filteredOrders = filter === 'all' 

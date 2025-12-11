@@ -35,7 +35,8 @@ export default function AdminOrders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date')
+    queryFn: () => base44.entities.Order.list('-created_date'),
+    refetchInterval: 5000
   });
 
   const { data: contacts = [] } = useQuery({
