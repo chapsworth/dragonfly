@@ -26,6 +26,9 @@ export default function Orders() {
   const filteredOrders = filter === 'all' 
     ? orders 
     : orders.filter(order => {
+        if (filter === 'pending') {
+          return order.status === 'pending';
+        }
         if (filter === 'active') {
           return ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status);
         }
@@ -63,6 +66,7 @@ export default function Orders() {
           <Tabs value={filter} onValueChange={setFilter}>
             <TabsList className="bg-white/60 backdrop-blur border border-white/40">
               <TabsTrigger value="all">All Orders</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
             </TabsList>
