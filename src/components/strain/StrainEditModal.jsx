@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus, Clipboard, Copy } from 'lucide-react';
+import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus, Clipboard, Copy, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StrainEditModal({ strain, isOpen, onClose }) {
@@ -57,6 +57,19 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
     },
     onError: (error) => {
       toast.error('Failed to update strain');
+      console.error(error);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.Strain.delete(strain.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['strains'] });
+      toast.success('Strain deleted successfully');
+      onClose();
+    },
+    onError: (error) => {
+      toast.error('Failed to delete strain');
       console.error(error);
     }
   });
@@ -156,21 +169,16 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Edit Strain</DialogTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={onClose}>
-                <X className="w-4 h-4" />
-              </Button>
-              <Button onClick={handleSave} disabled={updateMutation.isPending} size="sm">
-                {updateMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
           </div>
         </DialogHeader>
 
@@ -544,18 +552,29 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSave} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? (
+          <div className="flex justify-between gap-3">
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this strain?')) {
+                  deleteMutation.mutate();
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  Deleting...
                 </>
               ) : (
-                'Save Changes'
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Strain
+                </>
               )}
             </Button>
+            <Button variant="outline" onClick={onClose}>Close</Button>
           </div>
         </div>
       </DialogContent>
