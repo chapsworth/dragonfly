@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2, RefreshCw, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProductEditModal({ isOpen, onClose, product }) {
@@ -25,9 +25,12 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     in_stock: true,
     variants: []
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [unsplashQuery, setUnsplashQuery] = useState('');
+  const [unsplashResults, setUnsplashResults] = useState([]);
+  const [isUnsplashSearching, setIsUnsplashSearching] = useState(false);
+  const [googleQuery, setGoogleQuery] = useState('');
+  const [googleResults, setGoogleResults] = useState([]);
+  const [isGoogleSearching, setIsGoogleSearching] = useState(false);
   const [leaflyQuery, setLeaflyQuery] = useState('');
   const [leaflyResults, setLeaflyResults] = useState([]);
   const [isScrapingLeafly, setIsScrapingLeafly] = useState(false);
@@ -65,19 +68,40 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
 
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
+  const handleUnsplashSearch = async () => {
+    if (!unsplashQuery.trim()) return;
+    setIsUnsplashSearching(true);
     try {
       const response = await base44.functions.invoke('searchUnsplash', { 
-        query: searchQuery 
+        query: unsplashQuery 
       });
-      setSearchResults(response.data.images || []);
+      setUnsplashResults(response.data.images || []);
     } catch (error) {
-      console.error('Search failed:', error);
-      alert('Search failed: ' + error.message);
+      console.error('Unsplash search failed:', error);
+      toast.error('Unsplash search failed: ' + error.message);
     } finally {
-      setIsSearching(false);
+      setIsUnsplashSearching(false);
+    }
+  };
+
+  const handleGoogleSearch = async () => {
+    if (!googleQuery.trim()) return;
+    setIsGoogleSearching(true);
+    try {
+      const response = await base44.functions.invoke('searchGoogleImages', { 
+        query: googleQuery 
+      });
+      setGoogleResults(response.data.results || []);
+      if (response.data.results?.length > 0) {
+        toast.success(`Found ${response.data.results.length} images`);
+      } else {
+        toast.info('No images found');
+      }
+    } catch (error) {
+      console.error('Google search failed:', error);
+      toast.error('Google search failed: ' + error.message);
+    } finally {
+      setIsGoogleSearching(false);
     }
   };
 
@@ -204,10 +228,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </Label>
             
             <Tabs defaultValue="url" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="url">URL</TabsTrigger>
                 <TabsTrigger value="upload"><Upload className="w-4 h-4" /></TabsTrigger>
-                <TabsTrigger value="search"><Search className="w-4 h-4" /></TabsTrigger>
+                <TabsTrigger value="unsplash">Unsplash</TabsTrigger>
+                <TabsTrigger value="google">Google</TabsTrigger>
                 <TabsTrigger value="leafly"><Leaf className="w-4 h-4" /></TabsTrigger>
                 <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
               </TabsList>
@@ -230,26 +255,26 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                 />
               </TabsContent>
 
-              <TabsContent value="search" className="space-y-3">
+              <TabsContent value="unsplash" className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={unsplashQuery}
+                    onChange={(e) => setUnsplashQuery(e.target.value)}
                     placeholder="Search Unsplash..."
                     className="border-emerald-200"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUnsplashSearch()}
                   />
                   <Button 
-                    onClick={handleSearch}
-                    disabled={isSearching}
+                    onClick={handleUnsplashSearch}
+                    disabled={isUnsplashSearching}
                     className="bg-emerald-600"
                   >
-                    {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    {isUnsplashSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   </Button>
                 </div>
-                {searchResults.length > 0 && (
+                {unsplashResults.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-                    {searchResults.map((img, idx) => (
+                    {unsplashResults.map((img, idx) => (
                       <button
                         key={idx}
                         onClick={() => setFormData(prev => ({ ...prev, image_url: img.url }))}
@@ -261,6 +286,51 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                           className="w-full h-full object-cover"
                         />
                       </button>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="google" className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={googleQuery}
+                    onChange={(e) => setGoogleQuery(e.target.value)}
+                    placeholder="Search Google Images..."
+                    className="border-emerald-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleGoogleSearch()}
+                  />
+                  <Button 
+                    onClick={handleGoogleSearch}
+                    disabled={isGoogleSearching}
+                    className="bg-emerald-600"
+                  >
+                    {isGoogleSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {googleResults.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+                    {googleResults.map((img, idx) => (
+                      <div key={idx} className="relative group aspect-square">
+                        <img
+                          src={img}
+                          alt=""
+                          className="w-full h-full object-cover rounded-lg cursor-pointer hover:ring-2 ring-emerald-500 transition-all"
+                          onClick={() => setFormData(prev => ({ ...prev, image_url: img }))}
+                        />
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(img);
+                            toast.success('URL copied');
+                          }}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
