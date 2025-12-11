@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -52,45 +52,35 @@ export default function AdminDashboard() {
     .slice(0, 5);
 
   // Generate chart data for last 7 days
-  const getLast7Days = () => {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
-    }
-    return days;
-  };
-
-  const last7Days = getLast7Days();
-
-  // Stock levels data (simulated - you can adjust based on your data)
-  const stockData = last7Days.map((day, i) => ({
-    day,
-    value: Math.max(20, products.length - i * 2)
-  }));
-
-  // Revenue data by day
-  const revenueData = last7Days.map(day => {
-    const dayOrders = orders.filter(o => 
-      o.created_date && new Date(o.created_date).toISOString().split('T')[0] === day
-    );
-    return {
-      day,
-      value: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+  const chartData = useMemo(() => {
+    const getLast7Days = () => {
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        days.push(date.toISOString().split('T')[0]);
+      }
+      return days;
     };
-  });
 
-  // Customer signups by day
-  const signupData = last7Days.map(day => {
-    const dayUsers = users.filter(u => 
-      u.created_date && new Date(u.created_date).toISOString().split('T')[0] === day
-    );
-    return {
-      day,
-      value: dayUsers.length
-    };
-  });
+    const last7Days = getLast7Days();
+
+    return last7Days.map((day, i) => {
+      const dayOrders = orders.filter(o => 
+        o.created_date && new Date(o.created_date).toISOString().split('T')[0] === day
+      );
+      const dayUsers = users.filter(u => 
+        u.created_date && new Date(u.created_date).toISOString().split('T')[0] === day
+      );
+      
+      return {
+        day,
+        stock: Math.max(20, products.length - i * 2),
+        revenue: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        users: dayUsers.length * 5
+      };
+    });
+  }, [orders, users, products.length]);
 
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-700',
@@ -194,12 +184,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={120}>
-                <LineChart data={last7Days.map((day, i) => ({
-                  day,
-                  stock: stockData[i].value,
-                  revenue: revenueData[i].value,
-                  users: signupData[i].value * 5 // Scale up for visibility
-                }))}>
+                <LineChart data={chartData}>
                   <Line 
                     type="monotone" 
                     dataKey="stock" 
