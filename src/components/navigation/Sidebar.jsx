@@ -184,7 +184,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <span className="text-sm font-medium text-emerald-700">{user.full_name}</span>
                 </div>
                 <button
-                  onClick={() => base44.auth.logout()}
+                  onClick={() => base44.auth.logout(window.location.origin)}
                   className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors text-red-600"
                 >
                   <LogOut className="w-5 h-5" />
