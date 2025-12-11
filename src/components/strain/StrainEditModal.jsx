@@ -86,7 +86,7 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
     setIsGenerating(true);
     try {
       const response = await base44.integrations.Core.GenerateImage({
-        prompt: `Professional macro photography of ${formData.name} cannabis strain, high quality cannabis buds with visible trichomes, detailed close-up, studio lighting, clean white background, product photography style`
+        prompt: `${formData.name} Nugg, White Background`
       });
       
       setFormData({ ...formData, image_url: response.url });
