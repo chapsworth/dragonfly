@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
   Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette,
-  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User, Users, FolderTree, Settings, Image
+  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User, Users, FolderTree, Settings, Image, Briefcase
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -44,6 +44,7 @@ const adminNavItems = [
   { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
   { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
   { name: 'Users', page: 'AdminUsers', icon: Users },
+  { name: 'CRM', page: 'CRM', icon: Briefcase },
   { name: 'Carousel', page: 'AdminCarousel', icon: Image },
   { name: 'Settings', page: 'AdminSettings', icon: Settings },
 ];
