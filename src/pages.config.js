@@ -17,7 +17,6 @@ import StrainLibrary from './pages/StrainLibrary';
 import AdminInventory from './pages/AdminInventory';
 import CRM from './pages/CRM';
 import CRMContacts from './pages/CRMContacts';
-import BiometricLogin from './pages/BiometricLogin';
 import __Layout from './Layout.jsx';
 
 
@@ -41,7 +40,6 @@ export const PAGES = {
     "AdminInventory": AdminInventory,
     "CRM": CRM,
     "CRMContacts": CRMContacts,
-    "BiometricLogin": BiometricLogin,
 }
 
 export const pagesConfig = {
