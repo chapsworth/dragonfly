@@ -19,7 +19,7 @@ export default function RadioPlayer() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-2xl border-t-2 border-purple-400/30",
+          "fixed bottom-4 left-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-2xl border-2 border-purple-400/30 rounded-2xl",
           isMinimized ? "h-16" : "h-24"
         )}
       >
