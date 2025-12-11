@@ -26,9 +26,9 @@ Deno.serve(async (req) => {
         // Authenticate the user
         const user = await base44.auth.me();
         
-        // Only admins can update driver locations
-        if (!user || user.role !== 'admin') {
-            return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+        // Only admins and drivers can update driver locations
+        if (!user || (user.role !== 'admin' && user.role !== 'driver')) {
+            return Response.json({ error: 'Unauthorized - Admin or Driver access required' }, { status: 403 });
         }
         
         const { orderId, driverLat, driverLng, driverName, driverPhone } = await req.json();
@@ -43,6 +43,11 @@ Deno.serve(async (req) => {
 
         if (!order) {
             return Response.json({ error: 'Order not found' }, { status: 404 });
+        }
+
+        // If driver role, verify they can only update orders assigned to them
+        if (user.role === 'driver' && order.driver_email !== user.email) {
+            return Response.json({ error: 'Unauthorized - Can only update your own orders' }, { status: 403 });
         }
 
         // Calculate distance and ETA if delivery location exists
