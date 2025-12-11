@@ -146,16 +146,16 @@ export default function AdminOrders() {
       updateData.delivery_lng = parseFloat(formData.delivery_lng);
     }
     
-    saveMutation.mutate({ id: editingOrder?.id, data: updateData });
+    updateMutation.mutate({ id: editingOrder?.id, data: updateData });
   };
 
   const handleQuickStatusUpdate = (order, newStatus) => {
-    saveMutation.mutate({ id: order.id, data: { status: newStatus } });
+    updateMutation.mutate({ id: order.id, data: { status: newStatus } });
   };
 
   const handleCancelOrder = (order) => {
     if (confirm(`Cancel order #${order.id.slice(0, 8)}?`)) {
-      saveMutation.mutate({ id: order.id, data: { status: 'cancelled' } });
+      updateMutation.mutate({ id: order.id, data: { status: 'cancelled' } });
     }
   };
 
@@ -566,8 +566,8 @@ export default function AdminOrders() {
 
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => { setEditingOrder(null); setFormData({}); }} className="flex-1">Cancel</Button>
-                <Button onClick={handleSave} disabled={saveMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
-                  {saveMutation.isPending ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
+                <Button onClick={handleSave} disabled={updateMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
+                  {updateMutation.isPending ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
                 </Button>
               </div>
               </div>
