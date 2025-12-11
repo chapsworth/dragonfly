@@ -205,28 +205,39 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
                     />
                     <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
                       <Button
+                        type="button"
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8"
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           try {
                             const text = await navigator.clipboard.readText();
-                            setImageUrl(text);
-                            toast.success('URL pasted');
+                            if (text) {
+                              setImageUrl(text);
+                              toast.success('URL pasted from clipboard');
+                            } else {
+                              toast.error('Clipboard is empty');
+                            }
                           } catch (error) {
-                            toast.error('Failed to paste');
+                            console.error('Paste error:', error);
+                            toast.error('Failed to read clipboard. Please paste manually.');
                           }
                         }}
-                        title="Paste URL"
+                        title="Paste from clipboard"
                       >
                         <Clipboard className="w-4 h-4" />
                       </Button>
                       {imageUrl && (
                         <Button
+                          type="button"
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setImageUrl('');
                             setFormData({ ...formData, image_url: '' });
                             toast.success('Image URL cleared');
@@ -240,6 +251,7 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
                   </div>
                 </div>
                 <Button
+                  type="button"
                   onClick={() => {
                     setFormData({ ...formData, image_url: imageUrl });
                     toast.success('Image URL updated');
