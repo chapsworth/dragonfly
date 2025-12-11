@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -48,6 +49,14 @@ export default function Shop() {
   const { data: dbCategories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => base44.entities.Category.list()
+  });
+
+  const { data: appSettings } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.AppSettings.list();
+      return settings[0] || null;
+    }
   });
 
   const categories = [
@@ -115,7 +124,20 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-40">
+    <>
+      <Helmet>
+        <title>Shop - Dragonfly</title>
+        <meta name="description" content="Browse our premium cannabis products. High-quality flower, edibles, concentrates, and more." />
+        <meta property="og:title" content="Shop - Dragonfly" />
+        <meta property="og:description" content="Browse our premium cannabis products. High-quality flower, edibles, concentrates, and more." />
+        <meta property="og:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Shop - Dragonfly" />
+        <meta name="twitter:description" content="Browse our premium cannabis products. High-quality flower, edibles, concentrates, and more." />
+        <meta name="twitter:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-40">
       {/* Header Section */}
       <div className="pt-28 px-4 pb-4">
         <div className="max-w-7xl mx-auto">
@@ -334,7 +356,7 @@ export default function Shop() {
           </div>
         }
         </div>
-        </div>
-        );
-
-        }
+      </div>
+    </>
+  );
+}

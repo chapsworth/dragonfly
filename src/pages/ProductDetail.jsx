@@ -43,6 +43,14 @@ export default function ProductDetail() {
     enabled: !!productId
   });
 
+  const { data: appSettings } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.AppSettings.list();
+      return settings[0] || null;
+    }
+  });
+
   React.useEffect(() => {
     if (product?.variants && product.variants.length > 0) {
       setSelectedVariant(product.variants[0]);
@@ -85,12 +93,12 @@ export default function ProductDetail() {
         <meta name="description" content={product.description || `${product.name} - Premium cannabis products`} />
         <meta property="og:title" content={product.name} />
         <meta property="og:description" content={product.description || `${product.name} - Premium cannabis products`} />
-        <meta property="og:image" content={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800'} />
+        <meta property="og:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
         <meta property="og:type" content="product" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={product.name} />
         <meta name="twitter:description" content={product.description || `${product.name} - Premium cannabis products`} />
-        <meta name="twitter:image" content={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800'} />
+        <meta name="twitter:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-40 px-4">
         <div className="max-w-6xl mx-auto">
