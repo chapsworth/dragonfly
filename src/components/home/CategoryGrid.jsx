@@ -42,7 +42,7 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
 
 
   return (
-    <section className="px-2">
+    <section className="px-1">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-2 overflow-x-auto md:overflow-visible md:justify-between scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {categories.map((category) =>
