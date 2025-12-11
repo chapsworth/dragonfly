@@ -163,6 +163,19 @@ export default function AdminOrders() {
     resendEmailMutation.mutate(order);
   };
 
+  const handleTakeDelivery = async (order) => {
+    const user = await base44.auth.me();
+    updateMutation.mutate({
+      id: order.id,
+      data: {
+        status: 'out_for_delivery',
+        driver_email: user.email,
+        driver_name: user.full_name,
+        driver_phone: user.phone || ''
+      }
+    });
+  };
+
   const handleBulkAction = (action) => {
     if (selectedOrders.length === 0) {
       toast.error('No orders selected');
@@ -370,6 +383,12 @@ export default function AdminOrders() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(order)}>Edit Details</DropdownMenuItem>
+                          {(order.status === 'confirmed' || order.status === 'preparing') && (
+                            <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
+                              <Truck className="w-4 h-4 mr-2" />
+                              Take This Delivery
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleResendEmail(order)}>
                             <Mail className="w-4 h-4 mr-2" />
                             Resend Email
@@ -456,6 +475,12 @@ export default function AdminOrders() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleEdit(order)}>Edit</DropdownMenuItem>
+                              {(order.status === 'confirmed' || order.status === 'preparing') && (
+                                <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
+                                  <Truck className="w-4 h-4 mr-2" />
+                                  Take This Delivery
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={() => handleResendEmail(order)}>
                                 <Mail className="w-4 h-4 mr-2" />
                                 Resend Email
