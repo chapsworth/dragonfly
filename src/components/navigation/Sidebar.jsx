@@ -4,10 +4,11 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
   Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette,
-  ShoppingCart, Heart, Candy
+  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -38,6 +39,8 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const [user, setUser] = useState(null);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
 
   useEffect(() => {
     base44.auth.me()
@@ -99,55 +102,80 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
 
             {isAdmin && (
-              <div className="border-t border-emerald-100/50 pt-4 mb-6">
-                <h3 className="px-4 text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-3">
-                  Admin
-                </h3>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <Link
-                    to={createPageUrl('AdminDashboard')}
-                    onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
-                  >
-                    <LayoutDashboard className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
-                    <span className="font-medium text-emerald-800">Dashboard</span>
-                  </Link>
-                </motion.div>
-              </div>
-            )}
-
-            <div className="border-t border-emerald-100/50 pt-4">
-              <h3 className="px-4 text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-3">
-                Categories
-              </h3>
-              <div className="space-y-1">
-                {categories.map((cat, i) => (
+              <Collapsible open={isAdminOpen} onOpenChange={setIsAdminOpen} className="border-t border-emerald-100/50 pt-4 mb-6">
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 hover:bg-emerald-50 rounded-xl transition-colors">
+                  <h3 className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">
+                    Admin
+                  </h3>
+                  <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform ${isAdminOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
                   <motion.div
-                    key={cat.name}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.15 + i * 0.05 }}
                   >
                     <Link
-                      to={`${createPageUrl('Shop')}?category=${cat.slug}`}
+                      to={createPageUrl('AdminDashboard')}
                       onClick={onClose}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
                     >
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center`}>
-                        <cat.icon className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="font-medium text-emerald-800">{cat.name}</span>
+                      <LayoutDashboard className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                      <span className="font-medium text-emerald-800">Dashboard</span>
                     </Link>
                   </motion.div>
-                ))}
-              </div>
-            </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen} className="border-t border-emerald-100/50 pt-4">
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 hover:bg-emerald-50 rounded-xl transition-colors">
+                <h3 className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">
+                  Categories
+                </h3>
+                <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="space-y-1">
+                  {categories.map((cat, i) => (
+                    <motion.div
+                      key={cat.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.15 + i * 0.05 }}
+                    >
+                      <Link
+                        to={`${createPageUrl('Shop')}?category=${cat.slug}`}
+                        onClick={onClose}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center`}>
+                          <cat.icon className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-medium text-emerald-800">{cat.name}</span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
-          <div className="p-4 border-t border-emerald-100/50">
+          <div className="p-4 border-t border-emerald-100/50 space-y-3">
+            {user && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50">
+                  <User className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm font-medium text-emerald-700">{user.full_name}</span>
+                </div>
+                <button
+                  onClick={() => base44.auth.logout()}
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors text-red-600"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Sign Out</span>
+                </button>
+              </div>
+            )}
             <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-emerald-200/50">
               <p className="text-xs text-emerald-600 mb-1">Need help?</p>
               <p className="text-sm font-medium text-emerald-800">Call us at (555) 420-1234</p>

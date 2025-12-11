@@ -1,20 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Menu, ShoppingBag, Leaf, Phone, LogOut, LogIn, User } from 'lucide-react';
+import { Menu, ShoppingBag, Leaf, Phone } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
 
 export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
-  const [user, setUser] = React.useState(null);
-
-  React.useEffect(() => {
-    base44.auth.me()
-      .then(setUser)
-      .catch(() => setUser(null));
-  }, []);
 
   return (
     <header className="fixed lg:static top-0 left-0 right-0 z-40 lg:z-auto">
@@ -43,30 +35,6 @@ export default function Header({ onMenuClick }) {
                   <Phone className="w-6 h-6 text-green-600" />
                 </button>
               </Link>
-
-              {user ? (
-                <>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50">
-                    <User className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-700">{user.full_name}</span>
-                  </div>
-                  <button
-                    onClick={() => base44.auth.logout()}
-                    className="p-2 rounded-xl hover:bg-red-50 transition-colors"
-                    title="Sign Out"
-                  >
-                    <LogOut className="w-6 h-6 text-red-600" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => base44.auth.redirectToLogin()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-emerald-50 transition-colors"
-                >
-                  <LogIn className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-medium text-emerald-700 hidden sm:inline">Sign In</span>
-                </button>
-              )}
 
               <button
                 onClick={() => setIsCartOpen(true)}
