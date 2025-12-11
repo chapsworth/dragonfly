@@ -120,29 +120,45 @@ Be accurate and research-based. If the strain doesn't exist or you're not sure, 
           continue;
         }
 
-        // Try to find an image using Unsplash
+        // Try to find an image using Google Images first
         let imageUrl = '';
         try {
-          const unsplashKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
-          if (unsplashKey) {
-            const unsplashResponse = await fetch(
-              `https://api.unsplash.com/search/photos?query=cannabis+${encodeURIComponent(name)}&per_page=1`,
-              {
-                headers: {
-                  'Authorization': `Client-ID ${unsplashKey}`
-                }
-              }
-            );
-            const unsplashData = await unsplashResponse.json();
-            if (unsplashData.results && unsplashData.results.length > 0) {
-              imageUrl = unsplashData.results[0].urls.regular;
-            }
+          const googleSearchResponse = await base44.functions.invoke('searchGoogleImages', {
+            query: `${name} cannabis strain nugg`
+          });
+          
+          if (googleSearchResponse.data?.results?.length > 0) {
+            imageUrl = googleSearchResponse.data.results[0];
+            console.log('Found image via Google:', imageUrl);
           }
         } catch (e) {
-          console.log('Unsplash search failed:', e.message);
+          console.log('Google search failed:', e.message);
         }
 
-        // If no image found, generate one with AI
+        // Fallback to Unsplash
+        if (!imageUrl) {
+          try {
+            const unsplashKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
+            if (unsplashKey) {
+              const unsplashResponse = await fetch(
+                `https://api.unsplash.com/search/photos?query=cannabis+${encodeURIComponent(name)}&per_page=1`,
+                {
+                  headers: {
+                    'Authorization': `Client-ID ${unsplashKey}`
+                  }
+                }
+              );
+              const unsplashData = await unsplashResponse.json();
+              if (unsplashData.results && unsplashData.results.length > 0) {
+                imageUrl = unsplashData.results[0].urls.regular;
+              }
+            }
+          } catch (e) {
+            console.log('Unsplash search failed:', e.message);
+          }
+        }
+
+        // Final fallback: AI generation
         if (!imageUrl) {
           try {
             const aiImage = await base44.integrations.Core.GenerateImage({
