@@ -28,10 +28,8 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
-  const GOOGLE_MAPS_KEY = 'AIzaSyBFb2zzD7vQZnJ9xNJEKC2gD0QpYz9Jc2M'; // From secrets
-
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries: ['places', 'geometry']
   });
 
