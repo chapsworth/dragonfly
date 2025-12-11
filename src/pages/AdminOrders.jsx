@@ -192,11 +192,9 @@ export default function AdminOrders() {
       total: 0,
       status: 'pending',
       delivery_address: '',
-      customer_name: currentUser?.full_name || '',
-      customer_phone: currentUser?.phone || '',
-      customer_email: currentUser?.email || '',
       customer_id: '',
-      customer_selection: 'self'
+      customer_selection: 'existing',
+      driver_selection: 'none'
     });
     setIsCreateOpen(true);
   };
@@ -206,24 +204,36 @@ export default function AdminOrders() {
       toast.error('Please enter customer name');
       return;
     }
+    if (formData.customer_selection === 'existing' && !formData.customer_id) {
+      toast.error('Please select a customer');
+      return;
+    }
+    
+    const selectedContact = formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id) : null;
     
     const orderData = {
       items: formData.items || [],
       total: parseFloat(formData.total) || 0,
       status: formData.status,
       delivery_address: formData.delivery_address,
-      customer_name: formData.customer_selection === 'self' ? currentUser?.full_name : 
-                     formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.full_name :
-                     formData.new_customer_name,
-      customer_phone: formData.customer_selection === 'self' ? currentUser?.phone :
-                      formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.phone :
-                      formData.new_customer_phone,
-      customer_email: formData.customer_selection === 'self' ? currentUser?.email :
-                      formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.email :
-                      formData.new_customer_email,
+      customer_name: formData.customer_selection === 'existing' ? selectedContact?.full_name : formData.new_customer_name,
+      customer_phone: formData.customer_selection === 'existing' ? selectedContact?.phone : formData.new_customer_phone,
+      customer_email: formData.customer_selection === 'existing' ? selectedContact?.email : formData.new_customer_email,
       customer_id: formData.customer_selection === 'existing' ? formData.customer_id : undefined,
       notes: formData.notes
     };
+
+    // Add driver info if selected
+    if (formData.driver_selection === 'self') {
+      orderData.driver_name = currentUser?.full_name;
+      orderData.driver_phone = currentUser?.phone || '';
+      orderData.driver_email = currentUser?.email;
+      orderData.status = 'out_for_delivery';
+    } else if (formData.driver_selection === 'other') {
+      orderData.driver_name = formData.driver_name;
+      orderData.driver_phone = formData.driver_phone;
+      orderData.driver_email = formData.driver_email;
+    }
     
     createMutation.mutate(orderData);
   };
@@ -624,12 +634,8 @@ export default function AdminOrders() {
                 <>
                   {/* Customer Selection */}
                   <div>
-                    <Label className="text-base font-semibold mb-3 block">Customer</Label>
+                    <Label className="text-base font-semibold mb-3 block">Customer *</Label>
                     <RadioGroup value={formData.customer_selection} onValueChange={(v) => setFormData({...formData, customer_selection: v})}>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
-                        <RadioGroupItem value="self" id="self" />
-                        <Label htmlFor="self" className="flex-1 cursor-pointer">Send to myself ({currentUser?.email})</Label>
-                      </div>
                       <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
                         <RadioGroupItem value="existing" id="existing" />
                         <Label htmlFor="existing" className="flex-1 cursor-pointer">Select existing customer</Label>
@@ -643,7 +649,7 @@ export default function AdminOrders() {
 
                   {formData.customer_selection === 'existing' && (
                     <div>
-                      <Label>Select Customer</Label>
+                      <Label>Select Customer *</Label>
                       <Select value={formData.customer_id} onValueChange={(v) => setFormData({...formData, customer_id: v})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Choose a customer..." />
@@ -688,6 +694,58 @@ export default function AdminOrders() {
                           value={formData.new_customer_phone || ''} 
                           onChange={(e) => setFormData({...formData, new_customer_phone: e.target.value})}
                           placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Driver Assignment */}
+                  <div className="border-t border-emerald-100 pt-4">
+                    <Label className="text-base font-semibold mb-3 block">Delivery Driver</Label>
+                    <RadioGroup value={formData.driver_selection} onValueChange={(v) => setFormData({...formData, driver_selection: v})}>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="none" id="none" />
+                        <Label htmlFor="none" className="flex-1 cursor-pointer">No driver assigned yet</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="self" id="driver-self" />
+                        <Label htmlFor="driver-self" className="flex-1 cursor-pointer">I'll deliver this ({currentUser?.email})</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="other" id="other-driver" />
+                        <Label htmlFor="other-driver" className="flex-1 cursor-pointer">Assign to another driver</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {formData.driver_selection === 'other' && (
+                    <div className="space-y-3 p-4 border rounded-lg bg-blue-50/50">
+                      <Label className="font-semibold">Driver Details</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>Driver Name</Label>
+                          <Input 
+                            value={formData.driver_name || ''} 
+                            onChange={(e) => setFormData({...formData, driver_name: e.target.value})}
+                            placeholder="Jane Smith"
+                          />
+                        </div>
+                        <div>
+                          <Label>Driver Phone</Label>
+                          <Input 
+                            value={formData.driver_phone || ''} 
+                            onChange={(e) => setFormData({...formData, driver_phone: e.target.value})}
+                            placeholder="(555) 987-6543"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Driver Email</Label>
+                        <Input 
+                          type="email"
+                          value={formData.driver_email || ''} 
+                          onChange={(e) => setFormData({...formData, driver_email: e.target.value})}
+                          placeholder="driver@example.com"
                         />
                       </div>
                     </div>
