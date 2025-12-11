@@ -69,7 +69,15 @@ Deno.serve(async (req) => {
 
         // Use AI to research the strain
         const strainData = await base44.integrations.Core.InvokeLLM({
-          prompt: `Research the cannabis strain "${name}" and provide comprehensive information. Return ONLY valid JSON with this exact structure (no markdown, no code blocks):
+          prompt: `You're a passionate cannabis connoisseur with deep knowledge of strains. Research the cannabis strain "${name}" and write about it in an engaging, vivid way that captures its essence and character.
+
+Write a compelling 2-3 sentence description that:
+- Paints a sensory picture of the experience
+- Highlights what makes this strain unique or special
+- Uses evocative language that brings the strain to life
+- Feels natural and conversational, not clinical
+
+Return ONLY valid JSON (no markdown, no code blocks):
 {
   "name": "exact strain name",
   "type": "indica, sativa, hybrid, or cbd",
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
   "thc_max": number (max THC %),
   "cbd_min": number (min CBD %),
   "cbd_max": number (max CBD %),
-  "description": "detailed description 2-3 sentences",
+  "description": "your engaging, vivid 2-3 sentence description here",
   "effects": ["array", "of", "effects"],
   "flavors": ["array", "of", "flavors"],
   "medical_uses": ["array", "of", "medical", "uses"],
@@ -87,7 +95,7 @@ Deno.serve(async (req) => {
   "popular": false
 }
 
-Be accurate and research-based. If the strain doesn't exist or you're not sure, return: {"error": "Strain not found or verified"}`,
+Be accurate and research-based. If the strain doesn't exist or you're not confident, return: {"error": "Strain not found or verified"}`,
           add_context_from_internet: true,
           response_json_schema: {
         type: "object",
