@@ -28,10 +28,12 @@ export default function Home() {
     base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
   });
+
+  const products = allProducts.filter(p => p.published !== false);
 
   const { data: homeSettings } = useQuery({
     queryKey: ['homeSettings'],
