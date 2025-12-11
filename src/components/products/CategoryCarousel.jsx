@@ -1,9 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, Cigarette } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Leaf, Cannabis, Cookie, Droplets, Wind, Sparkles, Flame, Package, Cigarette, Plus } from 'lucide-react';
 import ProductCard from './ProductCard';
+import AddProductToCarousel from './AddProductToCarousel';
 import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
 
 const categoryIcons = {
   flower: Cannabis,
@@ -39,6 +41,12 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
   const scrollRef = useRef(null);
   const Icon = categoryIcons[category] || Leaf;
   const gradientColor = categoryColors[category] || 'from-emerald-400 to-green-500';
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -129,7 +137,33 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
             <ProductCard product={product} />
           </motion.div>
         ))}
+
+        {user?.role === 'admin' && (
+          <motion.button
+            onClick={() => setIsAddModalOpen(true)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: filteredProducts.length * 0.05 }}
+            className="min-w-[200px] sm:min-w-[240px] w-[200px] sm:w-[240px] h-[320px] sm:h-[370px] bg-gradient-to-br from-emerald-50 to-green-50 backdrop-blur-xl rounded-3xl border-2 border-dashed border-emerald-300 hover:border-emerald-500 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg group"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Plus className="w-8 h-8 text-white" strokeWidth={3} />
+            </div>
+            <div className="text-center px-4">
+              <p className="font-semibold text-emerald-900 mb-1">Add Product</p>
+              <p className="text-xs text-emerald-600">Select existing or create new</p>
+            </div>
+          </motion.button>
+        )}
       </div>
+
+      {user?.role === 'admin' && (
+        <AddProductToCarousel
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          category={category}
+        />
+      )}
     </div>
   );
 }
