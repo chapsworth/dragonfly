@@ -49,10 +49,22 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
 
 
 
-  let filteredProducts = selectedStrain === 'all' 
-    ? products 
-    : products.filter(p => p.strain_type === selectedStrain);
+  let filteredProducts = [...products];
 
+  // Filter by search
+  if (search) {
+    filteredProducts = filteredProducts.filter(p =>
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  // Filter by strain
+  if (selectedStrain !== 'all') {
+    filteredProducts = filteredProducts.filter(p => p.strain_type === selectedStrain);
+  }
+
+  // Sort products
   if (sortBy) {
     filteredProducts = [...filteredProducts].sort((a, b) => {
       const aVal = sortBy === 'thc' ? (a.thc_level || 0) : (a.cbd_level || 0);
