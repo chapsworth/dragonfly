@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import { ShoppingBag, Plus, Minus, Trash2, X, ArrowRight, Check } from 'lucide-react';
 import { useCart } from './CartContext';
 import { base44 } from '@/api/base44Client';
@@ -261,12 +262,11 @@ export default function CartDrawer() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-emerald-800">Delivery Address *</Label>
-                  <Textarea
+                  <AddressAutocomplete
                     value={formData.delivery_address}
-                    onChange={(e) => setFormData(p => ({ ...p, delivery_address: e.target.value }))}
-                    className="rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
+                    onChange={(val) => setFormData(p => ({ ...p, delivery_address: val }))}
+                    className="h-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
                     placeholder="123 Main St, Apt 4B, City, State 12345"
-                    rows={3}
                   />
                 </div>
                 <div className="space-y-2">
