@@ -117,7 +117,7 @@ export default function AdminLauncher() {
       </div>
 
       {/* App grid */}
-      <div className="px-6 pt-4 pb-20">
+      <div className="px-6 pt-16 pb-32">
         {/* Row 1 */}
         <div className="grid grid-cols-4 gap-x-4 gap-y-6 mb-6">
           {mainApps.map((app, i) => (
@@ -183,7 +183,7 @@ export default function AdminLauncher() {
       </div>
 
       {/* Dock */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-md">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-md">
         <div 
           className="bg-white/20 backdrop-blur-2xl rounded-[20px] px-4 py-3 border border-white/10"
           style={{
