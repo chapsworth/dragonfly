@@ -14,6 +14,7 @@ export function RadioProvider({ children }) {
   const [currentStation, setCurrentStation] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
+  const [isVisible, setIsVisible] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function RadioProvider({ children }) {
         audioRef.current.play();
         setCurrentStation(station);
         setIsPlaying(true);
+        setIsVisible(true);
       }
     }
   };
@@ -48,6 +50,16 @@ export function RadioProvider({ children }) {
       audioRef.current.pause();
       setIsPlaying(false);
     }
+  };
+
+  const close = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+    setIsPlaying(false);
+    setCurrentStation(null);
+    setIsVisible(false);
   };
 
   const changeVolume = (newVolume) => {
@@ -63,8 +75,10 @@ export function RadioProvider({ children }) {
         currentStation,
         isPlaying,
         volume,
+        isVisible,
         playStation,
         stop,
+        close,
         changeVolume,
       }}
     >
