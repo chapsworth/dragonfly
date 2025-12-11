@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus } from 'lucide-react';
+import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus, Eye, Trash2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import ProductSelector from '@/components/orders/ProductSelector';
+import OrderDetailModal from '@/components/orders/OrderDetailModal';
 
 const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -27,6 +29,8 @@ export default function AdminOrders() {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [viewMode, setViewMode] = useState('list');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
+  const [viewingOrder, setViewingOrder] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
@@ -190,6 +194,9 @@ export default function AdminOrders() {
     setEditingOrder(null);
     setFormData({
       items: [],
+      subtotal: 0,
+      discount: 0,
+      fees: 0,
       total: 0,
       status: 'pending',
       delivery_address: '',
@@ -198,6 +205,52 @@ export default function AdminOrders() {
       driver_selection: 'none'
     });
     setIsCreateOpen(true);
+  };
+
+  const calculateTotals = (items, discount = 0, fees = 0) => {
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - discount + fees;
+    return { subtotal, total };
+  };
+
+  const handleAddProducts = (products) => {
+    const newItems = [...(formData.items || []), ...products];
+    const { subtotal, total } = calculateTotals(newItems, formData.discount || 0, formData.fees || 0);
+    setFormData({ ...formData, items: newItems, subtotal, total });
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    const { subtotal, total } = calculateTotals(newItems, formData.discount || 0, formData.fees || 0);
+    setFormData({ ...formData, items: newItems, subtotal, total });
+  };
+
+  const handleUpdateItemPrice = (index, newPrice) => {
+    const newItems = formData.items.map((item, i) => 
+      i === index ? { ...item, price: parseFloat(newPrice) || 0 } : item
+    );
+    const { subtotal, total } = calculateTotals(newItems, formData.discount || 0, formData.fees || 0);
+    setFormData({ ...formData, items: newItems, subtotal, total });
+  };
+
+  const handleUpdateItemQuantity = (index, newQuantity) => {
+    const newItems = formData.items.map((item, i) => 
+      i === index ? { ...item, quantity: Math.max(1, parseInt(newQuantity) || 1) } : item
+    );
+    const { subtotal, total } = calculateTotals(newItems, formData.discount || 0, formData.fees || 0);
+    setFormData({ ...formData, items: newItems, subtotal, total });
+  };
+
+  const handleUpdateDiscount = (discount) => {
+    const discountVal = parseFloat(discount) || 0;
+    const { total } = calculateTotals(formData.items || [], discountVal, formData.fees || 0);
+    setFormData({ ...formData, discount: discountVal, total });
+  };
+
+  const handleUpdateFees = (fees) => {
+    const feesVal = parseFloat(fees) || 0;
+    const { total } = calculateTotals(formData.items || [], formData.discount || 0, feesVal);
+    setFormData({ ...formData, fees: feesVal, total });
   };
 
   const handleCreateOrder = () => {
@@ -209,14 +262,23 @@ export default function AdminOrders() {
       toast.error('Please select a customer');
       return;
     }
+    if (!formData.items || formData.items.length === 0) {
+      toast.error('Please add at least one product');
+      return;
+    }
     
     const selectedContact = formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id) : null;
     
     const orderData = {
-      items: formData.items || [],
-      total: parseFloat(formData.total) || 0,
+      items: formData.items,
+      subtotal: formData.subtotal,
+      discount: formData.discount || 0,
+      fees: formData.fees || 0,
+      total: formData.total,
       status: formData.status,
       delivery_address: formData.delivery_address,
+      delivery_lat: formData.delivery_lat,
+      delivery_lng: formData.delivery_lng,
       customer_name: formData.customer_selection === 'existing' ? selectedContact?.full_name : formData.new_customer_name,
       customer_phone: formData.customer_selection === 'existing' ? selectedContact?.phone : formData.new_customer_phone,
       customer_email: formData.customer_selection === 'existing' ? selectedContact?.email : formData.new_customer_email,
@@ -489,6 +551,10 @@ export default function AdminOrders() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setViewingOrder(order)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(order)}>Edit Details</DropdownMenuItem>
                           {(order.status === 'confirmed' || order.status === 'preparing') && (
                             <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
@@ -581,6 +647,10 @@ export default function AdminOrders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setViewingOrder(order)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(order)}>Edit</DropdownMenuItem>
                               {(order.status === 'confirmed' || order.status === 'preparing') && (
                                 <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
@@ -752,31 +822,112 @@ export default function AdminOrders() {
                     </div>
                   )}
 
+                  {/* Order Items */}
+                  <div className="border-t border-emerald-100 pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-base font-semibold">Order Items</Label>
+                      <Button 
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsProductSelectorOpen(true)}
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Products
+                      </Button>
+                    </div>
+
+                    {(!formData.items || formData.items.length === 0) ? (
+                      <p className="text-gray-400 text-center py-4 border rounded-lg">No products added yet</p>
+                    ) : (
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {formData.items.map((item, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            {item.image_url && (
+                              <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm truncate">{item.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.price}
+                                  onChange={(e) => handleUpdateItemPrice(index, e.target.value)}
+                                  className="h-7 w-20 text-xs"
+                                />
+                                <span className="text-xs">×</span>
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => handleUpdateItemQuantity(index, e.target.value)}
+                                  className="h-7 w-16 text-xs"
+                                />
+                                <span className="text-xs font-bold text-emerald-600">
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleRemoveItem(index)}
+                              className="h-8 w-8 text-red-500"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pricing Summary */}
+                    <div className="mt-4 p-4 bg-emerald-50 rounded-lg space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span className="font-semibold">${(formData.subtotal || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm">Discount</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.discount || 0}
+                          onChange={(e) => handleUpdateDiscount(e.target.value)}
+                          className="h-8 w-24 text-right"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm">Fees</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.fees || 0}
+                          onChange={(e) => handleUpdateFees(e.target.value)}
+                          className="h-8 w-24 text-right"
+                        />
+                      </div>
+                      <div className="flex justify-between font-bold text-lg border-t pt-2">
+                        <span>Total</span>
+                        <span className="text-emerald-600">${(formData.total || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Order Details */}
                   <div className="border-t border-emerald-100 pt-4">
                     <Label className="text-base font-semibold mb-3 block">Order Details</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Status</Label>
-                        <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map(s => (
-                              <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Total Amount ($)</Label>
-                        <Input 
-                          type="number"
-                          step="0.01"
-                          value={formData.total || ''} 
-                          onChange={(e) => setFormData({...formData, total: e.target.value})}
-                          placeholder="0.00"
-                        />
-                      </div>
+                    <div>
+                      <Label>Status</Label>
+                      <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {statusOptions.map(s => (
+                            <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="mt-3">
                       <Label>Delivery Address</Label>
@@ -887,6 +1038,18 @@ export default function AdminOrders() {
               </div>
             </DialogContent>
           </Dialog>
+
+          <ProductSelector
+            isOpen={isProductSelectorOpen}
+            onClose={() => setIsProductSelectorOpen(false)}
+            onAddProducts={handleAddProducts}
+          />
+
+          <OrderDetailModal
+            order={viewingOrder}
+            isOpen={!!viewingOrder}
+            onClose={() => setViewingOrder(null)}
+          />
         </div>
       </div>
     </div>
