@@ -248,7 +248,6 @@ function CRMContactsContent() {
     </div>
   );
 }
-}
 
 function ContactDialog({ contact, isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
