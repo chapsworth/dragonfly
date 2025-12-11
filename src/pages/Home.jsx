@@ -167,25 +167,21 @@ export default function Home() {
       </section>
     ),
     category_grid: (
-      <div key="category_grid" className="sticky top-0 lg:top-0 z-30 bg-white backdrop-blur-sm pb-2">
+      <div key="category_grid" className="sticky top-0 lg:top-0 z-30 bg-white backdrop-blur-sm">
         {/* Title & Filter Button */}
-        <div className="pt-4 px-4 pb-4">
+        <div className="pt-3 px-4 pb-2">
           <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4 flex items-center justify-center gap-4"
-            >
-              <h1 className="text-4xl font-bold text-emerald-900 text-center">Shop</h1>
-              <div className="flex items-center gap-2 absolute right-4">
+            <div className="flex items-center justify-center relative">
+              <h1 className="text-3xl font-bold text-emerald-900">Shop</h1>
+              <div className="absolute right-0 flex items-center gap-2">
                 <button
                   onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-                  className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white flex items-center justify-center"
+                  className="h-9 w-9 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center"
                 >
-                  <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
+                  <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
@@ -203,13 +199,13 @@ export default function Home() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden"
+              className="overflow-hidden pb-2"
             >
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-2 px-4">
+              <div className="flex flex-wrap items-center justify-center gap-2 px-4 pt-2">
                 {/* Strain Filters */}
                 <button
                   onClick={() => setSelectedStrain('all')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     selectedStrain === 'all'
                       ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
                       : 'bg-white/60 text-purple-700 hover:bg-white'
@@ -219,7 +215,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setSelectedStrain('indica')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     selectedStrain === 'indica'
                       ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
                       : 'bg-white/60 text-purple-700 hover:bg-white'
@@ -229,7 +225,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setSelectedStrain('sativa')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     selectedStrain === 'sativa'
                       ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
                       : 'bg-white/60 text-purple-700 hover:bg-white'
@@ -239,7 +235,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setSelectedStrain('hybrid')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     selectedStrain === 'hybrid'
                       ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
                       : 'bg-white/60 text-purple-700 hover:bg-white'
@@ -249,7 +245,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setSelectedStrain('cbd')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     selectedStrain === 'cbd'
                       ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
                       : 'bg-white/60 text-purple-700 hover:bg-white'
@@ -266,7 +262,7 @@ export default function Home() {
                     setSortBy('name');
                     setSortDirection('asc');
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     sortBy === 'name'
                       ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
                       : 'bg-white/60 text-blue-700 hover:bg-white'
@@ -283,7 +279,7 @@ export default function Home() {
                       setSortDirection('asc');
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
                     sortBy === 'price'
                       ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
                       : 'bg-white/60 text-blue-700 hover:bg-white'
@@ -303,7 +299,7 @@ export default function Home() {
                       setSortDirection('desc');
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
                     sortBy === 'thc'
                       ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
                       : 'bg-white/60 text-blue-700 hover:bg-white'
