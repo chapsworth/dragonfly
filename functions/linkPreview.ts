@@ -7,15 +7,34 @@ Deno.serve(async (req) => {
   let title = 'Dragonfly - Premium Cannabis Delivery';
   let description = 'Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet.';
   let imageUrl = 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80';
-  let redirectUrl = `${url.origin}`;
+  let redirectUrl = 'https://mydragonfly.club';
 
   // Customize based on page
   if (page === 'product' && productId) {
-    redirectUrl = `${url.origin}/?page=ProductDetail&id=${productId}`;
-    title = 'Premium Cannabis Product - Dragonfly';
-    description = 'Check out this premium cannabis product from Dragonfly';
+    // Fetch actual product data
+    try {
+      const apiUrl = `https://mydragonfly.base44.com/api/entity/Product/${productId}`;
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('BASE44_SERVICE_ROLE_KEY')}`
+        }
+      });
+      
+      if (response.ok) {
+        const product = await response.json();
+        title = `${product.name || 'Product'} - Dragonfly`;
+        description = product.description || 'Premium cannabis product - Order now for fast delivery';
+        imageUrl = product.image_url || imageUrl;
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      title = 'Premium Cannabis Product - Dragonfly';
+      description = 'Check out this premium cannabis product from Dragonfly';
+    }
+    
+    redirectUrl = `https://mydragonfly.club/?page=ProductDetail&id=${productId}`;
   } else if (page === 'shop') {
-    redirectUrl = `${url.origin}/?page=Shop`;
+    redirectUrl = 'https://mydragonfly.club/?page=Shop';
     title = 'Shop - Dragonfly';
     description = 'Browse our premium cannabis products. High-quality flower, edibles, concentrates, and more.';
   }
