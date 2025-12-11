@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2 } from 'lucide-react';
+import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
+import StrainEditModal from '@/components/strain/StrainEditModal';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -32,6 +33,7 @@ export default function StrainLibrary() {
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStrain, setSelectedStrain] = useState(null);
+  const [editingStrain, setEditingStrain] = useState(null);
   const [aiSearch, setAiSearch] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
   const queryClient = useQueryClient();
@@ -241,10 +243,9 @@ export default function StrainLibrary() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                onClick={() => setSelectedStrain(strain)}
-                className="cursor-pointer"
+                className="relative"
               >
-                <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400">
+                <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedStrain(strain)}>
                   <div className="h-40 relative">
                     <img 
                       src={strain.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=300'} 
@@ -254,6 +255,15 @@ export default function StrainLibrary() {
                     <div className={`absolute top-2 left-2 px-2 py-1 rounded-full bg-gradient-to-r ${strainColors[strain.type]} text-white text-xs font-bold`}>
                       {strain.type}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingStrain(strain);
+                      }}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                    >
+                      <Edit2 className="w-4 h-4 text-emerald-600" />
+                    </button>
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-emerald-900 mb-2">{strain.name}</h3>
@@ -273,6 +283,13 @@ export default function StrainLibrary() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      <StrainEditModal
+        strain={editingStrain}
+        isOpen={!!editingStrain}
+        onClose={() => setEditingStrain(null)}
+      />
 
       {/* Strain Detail Modal */}
       <Dialog open={!!selectedStrain} onOpenChange={() => setSelectedStrain(null)}>
@@ -298,6 +315,16 @@ export default function StrainLibrary() {
                       )}
                     </div>
                   </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditingStrain(selectedStrain);
+                      setSelectedStrain(null);
+                    }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </DialogHeader>
 
