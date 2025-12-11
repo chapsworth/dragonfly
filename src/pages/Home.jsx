@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone, SlidersHorizontal, ArrowUp, ArrowDown, Search, X } from 'lucide-react';
@@ -39,6 +40,14 @@ export default function Home() {
     queryKey: ['homeSettings'],
     queryFn: async () => {
       const settings = await base44.entities.HomeSettings.list();
+      return settings[0] || null;
+    }
+  });
+
+  const { data: appSettings } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.AppSettings.list();
       return settings[0] || null;
     }
   });
@@ -386,8 +395,21 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
+    <>
+      <Helmet>
+        <title>Dragonfly - Premium Cannabis Delivery</title>
+        <meta name="description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
+        <meta property="og:title" content="Dragonfly - Premium Cannabis Delivery" />
+        <meta property="og:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
+        <meta property="og:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Dragonfly - Premium Cannabis Delivery" />
+        <meta name="twitter:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
+        <meta name="twitter:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
+      </Helmet>
+      <div className="min-h-screen bg-white">
+        <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
         {/* Admin Edit Button */}
         {user?.role === 'admin' && (
           <motion.button

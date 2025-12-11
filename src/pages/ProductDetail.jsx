@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, ArrowLeft, Leaf, Award, Edit2 } from 'lucide-react';
@@ -78,8 +79,21 @@ export default function ProductDetail() {
   const currentPrice = selectedVariant?.price || product?.price || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-40 px-4">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <Helmet>
+        <title>{product.name} - Dragonfly</title>
+        <meta name="description" content={product.description || `${product.name} - Premium cannabis products`} />
+        <meta property="og:title" content={product.name} />
+        <meta property="og:description" content={product.description || `${product.name} - Premium cannabis products`} />
+        <meta property="og:image" content={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800'} />
+        <meta property="og:type" content="product" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={product.name} />
+        <meta name="twitter:description" content={product.description || `${product.name} - Premium cannabis products`} />
+        <meta name="twitter:image" content={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=800'} />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-40 px-4">
+        <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <Link to={createPageUrl('Shop')} className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
             <ArrowLeft className="w-5 h-5" />
@@ -246,6 +260,7 @@ export default function ProductDetail() {
         }}
         product={product}
       />
-    </div>
+      </div>
+    </>
   );
 }

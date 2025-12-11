@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { HelmetProvider } from 'react-helmet-async';
 import { CartProvider } from '@/components/cart/CartContext';
 import { RadioProvider } from '@/components/radio/RadioContext';
 import CartDrawer from '@/components/cart/CartDrawer';
@@ -39,18 +40,20 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <CartProvider>
-      <RadioProvider>
-        <div className="min-h-screen">
-          <Header onMenuClick={() => setIsSidebarOpen(true)} />
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-          <CartDrawer />
-          <RadioPlayer />
-          <main>
-            {children}
-          </main>
-        </div>
-      </RadioProvider>
-    </CartProvider>
+    <HelmetProvider>
+      <CartProvider>
+        <RadioProvider>
+          <div className="min-h-screen">
+            <Header onMenuClick={() => setIsSidebarOpen(true)} />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            <CartDrawer />
+            <RadioPlayer />
+            <main>
+              {children}
+            </main>
+          </div>
+        </RadioProvider>
+      </CartProvider>
+    </HelmetProvider>
   );
 }
