@@ -98,21 +98,9 @@ export default function AdminProducts() {
   };
 
   const copyShareLink = (product) => {
-    // Get the base44 app URL from the current hostname
-    const hostname = window.location.hostname;
-    let functionUrl;
-    
-    if (hostname.includes('.base44.com')) {
-      // Already on base44 domain
-      functionUrl = `${window.location.protocol}//${hostname}/function/linkPreview?page=product&id=${product.id}`;
-    } else {
-      // Custom domain - need to use base44 function URL
-      // Extract app ID from the page or use a fallback
-      const appId = window.location.hostname.split('.')[0];
-      functionUrl = `https://${appId}.base44.com/function/linkPreview?page=product&id=${product.id}`;
-    }
-    
-    navigator.clipboard.writeText(functionUrl);
+    // Use mydragonfly.club for white-labeled sharing
+    const shareUrl = `https://mydragonfly.club/function/linkPreview?page=product&id=${product.id}`;
+    navigator.clipboard.writeText(shareUrl);
     toast.success('Share link copied to clipboard!');
   };
 
