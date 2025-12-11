@@ -602,8 +602,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               <Label>Price ($) *</Label>
               <Input
                 type="number"
+                step="0.01"
+                inputMode="decimal"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                onFocus={(e) => e.target.select()}
                 className="border-emerald-200"
                 placeholder="Required"
               />
@@ -612,8 +615,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               <Label>THC %</Label>
               <Input
                 type="number"
+                step="0.1"
+                inputMode="decimal"
                 value={formData.thc_level}
                 onChange={(e) => setFormData(prev => ({ ...prev, thc_level: e.target.value }))}
+                onFocus={(e) => e.target.select()}
                 className="border-emerald-200"
               />
             </div>
@@ -621,8 +627,11 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               <Label>CBD %</Label>
               <Input
                 type="number"
+                step="0.1"
+                inputMode="decimal"
                 value={formData.cbd_level}
                 onChange={(e) => setFormData(prev => ({ ...prev, cbd_level: e.target.value }))}
+                onFocus={(e) => e.target.select()}
                 className="border-emerald-200"
               />
             </div>

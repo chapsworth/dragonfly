@@ -107,6 +107,13 @@ export default function AdminProducts() {
     }
   };
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Product.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    }
+  });
+
   const handleBulkEdit = (field, value) => {
     Promise.all(selectedProducts.map(id => {
       const product = products.find(p => p.id === id);
@@ -252,6 +259,14 @@ export default function AdminProducts() {
                       <Button variant="outline" size="sm">Bulk Actions</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={() => handleBulkEdit('published', true)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Publish
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkEdit('published', false)}>
+                        <EyeOff className="w-4 h-4 mr-2" />
+                        Hide
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', true)}>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Mark In Stock
@@ -397,7 +412,10 @@ export default function AdminProducts() {
                   <div className="p-3">
                     <h3 className="font-bold text-emerald-900 text-sm mb-1 line-clamp-1">{product.name}</h3>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      <div className="flex gap-1">
+                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                        {!product.published && <Badge variant="outline" className="text-xs">Hidden</Badge>}
+                      </div>
                       <span className="font-bold text-emerald-600 text-sm">${product.price?.toFixed(2)}</span>
                     </div>
                     <div className="text-xs text-emerald-600 mb-2">
@@ -440,9 +458,10 @@ export default function AdminProducts() {
                         <span className="font-bold text-emerald-600 text-sm whitespace-nowrap">${product.price?.toFixed(2)}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                        <span className="text-xs text-emerald-600">THC: {product.thc_level}%</span>
-                        <span className="text-xs text-emerald-600">CBD: {product.cbd_level}%</span>
+                       <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                       {!product.published && <Badge variant="outline" className="text-xs">Hidden</Badge>}
+                       <span className="text-xs text-emerald-600">THC: {product.thc_level}%</span>
+                       <span className="text-xs text-emerald-600">CBD: {product.cbd_level}%</span>
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="h-7 text-xs">
