@@ -4,18 +4,22 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
+import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
 import PageEditor from '@/components/editor/PageEditor';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [user, setUser] = React.useState(null);
   const [pageSections, setPageSections] = React.useState([]);
+  const [isFiltersOpen, setIsFiltersOpen] = React.useState(false);
+  const [selectedStrain, setSelectedStrain] = React.useState('all');
+  const [sortBy, setSortBy] = React.useState(null);
+  const [sortDirection, setSortDirection] = React.useState('desc');
 
   React.useEffect(() => {
     base44.auth.me().then(setUser).catch(() => setUser(null));
@@ -163,11 +167,117 @@ export default function Home() {
       </section>
     ),
     category_grid: (
-      <CategoryGrid 
-        key="category_grid"
-        selectedCategory={selectedCategory} 
-        onCategoryChange={setSelectedCategory} 
-      />
+      <div key="category_grid">
+        <CategoryGrid 
+          selectedCategory={selectedCategory} 
+          onCategoryChange={setSelectedCategory} 
+        />
+        
+        {/* Global Filter Button */}
+        <div className="flex justify-center mt-4 mb-2">
+          <button
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
+          >
+            <SlidersHorizontal className="w-5 h-5 text-emerald-700" />
+          </button>
+        </div>
+
+        {/* Global Filters */}
+        <AnimatePresence>
+          {isFiltersOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden px-4 mb-4"
+            >
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setSelectedStrain('all')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
+                    selectedStrain === 'all'
+                      ? 'bg-white text-black border-black'
+                      : 'bg-white text-black border-black'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('sativa')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'sativa'
+                      ? 'bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md'
+                      : 'bg-white/60 text-orange-700 hover:bg-white'
+                  }`}
+                >
+                  Sativa
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('hybrid')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'hybrid'
+                      ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md'
+                      : 'bg-white/60 text-emerald-700 hover:bg-white'
+                  }`}
+                >
+                  Hybrid
+                </button>
+                <button
+                  onClick={() => setSelectedStrain('indica')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    selectedStrain === 'indica'
+                      ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-md'
+                      : 'bg-white/60 text-purple-700 hover:bg-white'
+                  }`}
+                >
+                  Indica
+                </button>
+                <button
+                  onClick={() => {
+                    if (sortBy === 'thc') {
+                      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+                    } else {
+                      setSortBy('thc');
+                      setSortDirection('desc');
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                    sortBy === 'thc'
+                      ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                      : 'bg-white/60 text-red-700 hover:bg-white'
+                  }`}
+                >
+                  THC
+                  {sortBy === 'thc' && (
+                    sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    if (sortBy === 'cbd') {
+                      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+                    } else {
+                      setSortBy('cbd');
+                      setSortDirection('desc');
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                    sortBy === 'cbd'
+                      ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-md'
+                      : 'bg-white/60 text-blue-700 hover:bg-white'
+                  }`}
+                >
+                  CBD
+                  {sortBy === 'cbd' && (
+                    sortDirection === 'desc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     ),
     carousels: (
       <section key="carousels" className="py-8 pb-24">
@@ -188,6 +298,9 @@ export default function Home() {
                     key={cat.slug}
                     category={cat.slug}
                     products={productsByCategory[cat.slug] || []}
+                    selectedStrain={selectedStrain}
+                    sortBy={sortBy}
+                    sortDirection={sortDirection}
                   />
                 );
               })
