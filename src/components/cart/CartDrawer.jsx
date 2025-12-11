@@ -44,9 +44,14 @@ export default function CartDrawer() {
           quantity: item.quantity,
           image_url: item.image_url
         })),
+        subtotal: cartTotal,
         total: cartTotal,
-        ...formData,
-        customer_email: formData.customer_email || user.email
+        customer_name: formData.customer_name || user.full_name,
+        customer_email: formData.customer_email || user.email,
+        customer_phone: formData.customer_phone,
+        delivery_address: formData.delivery_address,
+        notes: formData.notes,
+        status: 'pending'
       });
 
       // Award loyalty points (1 point per dollar)
