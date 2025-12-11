@@ -1,102 +1,103 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Navigation, ChevronRight, MapPin } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Navigation, ArrowRight, ArrowLeft, ArrowUp, Clock, MapPin, MoveRight } from 'lucide-react';
 
-const getManeuverIcon = (maneuver) => {
-  if (maneuver.includes('left')) return ArrowLeft;
-  if (maneuver.includes('right')) return MoveRight;
-  return ArrowUp;
-};
-
-export default function DirectionsPanel({ directions, currentLegIndex = 0, currentStepIndex = 0 }) {
-  if (!directions || directions.length === 0) {
+export default function DirectionsPanel({ steps, currentStepIndex, onStepChange, destination }) {
+  if (!steps || steps.length === 0) {
     return (
-      <Card className="p-4">
-        <p className="text-gray-500 text-center">No directions available</p>
+      <Card className="p-4 bg-white">
+        <div className="text-center text-gray-400">
+          <Navigation className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No directions available</p>
+        </div>
       </Card>
     );
   }
 
-  const currentLeg = directions[currentLegIndex];
-  const currentStep = currentLeg?.steps[currentStepIndex];
-
   return (
-    <Card className="overflow-hidden">
-      {/* Current Step - Large Display */}
-      {currentStep && (
-        <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6">
-          <div className="flex items-start gap-4">
-            <div className="bg-white/20 p-3 rounded-xl">
-              {React.createElement(getManeuverIcon(currentStep.maneuver), { className: "w-8 h-8" })}
-            </div>
-            <div className="flex-1">
-              <p className="text-2xl font-bold mb-2">{currentStep.instruction}</p>
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {currentStep.distance}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {currentStep.duration}
-                </span>
-              </div>
-            </div>
-          </div>
+    <Card className="p-4 bg-white">
+      <div className="flex items-center gap-2 mb-4">
+        <Navigation className="w-5 h-5 text-emerald-600" />
+        <h3 className="font-bold text-lg">Turn-by-Turn Directions</h3>
+      </div>
+
+      <div className="mb-3 p-3 bg-blue-50 rounded-lg flex items-center gap-2">
+        <MapPin className="w-4 h-4 text-blue-600" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-600">Destination</p>
+          <p className="text-sm font-semibold truncate">{destination}</p>
         </div>
-      )}
+      </div>
 
-      {/* Upcoming Steps */}
       <ScrollArea className="h-[300px]">
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-emerald-900">Upcoming Steps</h3>
-            <Badge variant="outline">
-              Leg {currentLegIndex + 1} of {directions.length}
-            </Badge>
-          </div>
-
-          {currentLeg?.steps.map((step, index) => {
-            if (index <= currentStepIndex) return null;
-            const Icon = getManeuverIcon(step.maneuver);
-            
-            return (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="bg-emerald-100 p-2 rounded-lg">
-                  <Icon className="w-5 h-5 text-emerald-600" />
+        <div className="space-y-2">
+          {steps.map((step, idx) => (
+            <div
+              key={idx}
+              className={`p-3 rounded-lg border-2 transition-all ${
+                idx === currentStepIndex
+                  ? 'bg-emerald-100 border-emerald-500 shadow-md'
+                  : idx < currentStepIndex
+                  ? 'bg-gray-50 border-gray-200 opacity-60'
+                  : 'bg-white border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                    idx === currentStepIndex
+                      ? 'bg-emerald-500 text-white'
+                      : idx < currentStepIndex
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-300 text-gray-600'
+                  }`}
+                >
+                  {idx < currentStepIndex ? '✓' : idx + 1}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{step.instruction}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {step.distance} • {step.duration}
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm font-semibold mb-1"
+                    dangerouslySetInnerHTML={{ __html: step.instruction }}
+                  />
+                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                    <span>{step.distance}</span>
+                    <span>•</span>
+                    <span>{step.duration}</span>
+                  </div>
                 </div>
+                {idx === currentStepIndex && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onStepChange(idx + 1)}
+                    disabled={idx >= steps.length - 1}
+                    className="flex-shrink-0"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
-            );
-          })}
-
-          {/* Next Leg Preview */}
-          {currentLegIndex < directions.length - 1 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <ArrowRight className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-semibold text-blue-900">Next Delivery</span>
-              </div>
-              <p className="text-sm text-blue-700">
-                {directions[currentLegIndex + 1].endAddress}
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                {directions[currentLegIndex + 1].distance} • {directions[currentLegIndex + 1].duration}
-              </p>
             </div>
-          )}
+          ))}
         </div>
       </ScrollArea>
+
+      <div className="mt-4 flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+        <div>
+          <p className="text-xs text-gray-600">Current Step</p>
+          <p className="font-bold text-emerald-900">
+            {currentStepIndex + 1} of {steps.length}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-gray-600">Progress</p>
+          <p className="font-bold text-emerald-900">
+            {Math.round(((currentStepIndex + 1) / steps.length) * 100)}%
+          </p>
+        </div>
+      </div>
     </Card>
   );
 }

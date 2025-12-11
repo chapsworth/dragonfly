@@ -1,70 +1,79 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Wind, AlertCircle } from 'lucide-react';
+import { Wind, AlertTriangle } from 'lucide-react';
 
-const getAQIColor = (aqi) => {
-  const colors = {
-    1: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
-    2: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
-    3: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' },
-    4: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
-    5: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
-  };
-  return colors[aqi] || colors[1];
-};
-
-export default function AirQualityWidget({ airQuality, isLoading }) {
-  if (isLoading) {
+export default function AirQualityWidget({ airQuality }) {
+  if (!airQuality) {
     return (
-      <Card className="p-4">
-        <div className="animate-pulse space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-          <div className="h-6 bg-gray-200 rounded w-16"></div>
-        </div>
+      <Card className="p-4 bg-white">
+        <p className="text-sm text-gray-400">Loading air quality...</p>
       </Card>
     );
   }
 
-  if (!airQuality) return null;
+  const getAQIColor = (level) => {
+    const colors = {
+      'Good': 'from-green-500 to-emerald-500',
+      'Fair': 'from-yellow-500 to-amber-500',
+      'Moderate': 'from-orange-500 to-red-400',
+      'Poor': 'from-red-500 to-red-600',
+      'Very Poor': 'from-purple-600 to-pink-600'
+    };
+    return colors[level] || 'from-gray-500 to-gray-600';
+  };
 
-  const colors = getAQIColor(airQuality.aqi);
+  const getAQITextColor = (level) => {
+    const colors = {
+      'Good': 'text-green-600',
+      'Fair': 'text-yellow-600',
+      'Moderate': 'text-orange-600',
+      'Poor': 'text-red-600',
+      'Very Poor': 'text-purple-600'
+    };
+    return colors[level] || 'text-gray-600';
+  };
+
+  const showWarning = airQuality.level !== 'Good' && airQuality.level !== 'Fair';
 
   return (
-    <Card className={`p-4 ${colors.bg} border-2 ${colors.border}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Wind className={`w-5 h-5 ${colors.text}`} />
-            <p className="text-xs font-medium">Air Quality Index</p>
+    <Card className={`p-4 bg-gradient-to-br ${getAQIColor(airQuality.level)} text-white`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Wind className="w-6 h-6" />
+          <div>
+            <h3 className="font-bold text-lg">Air Quality</h3>
+            <p className="text-sm opacity-90">{airQuality.level}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className={`text-3xl font-bold ${colors.text}`}>{airQuality.aqi}</span>
-            <Badge className={`${colors.bg} ${colors.text}`}>
-              {airQuality.label}
-            </Badge>
-          </div>
+        </div>
+        {showWarning && <AlertTriangle className="w-6 h-6" />}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-xs opacity-90 mb-1">AQI Index</p>
+          <p className="text-2xl font-bold">{airQuality.aqi}</p>
+        </div>
+
+        <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-xs opacity-90 mb-1">PM2.5</p>
+          <p className="text-2xl font-bold">{airQuality.pm25.toFixed(1)}</p>
+        </div>
+
+        <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-xs opacity-90 mb-1">PM10</p>
+          <p className="text-2xl font-bold">{airQuality.pm10.toFixed(1)}</p>
+        </div>
+
+        <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-xs opacity-90 mb-1">O₃ (Ozone)</p>
+          <p className="text-2xl font-bold">{airQuality.o3.toFixed(1)}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-current/20">
-        <div>
-          <p className="text-xs opacity-70">PM2.5</p>
-          <p className="text-sm font-semibold">{airQuality.pm25.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-xs opacity-70">PM10</p>
-          <p className="text-sm font-semibold">{airQuality.pm10.toFixed(1)}</p>
-        </div>
-      </div>
-
-      {airQuality.aqi >= 3 && (
-        <div className={`mt-3 p-2 rounded-lg ${colors.bg} border ${colors.border} flex items-start gap-2`}>
-          <AlertCircle className="w-4 h-4 mt-0.5" />
-          <p className="text-xs">
-            {airQuality.aqi >= 4 
-              ? 'Poor air quality. Consider limiting outdoor exposure.' 
-              : 'Moderate air quality. Sensitive individuals should take precautions.'}
+      {showWarning && (
+        <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-xs font-semibold">
+            Air quality may affect sensitive individuals. Consider shorter outdoor exposure.
           </p>
         </div>
       )}

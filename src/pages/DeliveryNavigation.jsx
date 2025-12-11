@@ -17,6 +17,10 @@ import { toast } from 'sonner';
 import polyline from 'npm:@mapbox/polyline@1.2.1';
 import ChatModal from '@/components/delivery/ChatModal';
 import ChatButton from '@/components/delivery/ChatButton';
+import DirectionsPanel from '@/components/delivery/DirectionsPanel';
+import WeatherWidget from '@/components/delivery/WeatherWidget';
+import AirQualityWidget from '@/components/delivery/AirQualityWidget';
+import MultiDeliveryManager from '@/components/delivery/MultiDeliveryManager';
 
 export default function DeliveryNavigation() {
   const navigate = useNavigate();
@@ -24,8 +28,10 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
+  const GOOGLE_MAPS_KEY = 'AIzaSyBFb2zzD7vQZnJ9xNJEKC2gD0QpYz9Jc2M'; // From secrets
+
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: GOOGLE_MAPS_KEY,
     libraries: ['places', 'geometry']
   });
 
@@ -105,6 +111,17 @@ export default function DeliveryNavigation() {
 
   const getUnreadCountForOrder = (orderId) => {
     return unreadMessages.filter(m => m.order_id === orderId).length;
+  };
+
+  const handleCallCustomer = (order) => {
+    if (order.customer_phone) {
+      window.location.href = `tel:${order.customer_phone}`;
+    }
+  };
+
+  const handleOrderSelect = (index) => {
+    setCurrentRouteIndex(index);
+    setCurrentStepIndex(0);
   };
 
   const updateLocationMutation = useMutation({
@@ -357,7 +374,7 @@ export default function DeliveryNavigation() {
       </div>
 
       {/* Bottom Panel */}
-      <Card className="rounded-t-3xl shadow-2xl border-t-4 border-emerald-500 max-h-[50vh] overflow-y-auto">
+      <div className="bg-white rounded-t-3xl shadow-2xl border-t-4 border-emerald-500 max-h-[60vh] overflow-y-auto">
         <div className="p-6 space-y-4">
           {/* Route Summary */}
           {routeData && (
@@ -392,7 +409,16 @@ export default function DeliveryNavigation() {
             </div>
           )}
 
-          {/* Current Delivery */}
+          {/* Multi-Delivery Manager */}
+          <MultiDeliveryManager
+            orders={pendingOrders}
+            currentOrderIndex={currentRouteIndex}
+            completedOrders={completedOrders}
+            onOrderSelect={handleOrderSelect}
+            onCallCustomer={handleCallCustomer}
+          />
+
+          {/* Current Delivery Details */}
           {currentOrder && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -418,43 +444,14 @@ export default function DeliveryNavigation() {
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600">{currentOrder.delivery_address}</p>
-
               {/* Turn-by-Turn Directions */}
               {currentSteps.length > 0 && (
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Navigation className="w-5 h-5 text-emerald-600" />
-                    <p className="font-semibold">Directions</p>
-                  </div>
-                  {currentSteps.map((step, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                        idx === currentStepIndex ? 'bg-emerald-100 border-2 border-emerald-500' : 'bg-gray-50'
-                      }`}
-                    >
-                      <div className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold ${
-                        idx === currentStepIndex ? 'bg-emerald-500 text-white' : 'bg-gray-300 text-gray-600'
-                      }`}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">{step.instruction}</p>
-                        <p className="text-xs text-gray-600">{step.distance} • {step.duration}</p>
-                      </div>
-                      {idx === currentStepIndex && (
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => setCurrentStepIndex(Math.min(currentStepIndex + 1, currentSteps.length - 1))}
-                        >
-                          Next
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <DirectionsPanel
+                  steps={currentSteps}
+                  currentStepIndex={currentStepIndex}
+                  onStepChange={setCurrentStepIndex}
+                  destination={currentOrder.delivery_address}
+                />
               )}
 
               {/* Order Items */}
@@ -514,41 +511,15 @@ export default function DeliveryNavigation() {
             </div>
           )}
 
-          {/* Weather Details */}
+          {/* Weather & Air Quality */}
           {weatherData && (
-            <div className="grid grid-cols-4 gap-2">
-              <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-                <Wind className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-xs text-gray-600">Wind</p>
-                  <p className="text-sm font-bold">{weatherData.weather.windSpeed} mph</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-cyan-50 rounded-lg">
-                <Droplets className="w-5 h-5 text-cyan-600" />
-                <div>
-                  <p className="text-xs text-gray-600">Humidity</p>
-                  <p className="text-sm font-bold">{weatherData.weather.humidity}%</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
-                <Eye className="w-5 h-5 text-purple-600" />
-                <div>
-                  <p className="text-xs text-gray-600">Visibility</p>
-                  <p className="text-sm font-bold">{weatherData.weather.visibility} mi</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-orange-600" />
-                <div>
-                  <p className="text-xs text-gray-600">PM2.5</p>
-                  <p className="text-sm font-bold">{weatherData.airQuality.pm25.toFixed(1)}</p>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <WeatherWidget weather={weatherData.weather} />
+              <AirQualityWidget airQuality={weatherData.airQuality} />
             </div>
           )}
         </div>
-        </Card>
+        </div>
 
         <ChatModal 
         order={chatOrder}

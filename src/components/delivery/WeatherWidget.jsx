@@ -1,62 +1,60 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Cloud, CloudRain, CloudSnow, Sun, Wind, Droplets, Eye } from 'lucide-react';
+import { Cloud, Wind, Droplets, Eye, Thermometer } from 'lucide-react';
 
-const getWeatherIcon = (condition) => {
-  const icons = {
-    Clear: Sun,
-    Clouds: Cloud,
-    Rain: CloudRain,
-    Snow: CloudSnow,
-    Drizzle: CloudRain,
-  };
-  return icons[condition] || Cloud;
-};
-
-export default function WeatherWidget({ weather, isLoading }) {
-  if (isLoading) {
+export default function WeatherWidget({ weather }) {
+  if (!weather) {
     return (
-      <Card className="p-4">
-        <div className="animate-pulse space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-20"></div>
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
-        </div>
+      <Card className="p-4 bg-white">
+        <p className="text-sm text-gray-400">Loading weather...</p>
       </Card>
     );
   }
 
-  if (!weather) return null;
-
-  const WeatherIcon = getWeatherIcon(weather.condition);
-
   return (
-    <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
-      <div className="flex items-start justify-between mb-3">
+    <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50">
+      <div className="flex items-center gap-3 mb-4">
+        <Cloud className="w-6 h-6 text-blue-500" />
         <div>
-          <p className="text-xs text-blue-600 font-medium mb-1">Current Weather</p>
-          <div className="flex items-center gap-2">
-            <span className="text-3xl font-bold text-blue-900">{weather.temp}°F</span>
-            <WeatherIcon className="w-8 h-8 text-blue-600" />
-          </div>
-          <p className="text-sm text-blue-700 capitalize">{weather.description}</p>
+          <h3 className="font-bold text-lg">Current Weather</h3>
+          <p className="text-sm text-gray-600">{weather.condition}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-blue-200">
-        <div className="text-center">
-          <Wind className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-          <p className="text-xs text-blue-600">Wind</p>
-          <p className="text-sm font-semibold text-blue-900">{weather.windSpeed} mph</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white/60 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Thermometer className="w-4 h-4 text-red-500" />
+            <p className="text-xs text-gray-600">Temperature</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{weather.temp}°F</p>
+          <p className="text-xs text-gray-500">Feels like {weather.feelsLike}°F</p>
         </div>
-        <div className="text-center">
-          <Droplets className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-          <p className="text-xs text-blue-600">Humidity</p>
-          <p className="text-sm font-semibold text-blue-900">{weather.humidity}%</p>
+
+        <div className="bg-white/60 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Wind className="w-4 h-4 text-cyan-500" />
+            <p className="text-xs text-gray-600">Wind</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{weather.windSpeed}</p>
+          <p className="text-xs text-gray-500">mph</p>
         </div>
-        <div className="text-center">
-          <Eye className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-          <p className="text-xs text-blue-600">Visibility</p>
-          <p className="text-sm font-semibold text-blue-900">{weather.visibility} mi</p>
+
+        <div className="bg-white/60 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Droplets className="w-4 h-4 text-blue-500" />
+            <p className="text-xs text-gray-600">Humidity</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{weather.humidity}%</p>
+        </div>
+
+        <div className="bg-white/60 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Eye className="w-4 h-4 text-purple-500" />
+            <p className="text-xs text-gray-600">Visibility</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{weather.visibility}</p>
+          <p className="text-xs text-gray-500">miles</p>
         </div>
       </div>
     </Card>
