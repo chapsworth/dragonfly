@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, ArrowLeft, Leaf, Award } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Leaf, Award, Edit2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useCart } from '@/components/cart/CartContext';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import ProductEditModal from '@/components/products/ProductEditModal';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -23,7 +24,14 @@ export default function ProductDetail() {
   const productId = urlParams.get('id');
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const { addToCart, setIsCartOpen } = useCart();
+  const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
@@ -72,10 +80,22 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-40 px-4">
       <div className="max-w-6xl mx-auto">
-        <Link to={createPageUrl('Shop')} className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6">
-          <ArrowLeft className="w-5 h-5" />
-          Back to Shop
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link to={createPageUrl('Shop')} className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
+            <ArrowLeft className="w-5 h-5" />
+            Back to Shop
+          </Link>
+          {user?.role === 'admin' && (
+            <Button
+              onClick={() => setIsEditModalOpen(true)}
+              variant="outline"
+              size="icon"
+              className="w-10 h-10 rounded-xl border-emerald-200 hover:bg-emerald-50"
+            >
+              <Edit2 className="w-5 h-5 text-emerald-600" />
+            </Button>
+          )}
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Image */}
@@ -217,6 +237,15 @@ export default function ProductDetail() {
           </motion.div>
         </div>
       </div>
+
+      <ProductEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['product', productId] });
+        }}
+        product={product}
+      />
     </div>
   );
 }
