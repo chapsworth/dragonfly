@@ -16,6 +16,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 export default function AdminCarousel() {
   const [editingCarousel, setEditingCarousel] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [viewMode, setViewMode] = useState('list');
@@ -50,9 +51,7 @@ export default function AdminCarousel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carouselSettings'] });
-      setEditingCarousel(null);
-      setFormData({});
-      setSelectedProducts([]);
+      handleCloseDialog();
     }
   });
 
@@ -67,11 +66,20 @@ export default function AdminCarousel() {
     setEditingCarousel(carousel);
     setFormData(carousel);
     setSelectedProducts(carousel.featured_product_ids || []);
+    setIsDialogOpen(true);
   };
 
   const handleNew = () => {
     setEditingCarousel(null);
     setFormData({ is_active: true, display_order: carouselSettings.length + 1 });
+    setSelectedProducts([]);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingCarousel(null);
+    setFormData({});
     setSelectedProducts([]);
   };
 
@@ -320,7 +328,7 @@ export default function AdminCarousel() {
             </DragDropContext>
           )}
 
-          <Dialog open={!!editingCarousel || formData.category} onOpenChange={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }}>
+          <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
               <DialogHeader>
                 <DialogTitle>{editingCarousel ? 'Edit Carousel' : 'New Carousel'}</DialogTitle>
@@ -393,7 +401,7 @@ export default function AdminCarousel() {
               )}
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => { setEditingCarousel(null); setFormData({}); setSelectedProducts([]); }} className="flex-1">
+                <Button variant="outline" onClick={handleCloseDialog} className="flex-1">
                   Cancel
                 </Button>
                 <Button onClick={handleSave} disabled={saveMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
