@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Fingerprint, Loader2, Mail, Lock, Leaf, UserPlus, Chrome } from 'lucide-react';
+import { Fingerprint, Loader2, Mail, Lock, Leaf, UserPlus } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -36,15 +36,6 @@ export default function BiometricLogin() {
       }
     } catch {
       // Not logged in
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await base44.auth.loginWithGoogle();
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      toast.error('Google sign-in failed');
     }
   };
 
@@ -129,15 +120,6 @@ export default function BiometricLogin() {
           <p className="text-center text-emerald-600 mb-8 text-lg">
             Sign in to continue to Dragonfly
           </p>
-
-          {/* Google Sign In */}
-          <Button
-            onClick={handleGoogleSignIn}
-            className="w-full h-14 bg-white hover:bg-gray-50 text-gray-700 text-lg border-2 border-gray-200 shadow-md hover:shadow-lg transition-all rounded-xl font-semibold mb-4"
-          >
-            <Chrome className="w-5 h-5 mr-2" />
-            Continue with Google
-          </Button>
 
           {/* Biometric Login Button */}
           {isSupported && (
