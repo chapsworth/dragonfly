@@ -77,8 +77,9 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
   const handleAiImageSearch = async () => {
     setIsSearching(true);
     try {
-      const response = await base44.functions.invoke('searchUnsplash', {
-        query: `cannabis ${formData.name}`
+      const query = searchQuery || `${formData.name} cannabis strain`;
+      const response = await base44.functions.invoke('searchGoogleImages', {
+        query
       });
       
       if (response.data.results?.length > 0) {
@@ -304,7 +305,7 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
               <TabsContent value="search" className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Search images..."
+                    placeholder="Search Google Images..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAiImageSearch()}
@@ -319,18 +320,31 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
                 {searchResults.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
                     {searchResults.map((img, i) => (
-                      <img
-                        key={i}
-                        src={img}
-                        alt=""
-                        className="w-full h-24 object-cover rounded cursor-pointer hover:ring-2 ring-emerald-500"
-                        onClick={() => {
-                          setFormData({ ...formData, image_url: img });
-                          setImageUrl(img);
-                          toast.success('Image selected');
-                          setImageTab('current');
-                        }}
-                      />
+                      <div key={i} className="relative group">
+                        <img
+                          src={img}
+                          alt=""
+                          className="w-full h-24 object-cover rounded cursor-pointer hover:ring-2 ring-emerald-500"
+                          onClick={() => {
+                            setFormData({ ...formData, image_url: img });
+                            setImageUrl(img);
+                            toast.success('Image selected');
+                            setImageTab('current');
+                          }}
+                        />
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(img);
+                            toast.success('Image URL copied to clipboard');
+                          }}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
