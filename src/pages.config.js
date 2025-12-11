@@ -13,6 +13,7 @@ import AdminCategories from './pages/AdminCategories';
 import ComponentLibrary from './pages/ComponentLibrary';
 import Radio from './pages/Radio';
 import AdminSettings from './pages/AdminSettings';
+import StrainLibrary from './pages/StrainLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +33,7 @@ export const PAGES = {
     "ComponentLibrary": ComponentLibrary,
     "Radio": Radio,
     "AdminSettings": AdminSettings,
+    "StrainLibrary": StrainLibrary,
 }
 
 export const pagesConfig = {
