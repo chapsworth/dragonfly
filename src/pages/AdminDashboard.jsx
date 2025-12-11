@@ -7,7 +7,7 @@ import AdminNav from '@/components/admin/AdminNav';
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, formatInTimeZone } from 'date-fns-tz';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <p className="font-semibold text-emerald-900 text-sm">Order #{order.id.slice(-8)}</p>
-                            <p className="text-xs text-emerald-600">{format(new Date(order.created_date), 'MMM d, h:mm a')}</p>
+                            <p className="text-xs text-emerald-600">{formatInTimeZone(new Date(order.created_date), 'America/Los_Angeles', 'MMM d, h:mm a')}</p>
                           </div>
                           <Badge className={statusColors[order.status]}>
                             {order.status.replace('_', ' ')}
