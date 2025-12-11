@@ -162,7 +162,7 @@ export default function AdminLauncher() {
             color="bg-gradient-to-br from-pink-500 to-rose-500"
           />
           <AppIcon 
-            icon: {MapPin} 
+            icon={MapPin} 
             label="Tracking" 
             page="OrderTracking" 
             color="bg-gradient-to-br from-cyan-500 to-blue-500"
