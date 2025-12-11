@@ -17,6 +17,11 @@ import StrainLibrary from './pages/StrainLibrary';
 import AdminInventory from './pages/AdminInventory';
 import CRM from './pages/CRM';
 import CRMContacts from './pages/CRMContacts';
+import CRMTasks from './pages/CRMTasks';
+import CRMVendors from './pages/CRMVendors';
+import CRMCalendar from './pages/CRMCalendar';
+import CRMBookmarks from './pages/CRMBookmarks';
+import CRMDocuments from './pages/CRMDocuments';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +45,11 @@ export const PAGES = {
     "AdminInventory": AdminInventory,
     "CRM": CRM,
     "CRMContacts": CRMContacts,
+    "CRMTasks": CRMTasks,
+    "CRMVendors": CRMVendors,
+    "CRMCalendar": CRMCalendar,
+    "CRMBookmarks": CRMBookmarks,
+    "CRMDocuments": CRMDocuments,
 }
 
 export const pagesConfig = {
