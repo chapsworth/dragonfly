@@ -88,7 +88,9 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
               {filteredProducts.length}
             </span>
           </div>
-
+        </div>
+        
+        <div className="flex items-center gap-2">
           <div className="flex gap-2">
             <button
               onClick={() => scroll('left')}
@@ -103,13 +105,13 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
               <ChevronRight className="w-5 h-5 text-emerald-700" />
             </button>
           </div>
+          
+          <Link to={`${createPageUrl('Shop')}?category=${category}`}>
+            <button className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:shadow-lg transition-all">
+              Show All
+            </button>
+          </Link>
         </div>
-        
-        <Link to={`${createPageUrl('Shop')}?category=${category}`}>
-          <button className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:shadow-lg transition-all">
-            Show All
-          </button>
-        </Link>
       </div>
 
       <div
