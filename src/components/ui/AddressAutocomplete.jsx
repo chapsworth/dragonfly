@@ -1,115 +1,126 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC4Lu7mjc3xzoD7rx2jMo1fqfYe3IN8J-I';
-
-let scriptLoadPromise = null;
-
-function loadGoogleMapsScript() {
-  if (scriptLoadPromise) return scriptLoadPromise;
-  
-  if (window.google?.maps?.places) {
-    return Promise.resolve();
-  }
-
-  scriptLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps'));
-    document.head.appendChild(script);
-  });
-
-  return scriptLoadPromise;
-}
-
 export default function AddressAutocomplete({ value, onChange, placeholder, className, onPlaceSelect }) {
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState(null);
+  const [predictions, setPredictions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [sessionToken] = useState(() => Math.random().toString(36).substring(7));
   const inputRef = useRef(null);
-  const autocompleteRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
-    loadGoogleMapsScript()
-      .then(() => setIsReady(true))
-      .catch(err => {
-        console.error('Google Maps load error:', err);
-        setError(err.message);
-      });
+    const handleClickOutside = (e) => {
+      if (
+        inputRef.current && !inputRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!isReady || !inputRef.current || autocompleteRef.current) return;
-
-    try {
-      const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
-        fields: ['formatted_address', 'geometry', 'address_components', 'place_id']
-      });
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        
-        if (place.formatted_address) {
-          onChange(place.formatted_address);
-          
-          if (onPlaceSelect) {
-            const details = {
-              address: place.formatted_address,
-              lat: place.geometry?.location?.lat(),
-              lng: place.geometry?.location?.lng(),
-              place_id: place.place_id,
-              city: place.address_components?.find(c => c.types.includes('locality'))?.long_name || '',
-              state: place.address_components?.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '',
-              zip: place.address_components?.find(c => c.types.includes('postal_code'))?.long_name || '',
-              country: place.address_components?.find(c => c.types.includes('country'))?.long_name || ''
-            };
-            onPlaceSelect(details);
-          }
-        }
-      });
-
-      autocompleteRef.current = autocomplete;
-    } catch (err) {
-      console.error('Autocomplete init error:', err);
-      setError(err.message);
+  const fetchPredictions = async (input) => {
+    if (!input || input.length < 3) {
+      setPredictions([]);
+      setShowDropdown(false);
+      return;
     }
-  }, [isReady, onChange, onPlaceSelect]);
 
-  if (error) {
-    return (
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder || "Enter address"}
-        className={className}
-      />
-    );
-  }
+    setIsLoading(true);
+    try {
+      const response = await base44.functions.invoke('googlePlacesAutocomplete', {
+        input,
+        sessiontoken: sessionToken,
+        types: 'address'
+      });
 
-  if (!isReady) {
-    return (
-      <div className="relative">
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || "Loading..."}
-          className={className}
-        />
-        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
-      </div>
-    );
-  }
+      if (response.data.status === 'success') {
+        setPredictions(response.data.predictions || []);
+        setShowDropdown(true);
+      } else {
+        console.error('Autocomplete error:', response.data.details);
+        setPredictions([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch predictions:', error);
+      setPredictions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchPredictions(newValue);
+    }, 300);
+  };
+
+  const handleSelectPrediction = async (prediction) => {
+    onChange(prediction.description);
+    setShowDropdown(false);
+    setPredictions([]);
+
+    if (onPlaceSelect) {
+      try {
+        const response = await base44.functions.invoke('googlePlaceDetails', {
+          place_id: prediction.place_id
+        });
+
+        if (response.data.status === 'success') {
+          onPlaceSelect(response.data.details);
+        }
+      } catch (error) {
+        console.error('Failed to fetch place details:', error);
+      }
+    }
+  };
 
   return (
-    <Input
-      ref={inputRef}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder || "Start typing address..."}
-      className={className}
-    />
+    <div className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={handleInputChange}
+          placeholder={placeholder || "Start typing address..."}
+          className={className}
+          autoComplete="off"
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+        )}
+      </div>
+
+      {showDropdown && predictions.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+        >
+          {predictions.map((prediction) => (
+            <button
+              key={prediction.place_id}
+              onClick={() => handleSelectPrediction(prediction)}
+              className="w-full px-4 py-3 text-left hover:bg-emerald-50 transition-colors border-b border-gray-100 last:border-b-0"
+            >
+              <p className="text-sm text-gray-900">{prediction.description}</p>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
