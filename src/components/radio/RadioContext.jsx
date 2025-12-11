@@ -64,9 +64,6 @@ export function RadioProvider({ children }) {
 
   const changeVolume = (newVolume) => {
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
   };
 
   return (
