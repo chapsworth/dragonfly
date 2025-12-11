@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle, Settings, Eye, EyeOff } from 'lucide-react';
+import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle, Settings, Eye, EyeOff, Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -95,6 +95,13 @@ export default function AdminProducts() {
     } else {
       setSelectedProducts(filteredIds);
     }
+  };
+
+  const copyShareLink = (product) => {
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/function/linkPreview?page=product&id=${product.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Share link copied to clipboard!');
   };
 
   const handleBulkDelete = () => {
@@ -370,12 +377,15 @@ export default function AdminProducts() {
                                         <p className="text-xs text-emerald-600">${product.price?.toFixed(2)} • THC: {product.thc_level}%</p>
                                       </div>
                                       <div className="flex gap-1">
-                                        <Button size="sm" variant="ghost" onClick={() => handleEdit(product)} className="h-8 w-8 p-0">
-                                          <Edit2 className="w-4 h-4" />
-                                        </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(product.id)} className="h-8 w-8 p-0 text-red-600">
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                       <Button size="sm" variant="ghost" onClick={() => copyShareLink(product)} className="h-8 w-8 p-0 text-blue-600">
+                                         <Share2 className="w-4 h-4" />
+                                       </Button>
+                                       <Button size="sm" variant="ghost" onClick={() => handleEdit(product)} className="h-8 w-8 p-0">
+                                         <Edit2 className="w-4 h-4" />
+                                       </Button>
+                                       <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(product.id)} className="h-8 w-8 p-0 text-red-600">
+                                         <Trash2 className="w-4 h-4" />
+                                       </Button>
                                       </div>
                                     </div>
                                   </div>
@@ -422,6 +432,9 @@ export default function AdminProducts() {
                       THC: {product.thc_level}% | CBD: {product.cbd_level}%
                     </div>
                     <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyShareLink(product)} className="h-8 text-blue-600">
+                        <Share2 className="w-3 h-3" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="flex-1 h-8 text-xs">
                         <Edit2 className="w-3 h-3 mr-1" />
                         Edit
@@ -464,6 +477,10 @@ export default function AdminProducts() {
                        <span className="text-xs text-emerald-600">CBD: {product.cbd_level}%</span>
                       </div>
                       <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => copyShareLink(product)} className="h-7 text-xs text-blue-600">
+                          <Share2 className="w-3 h-3 mr-1" />
+                          Share
+                        </Button>
                         <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="h-7 text-xs">
                           <Edit2 className="w-3 h-3 mr-1" />
                           Edit
