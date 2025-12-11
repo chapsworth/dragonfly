@@ -154,7 +154,24 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Strain</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Edit Strain</DialogTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" onClick={onClose}>
+                <X className="w-4 h-4" />
+              </Button>
+              <Button onClick={handleSave} disabled={updateMutation.isPending} size="sm">
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
