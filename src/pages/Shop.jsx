@@ -130,7 +130,7 @@ export default function Shop() {
             </h1>
 
             {/* Expandable Search & Filters */}
-            <div className="flex items-center gap-2 absolute right-4">
+            <div className="flex items-center gap-2 absolute right-0">
               <AnimatePresence>
                 {isSearchOpen &&
                 <motion.div
