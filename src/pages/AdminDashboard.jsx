@@ -170,97 +170,60 @@ export default function AdminDashboard() {
               <p className="text-emerald-600">Welcome to your admin panel</p>
             </div>
 
-            {/* Mini Charts */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4">
-              {/* Stock Levels Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
-                  <p className="text-xs font-semibold text-emerald-900">Stock Levels</p>
+            {/* Combined Analytics Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg mb-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-emerald-900">Analytics Overview</h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
+                    <span className="text-xs text-emerald-700">Stock</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-600" />
+                    <span className="text-xs text-emerald-700">Revenue</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-violet-500" />
+                    <span className="text-xs text-emerald-700">Users</span>
+                  </div>
                 </div>
-                <ResponsiveContainer width="100%" height={60}>
-                  <LineChart data={stockData}>
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="url(#stockGradient)" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <defs>
-                      <linearGradient id="stockGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#60a5fa" />
-                        <stop offset="100%" stopColor="#06b6d4" />
-                      </linearGradient>
-                    </defs>
-                  </LineChart>
-                </ResponsiveContainer>
-              </motion.div>
-
-              {/* Revenue Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-600" />
-                  <p className="text-xs font-semibold text-emerald-900">Revenue Trend</p>
-                </div>
-                <ResponsiveContainer width="100%" height={60}>
-                  <LineChart data={revenueData}>
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="url(#revenueGradient)" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <defs>
-                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#059669" />
-                      </linearGradient>
-                    </defs>
-                  </LineChart>
-                </ResponsiveContainer>
-              </motion.div>
-
-              {/* Customer Signups Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-violet-500" />
-                  <p className="text-xs font-semibold text-emerald-900">User Activity</p>
-                </div>
-                <ResponsiveContainer width="100%" height={60}>
-                  <LineChart data={signupData}>
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="url(#signupGradient)" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <defs>
-                      <linearGradient id="signupGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#c084fc" />
-                        <stop offset="100%" stopColor="#8b5cf6" />
-                      </linearGradient>
-                    </defs>
-                  </LineChart>
-                </ResponsiveContainer>
-              </motion.div>
-            </div>
+              </div>
+              <ResponsiveContainer width="100%" height={120}>
+                <LineChart data={last7Days.map((day, i) => ({
+                  day,
+                  stock: stockData[i].value,
+                  revenue: revenueData[i].value,
+                  users: signupData[i].value * 5 // Scale up for visibility
+                }))}>
+                  <Line 
+                    type="monotone" 
+                    dataKey="stock" 
+                    stroke="#60a5fa" 
+                    strokeWidth={2.5}
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#10b981" 
+                    strokeWidth={2.5}
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="users" 
+                    stroke="#c084fc" 
+                    strokeWidth={2.5}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
 
             {/* Stats Grid - 3 columns on mobile */}
             <div className="grid grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6">
