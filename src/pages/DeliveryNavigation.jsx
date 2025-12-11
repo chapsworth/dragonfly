@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Navigation, Phone, MessageSquare, CheckCircle, MapPin, Clock } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MapPin, Navigation, Phone, MessageSquare, CheckCircle, Play, Pause, Route, Clock, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import L from 'leaflet';
+import DirectionsPanel from '@/components/delivery/DirectionsPanel';
+import WeatherWidget from '@/components/delivery/WeatherWidget';
+import AirQualityWidget from '@/components/delivery/AirQualityWidget';
+import MultiDeliveryManager from '@/components/delivery/MultiDeliveryManager';
 import 'leaflet/dist/leaflet.css';
 
-// Fix Leaflet default marker icons
+// Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -21,273 +25,381 @@ L.Icon.Default.mergeOptions({
 
 // Custom icons
 const driverIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 const destinationIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2VmNDQ0NCIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjgiIGZpbGw9IndoaXRlIi8+PC9zdmc+',
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 function MapUpdater({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
+    if (center) {
+      map.setView(center, zoom);
+    }
   }, [center, zoom, map]);
   return null;
 }
 
+function decodePolyline(encoded) {
+  const points = [];
+  let index = 0, lat = 0, lng = 0;
+
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+  return points;
+}
+
 export default function DeliveryNavigation() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const urlParams = new URLSearchParams(window.location.search);
-  const orderId = urlParams.get('orderId');
-
-  const [currentLocation, setCurrentLocation] = useState(null);
+  const [user, setUser] = useState(null);
+  const [driverLocation, setDriverLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
-
-  const { data: order, isLoading } = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: async () => {
-      const orders = await base44.entities.Order.list();
-      return orders.find(o => o.id === orderId);
-    },
-    enabled: !!orderId,
-    refetchInterval: 5000
-  });
-
-  const updateLocationMutation = useMutation({
-    mutationFn: async (location) => {
-      return base44.functions.invoke('updateDriverLocation', {
-        orderId,
-        driver_lat: location.lat,
-        driver_lng: location.lng
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-    }
-  });
-
-  const markDeliveredMutation = useMutation({
-    mutationFn: () => base44.entities.Order.update(orderId, { status: 'delivered' }),
-    onSuccess: () => {
-      toast.success('Order marked as delivered!');
-      setTimeout(() => navigate(createPageUrl('AdminOrders')), 2000);
-    }
-  });
+  const [watchId, setWatchId] = useState(null);
+  const [optimizeBy, setOptimizeBy] = useState('distance');
+  const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [routeData, setRouteData] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
+  const [airQualityData, setAirQualityData] = useState(null);
 
   useEffect(() => {
-    if (navigator.geolocation && isTracking) {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setCurrentLocation(location);
-          updateLocationMutation.mutate(location);
-        },
-        (error) => console.error('Geolocation error:', error),
-        { enableHighAccuracy: true, maximumAge: 5000 }
-      );
-      return () => navigator.geolocation.clearWatch(watchId);
-    }
-  }, [isTracking]);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      });
-    }
+    base44.auth.me().then(setUser);
   }, []);
 
-  if (isLoading || !order) {
+  // Fetch driver's orders
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ['driverOrders'],
+    queryFn: async () => {
+      const allOrders = await base44.entities.Order.list('-created_date');
+      return allOrders.filter(o => 
+        o.driver_email === user?.email && 
+        (o.status === 'out_for_delivery' || o.status === 'preparing')
+      );
+    },
+    enabled: !!user,
+    refetchInterval: 30000
+  });
+
+  // Optimize route when orders change
+  useEffect(() => {
+    if (orders.length > 0 && driverLocation && !routeData) {
+      optimizeRoute();
+    }
+  }, [orders, driverLocation]);
+
+  // Fetch weather and air quality for current location
+  useEffect(() => {
+    if (driverLocation) {
+      fetchWeatherAndAirQuality(driverLocation.lat, driverLocation.lng);
+    }
+  }, [driverLocation]);
+
+  const optimizeRoute = async () => {
+    if (!driverLocation || orders.length === 0) return;
+
+    try {
+      const destinations = orders.map(order => ({
+        lat: order.delivery_lat,
+        lng: order.delivery_lng,
+        orderId: order.id
+      }));
+
+      const response = await base44.functions.invoke('optimizeRoute', {
+        origin: driverLocation,
+        destinations,
+        optimizeBy
+      });
+
+      if (response.data.status === 'success') {
+        setRouteData(response.data);
+        toast.success('Route optimized!');
+      }
+    } catch (error) {
+      console.error('Route optimization failed:', error);
+      toast.error('Failed to optimize route');
+    }
+  };
+
+  const fetchWeatherAndAirQuality = async (lat, lng) => {
+    try {
+      const response = await base44.functions.invoke('getWeatherAndAirQuality', { lat, lng });
+      if (response.data.status === 'success') {
+        setWeatherData(response.data.weather);
+        setAirQualityData(response.data.airQuality);
+      }
+    } catch (error) {
+      console.error('Failed to fetch weather data:', error);
+    }
+  };
+
+  const updateLocationMutation = useMutation({
+    mutationFn: async ({ orderId, lat, lng }) => {
+      return base44.functions.invoke('updateDriverLocation', {
+        orderId,
+        driverLat: lat,
+        driverLng: lng
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driverOrders'] });
+    }
+  });
+
+  const startTracking = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not supported');
+      return;
+    }
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        setDriverLocation(newLocation);
+
+        const currentOrder = orders[currentOrderIndex];
+        if (currentOrder) {
+          updateLocationMutation.mutate({
+            orderId: currentOrder.id,
+            lat: newLocation.lat,
+            lng: newLocation.lng
+          });
+        }
+      },
+      (error) => {
+        console.error('Location error:', error);
+        toast.error('Failed to get location');
+      },
+      { enableHighAccuracy: true, maximumAge: 0 }
+    );
+
+    setWatchId(id);
+    setIsTracking(true);
+    toast.success('Location tracking started');
+  };
+
+  const stopTracking = () => {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    setIsTracking(false);
+    toast.success('Location tracking stopped');
+  };
+
+  const completeDeliveryMutation = useMutation({
+    mutationFn: async (order) => {
+      await base44.entities.Order.update(order.id, { 
+        status: 'delivered',
+        driver_lat: driverLocation?.lat,
+        driver_lng: driverLocation?.lng
+      });
+      
+      await base44.functions.invoke('sendOrderEmail', {
+        orderId: order.id,
+        status: 'delivered',
+        customerEmail: order.customer_email,
+        customerName: order.customer_name
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driverOrders'] });
+      toast.success('Delivery completed!');
+      
+      // Move to next order
+      if (currentOrderIndex < orders.length - 1) {
+        setCurrentOrderIndex(currentOrderIndex + 1);
+        setCurrentStepIndex(0);
+      }
+    }
+  });
+
+  const handleCompleteDelivery = (order) => {
+    if (confirm(`Mark delivery for ${order.customer_name} as completed?`)) {
+      completeDeliveryMutation.mutate(order);
+    }
+  };
+
+  const handleNavigateToOrder = (order) => {
+    const index = orders.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+      setCurrentOrderIndex(index);
+      setCurrentStepIndex(0);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-emerald-600">Loading delivery...</p>
+          <p className="text-emerald-600">Loading deliveries...</p>
         </div>
       </div>
     );
   }
 
-  const destination = {
-    lat: order.delivery_lat || 0,
-    lng: order.delivery_lng || 0
-  };
+  if (orders.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="p-8 text-center max-w-md">
+          <Navigation className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-emerald-900 mb-2">No Active Deliveries</h2>
+          <p className="text-emerald-600">You don't have any deliveries assigned at the moment.</p>
+        </Card>
+      </div>
+    );
+  }
 
-  const mapCenter = currentLocation || destination;
-
-  const calculateDistance = () => {
-    if (!currentLocation || !destination.lat) return null;
-    const R = 6371; // Earth radius in km
-    const dLat = (destination.lat - currentLocation.lat) * Math.PI / 180;
-    const dLon = (destination.lng - currentLocation.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(currentLocation.lat * Math.PI / 180) * Math.cos(destination.lat * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return (R * c).toFixed(2);
-  };
-
-  const distance = calculateDistance();
+  const currentOrder = orders[currentOrderIndex];
+  const mapCenter = driverLocation || (currentOrder ? [currentOrder.delivery_lat, currentOrder.delivery_lng] : [40.7128, -74.0060]);
+  const routePolyline = routeData?.polyline ? decodePolyline(routeData.polyline) : [];
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900">
-      {/* Map */}
-      <div className="flex-1 relative">
-        {destination.lat !== 0 && (
-          <MapContainer
-            center={[mapCenter.lat, mapCenter.lng]}
-            zoom={15}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
-            <MapUpdater center={[mapCenter.lat, mapCenter.lng]} zoom={15} />
-            
-            {currentLocation && (
-              <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverIcon}>
-                <Popup>Your Location</Popup>
-              </Marker>
-            )}
-            
-            <Marker position={[destination.lat, destination.lng]} icon={destinationIcon}>
-              <Popup>{order.delivery_address}</Popup>
-            </Marker>
-
-            {currentLocation && destination.lat && (
-              <Polyline
-                positions={[
-                  [currentLocation.lat, currentLocation.lng],
-                  [destination.lat, destination.lng]
-                ]}
-                color="#10b981"
-                weight={4}
-                dashArray="10, 10"
-              />
-            )}
-          </MapContainer>
-        )}
-
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(createPageUrl('AdminOrders'))}
-          className="absolute top-4 left-4 z-[1000] p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-
-        {/* Tracking Toggle */}
-        <button
-          onClick={() => setIsTracking(!isTracking)}
-          className={`absolute top-4 right-4 z-[1000] px-4 py-2 rounded-full shadow-lg font-semibold ${
-            isTracking 
-              ? 'bg-emerald-500 text-white' 
-              : 'bg-white text-gray-700'
-          }`}
-        >
-          {isTracking ? '✓ Tracking On' : 'Start Tracking'}
-        </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Bar */}
+      <div className="bg-white border-b p-4 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-emerald-900">Delivery Navigation</h1>
+            <p className="text-sm text-emerald-600">
+              {orders.filter(o => o.status === 'delivered').length} of {orders.length} deliveries completed
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={optimizeBy === 'distance' ? 'default' : 'outline'}
+              onClick={() => {
+                setOptimizeBy('distance');
+                setRouteData(null);
+              }}
+            >
+              <Route className="w-4 h-4 mr-1" />
+              Shortest
+            </Button>
+            <Button
+              size="sm"
+              variant={optimizeBy === 'time' ? 'default' : 'outline'}
+              onClick={() => {
+                setOptimizeBy('time');
+                setRouteData(null);
+              }}
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              By Order
+            </Button>
+            <Button
+              size="sm"
+              variant={isTracking ? 'destructive' : 'default'}
+              onClick={isTracking ? stopTracking : startTracking}
+            >
+              {isTracking ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+              {isTracking ? 'Stop' : 'Start'} Tracking
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom Card */}
-      <Card className="rounded-t-3xl shadow-2xl border-t-4 border-emerald-500 max-h-[40vh] overflow-y-auto">
-        <div className="p-6 space-y-4">
-          {/* Distance & ETA */}
-          {distance && (
-            <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <MapPin className="w-6 h-6 text-emerald-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Distance</p>
-                  <p className="text-2xl font-bold text-emerald-600">{distance} km</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">ETA</p>
-                  <p className="text-2xl font-bold text-blue-600">{Math.ceil(parseFloat(distance) * 3)} min</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Customer Info */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Delivering to</p>
-                <p className="text-xl font-bold">{order.customer_name}</p>
-              </div>
-              <div className="flex gap-2">
-                <a href={`tel:${order.customer_phone}`}>
-                  <Button size="icon" className="bg-green-500 hover:bg-green-600 rounded-full">
-                    <Phone className="w-5 h-5" />
-                  </Button>
-                </a>
-                <a href={`sms:${order.customer_phone}`}>
-                  <Button size="icon" className="bg-blue-500 hover:bg-blue-600 rounded-full">
-                    <MessageSquare className="w-5 h-5" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-            <p className="text-gray-600 text-sm">{order.delivery_address}</p>
-          </div>
-
-          {/* Order Items */}
-          <div className="space-y-2">
-            <p className="font-semibold text-gray-700">Order Items</p>
-            {order.items?.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  {item.image_url && (
-                    <img src={item.image_url} alt={item.name} className="w-10 h-10 object-cover rounded" />
-                  )}
-                  <span className="text-sm">{item.name} x{item.quantity}</span>
-                </div>
-                <span className="text-sm font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between font-bold text-lg pt-2 border-t">
-              <span>Total</span>
-              <span className="text-emerald-600">${order.total.toFixed(2)}</span>
-            </div>
-          </div>
-
-          {/* Complete Delivery Button */}
-          {distance && parseFloat(distance) < 0.1 && (
-            <Button
-              onClick={() => markDeliveredMutation.mutate()}
-              disabled={markDeliveredMutation.isPending}
-              className="w-full h-14 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-lg font-bold"
+      <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Map Column */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="h-[500px] rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
+            <MapContainer
+              center={mapCenter}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
             >
-              <CheckCircle className="w-6 h-6 mr-2" />
-              {markDeliveredMutation.isPending ? 'Completing...' : 'Complete Delivery'}
-            </Button>
-          )}
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <MapUpdater center={mapCenter} zoom={13} />
 
-          {order.notes && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm font-semibold text-yellow-800 mb-1">Delivery Notes:</p>
-              <p className="text-sm text-yellow-700">{order.notes}</p>
-            </div>
-          )}
+              {driverLocation && (
+                <Marker position={[driverLocation.lat, driverLocation.lng]} icon={driverIcon}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+              )}
+
+              {orders.map((order, index) => (
+                <Marker
+                  key={order.id}
+                  position={[order.delivery_lat, order.delivery_lng]}
+                  icon={destinationIcon}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <p className="font-bold">{index + 1}. {order.customer_name}</p>
+                      <p className="text-sm">{order.delivery_address}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {routePolyline.length > 0 && (
+                <Polyline positions={routePolyline} color="#10b981" weight={4} opacity={0.7} />
+              )}
+            </MapContainer>
+          </div>
+
+          {/* Directions Panel */}
+          <DirectionsPanel
+            directions={routeData?.directions}
+            currentLegIndex={currentOrderIndex}
+            currentStepIndex={currentStepIndex}
+          />
         </div>
-      </Card>
+
+        {/* Sidebar Column */}
+        <div className="space-y-4">
+          {/* Weather & Air Quality */}
+          <div className="grid grid-cols-1 gap-4">
+            <WeatherWidget weather={weatherData} isLoading={!weatherData && !!driverLocation} />
+            <AirQualityWidget airQuality={airQualityData} isLoading={!airQualityData && !!driverLocation} />
+          </div>
+
+          {/* Multi-Delivery Manager */}
+          <MultiDeliveryManager
+            orders={orders}
+            currentOrderIndex={currentOrderIndex}
+            onSelectOrder={handleNavigateToOrder}
+            onCompleteDelivery={handleCompleteDelivery}
+            onNavigateToOrder={handleNavigateToOrder}
+          />
+        </div>
+      </div>
     </div>
   );
 }
