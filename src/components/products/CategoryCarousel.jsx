@@ -84,7 +84,7 @@ export default function CategoryCarousel({ category, products, selectedStrain = 
   if (products.length === 0) return null;
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-4 px-4 flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-3">
