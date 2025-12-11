@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Upload, Search, Sparkles, Loader2, X, Leaf, Plus, Trash2, RefreshCw, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,7 +36,13 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const [isScrapingLeafly, setIsScrapingLeafly] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedStrainId, setSelectedStrainId] = useState(null);
   const queryClient = useQueryClient();
+
+  const { data: strains = [] } = useQuery({
+    queryKey: ['strains'],
+    queryFn: () => base44.entities.Strain.list()
+  });
 
   useEffect(() => {
     if (product) {
@@ -199,6 +205,23 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     }));
   };
 
+  const handleStrainSelect = (strainId) => {
+    const strain = strains.find(s => s.id === strainId);
+    if (!strain) return;
+
+    setSelectedStrainId(strainId);
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || strain.name,
+      description: prev.description || strain.description || '',
+      thc_level: strain.thc_min ? ((strain.thc_min + (strain.thc_max || strain.thc_min)) / 2).toFixed(1) : prev.thc_level,
+      cbd_level: strain.cbd_min ? ((strain.cbd_min + (strain.cbd_max || strain.cbd_min)) / 2).toFixed(1) : prev.cbd_level,
+      strain_type: strain.type || prev.strain_type,
+      image_url: prev.image_url || strain.image_url || ''
+    }));
+    toast.success(`Pre-filled with ${strain.name} strain data`);
+  };
+
   const handleSave = () => {
     const variants = formData.variants?.map(v => ({
       name: v.name,
@@ -227,6 +250,52 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
+          {/* Strain Library Selector */}
+          <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200">
+            <Label className="text-emerald-900 font-semibold mb-2 block flex items-center gap-2">
+              <Leaf className="w-5 h-5" />
+              Pre-fill from Strain Library
+            </Label>
+            <div className="flex gap-2">
+              <Select value={selectedStrainId || ''} onValueChange={handleStrainSelect}>
+                <SelectTrigger className="flex-1 bg-white">
+                  <SelectValue placeholder="Select a strain to pre-fill data..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {strains.map(strain => (
+                    <SelectItem key={strain.id} value={strain.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{strain.name}</span>
+                        <span className="text-xs text-gray-500">
+                          {strain.type && `(${strain.type})`}
+                          {strain.thc_min && ` • THC: ${strain.thc_min}-${strain.thc_max || strain.thc_min}%`}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedStrainId && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedStrainId(null);
+                    toast.info('Strain selection cleared');
+                  }}
+                  className="flex-shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {selectedStrainId && (
+              <p className="text-xs text-emerald-600 mt-2">
+                ✓ Strain data pre-filled. You can still edit any field below.
+              </p>
+            )}
+          </div>
+
           {/* Product Image */}
           <div>
             <Label className="text-emerald-900 font-semibold mb-2 block">
