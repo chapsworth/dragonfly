@@ -37,6 +37,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedStrainId, setSelectedStrainId] = useState(null);
+  const [inventoryEnabled, setInventoryEnabled] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: strains = [] } = useQuery({
@@ -46,6 +47,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
   useEffect(() => {
     if (product) {
+      const hasInventory = product.sku || product.stock_quantity > 0;
+      setInventoryEnabled(hasInventory);
       setFormData({
         name: product.name || '',
         category: product.category || 'flower',
@@ -248,15 +251,22 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       stock_quantity: parseInt(v.stock_quantity) || 0
     })).filter(v => v.name && v.price > 0);
 
-    saveMutation.mutate({
+    const saveData = {
       ...formData,
       price: parseFloat(formData.price) || 0,
       thc_level: parseFloat(formData.thc_level) || 0,
       cbd_level: parseFloat(formData.cbd_level) || 0,
-      stock_quantity: parseInt(formData.stock_quantity) || 0,
-      low_stock_threshold: parseInt(formData.low_stock_threshold) || 10,
       variants: variants || []
-    });
+    };
+
+    // Only include inventory fields if inventory is enabled
+    if (inventoryEnabled) {
+      saveData.stock_quantity = parseInt(formData.stock_quantity) || 0;
+      saveData.low_stock_threshold = parseInt(formData.low_stock_threshold) || 10;
+      saveData.sku = formData.sku || '';
+    }
+
+    saveMutation.mutate(saveData);
   };
 
   return (
@@ -634,36 +644,52 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
           {/* Inventory Management */}
           <div className="border-t border-emerald-100 pt-4">
-            <Label className="text-emerald-900 font-semibold mb-3 block">Inventory</Label>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm">SKU</Label>
-                <Input
-                  value={formData.sku || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                  placeholder="Product SKU"
-                  className="border-emerald-200"
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-emerald-900 font-semibold">Inventory Management</Label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={inventoryEnabled}
+                  onChange={(e) => setInventoryEnabled(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600"
                 />
-              </div>
-              <div>
-                <Label className="text-sm">Stock Quantity</Label>
-                <Input
-                  type="number"
-                  value={formData.stock_quantity || 0}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
-                  className="border-emerald-200"
-                />
-              </div>
-              <div>
-                <Label className="text-sm">Low Stock Threshold</Label>
-                <Input
-                  type="number"
-                  value={formData.low_stock_threshold || 10}
-                  onChange={(e) => setFormData(prev => ({ ...prev, low_stock_threshold: parseInt(e.target.value) || 10 }))}
-                  className="border-emerald-200"
-                />
-              </div>
+                <span className="text-sm text-emerald-900">Enable Inventory Tracking</span>
+              </label>
             </div>
+            
+            {inventoryEnabled ? (
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm">SKU</Label>
+                  <Input
+                    value={formData.sku || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                    placeholder="Product SKU"
+                    className="border-emerald-200"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Stock Quantity</Label>
+                  <Input
+                    type="number"
+                    value={formData.stock_quantity || 0}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
+                    className="border-emerald-200"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Low Stock Threshold</Label>
+                  <Input
+                    type="number"
+                    value={formData.low_stock_threshold || 10}
+                    onChange={(e) => setFormData(prev => ({ ...prev, low_stock_threshold: parseInt(e.target.value) || 10 }))}
+                    className="border-emerald-200"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-emerald-600">Inventory tracking is disabled for this product.</p>
+            )}
           </div>
 
           {/* Variants */}
