@@ -47,7 +47,7 @@ export default function CartDrawer() {
         subtotal: cartTotal,
         total: cartTotal,
         customer_name: formData.customer_name || user.full_name,
-        customer_email: formData.customer_email || user.email,
+        customer_email: user.email,
         customer_phone: formData.customer_phone,
         delivery_address: formData.delivery_address,
         notes: formData.notes,
