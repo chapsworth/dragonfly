@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft, FolderTree, Image } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft, FolderTree, Image, PackageCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { name: 'Dashboard', page: 'AdminDashboard', icon: LayoutDashboard },
   { name: 'Products', page: 'AdminProducts', icon: Package },
+  { name: 'Inventory', page: 'AdminInventory', icon: PackageCheck },
   { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
   { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
   { name: 'Users', page: 'AdminUsers', icon: Users },
