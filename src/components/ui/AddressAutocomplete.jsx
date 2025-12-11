@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyAQ4EbHpq31N1np1FAmjGVdw24DiEQAVj0';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyC4Lu7mjc3xzoD7rx2jMo1fqfYe3IN8J-I';
 
 export default function AddressAutocomplete({ value, onChange, placeholder, className, onPlaceSelect }) {
   const [autocomplete, setAutocomplete] = useState(null);
