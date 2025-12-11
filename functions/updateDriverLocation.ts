@@ -23,7 +23,14 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // For admin/driver use - can be called without user auth
+        // Authenticate the user
+        const user = await base44.auth.me();
+        
+        // Only admins can update driver locations
+        if (!user || user.role !== 'admin') {
+            return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+        }
+        
         const { orderId, driverLat, driverLng, driverName, driverPhone } = await req.json();
 
         if (!orderId || !driverLat || !driverLng) {
