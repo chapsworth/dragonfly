@@ -39,13 +39,9 @@ export default function BiometricLogin() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      await base44.auth.loginWithGoogle();
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      toast.error('Google sign-in failed');
-    }
+  const handleGoogleSignIn = () => {
+    // Base44 Google OAuth - redirects to Google sign-in
+    window.location.href = `${window.location.origin}/api/auth/google`;
   };
 
   const handleTraditionalLogin = async (e) => {
