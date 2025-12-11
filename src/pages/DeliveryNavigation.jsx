@@ -28,8 +28,17 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
+  const [apiKey, setApiKey] = useState(null);
+
+  useEffect(() => {
+    // Fetch API key from backend function
+    base44.functions.invoke('getGoogleMapsKey', {}).then(res => {
+      setApiKey(res.data.key);
+    });
+  }, []);
+
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: apiKey,
     libraries: ['places', 'geometry']
   });
 
@@ -237,7 +246,7 @@ export default function DeliveryNavigation() {
     return colors[level] || 'bg-gray-500';
   };
 
-  if (ordersLoading || !isLoaded) {
+  if (ordersLoading || !isLoaded || !apiKey) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
