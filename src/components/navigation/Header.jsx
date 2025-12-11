@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PanelLeft, ShoppingBag, Leaf, Grid2x2 } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
+import QuickCreateMenu from './QuickCreateMenu';
 
 export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
@@ -55,6 +56,7 @@ export default function Header({ onMenuClick }) {
             </Link>
 
             <div className="flex items-center gap-1">
+              <QuickCreateMenu />
               <button
                 onClick={() => setIsCartOpen(true)}
                 data-cart-button
