@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Navigation, Phone, MessageSquare, CheckCircle, Play, Pause, Route, Clock, Zap } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  ArrowLeft, Navigation, Phone, MessageSquare, CheckCircle, MapPin, 
+  Clock, Cloud, Wind, Eye, Droplets, AlertCircle, Navigation2, 
+  Package, DollarSign, ListOrdered, Route, Loader2
+} from 'lucide-react';
 import { toast } from 'sonner';
 import L from 'leaflet';
-import DirectionsPanel from '@/components/delivery/DirectionsPanel.jsx';
-import WeatherWidget from '@/components/delivery/WeatherWidget.jsx';
-import AirQualityWidget from '@/components/delivery/AirQualityWidget.jsx';
-import MultiDeliveryManager from '@/components/delivery/MultiDeliveryManager.jsx';
+import polyline from 'npm:@mapbox/polyline@1.2.1';
 import 'leaflet/dist/leaflet.css';
 
-// Fix Leaflet default icon
+// Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -23,383 +26,502 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom icons
 const driverIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
-const destinationIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+const destinationIcon = (index) => new L.Icon({
+  iconUrl: `data:image/svg+xml;base64,${btoa(`<svg width="40" height="50" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 0C8.954 0 0 8.954 0 20c0 14 20 30 20 30s20-16 20-30c0-11.046-8.954-20-20-20z" fill="#ef4444"/><circle cx="20" cy="20" r="10" fill="white"/><text x="20" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#ef4444">${index + 1}</text></svg>`)}`,
+  iconSize: [40, 50],
+  iconAnchor: [20, 50],
 });
 
-function MapUpdater({ center, zoom }) {
+function MapUpdater({ center, zoom, bounds }) {
   const map = useMap();
+  
   useEffect(() => {
-    if (center) {
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else if (center) {
       map.setView(center, zoom);
     }
-  }, [center, zoom, map]);
+  }, [center, zoom, bounds, map]);
+  
   return null;
 }
 
-function decodePolyline(encoded) {
-  const points = [];
-  let index = 0, lat = 0, lng = 0;
-
-  while (index < encoded.length) {
-    let b, shift = 0, result = 0;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-    lat += dlat;
-
-    shift = 0;
-    result = 0;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-    lng += dlng;
-
-    points.push([lat / 1e5, lng / 1e5]);
-  }
-  return points;
-}
-
 export default function DeliveryNavigation() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
-  const [driverLocation, setDriverLocation] = useState(null);
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderIds = urlParams.get('orderIds')?.split(',') || [];
+
+  const [currentLocation, setCurrentLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [watchId, setWatchId] = useState(null);
   const [optimizeBy, setOptimizeBy] = useState('distance');
-  const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [routeData, setRouteData] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
-  const [airQualityData, setAirQualityData] = useState(null);
+  const [currentRouteIndex, setCurrentRouteIndex] = useState(0);
+  const [completedOrders, setCompletedOrders] = useState([]);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser);
-  }, []);
-
-  // Fetch driver's orders
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['driverOrders'],
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['delivery-orders', orderIds],
     queryFn: async () => {
-      const allOrders = await base44.entities.Order.list('-created_date');
-      return allOrders.filter(o => 
-        o.driver_email === user?.email && 
-        (o.status === 'out_for_delivery' || o.status === 'preparing')
-      );
+      const allOrders = await base44.entities.Order.list();
+      return allOrders.filter(o => orderIds.includes(o.id));
     },
-    enabled: !!user,
-    refetchInterval: 30000
+    enabled: orderIds.length > 0,
+    refetchInterval: 5000
   });
 
-  // Optimize route when orders change
-  useEffect(() => {
-    if (orders.length > 0 && driverLocation && !routeData) {
-      optimizeRoute();
-    }
-  }, [orders, driverLocation]);
+  const { data: routeData, isLoading: routeLoading, refetch: refetchRoute } = useQuery({
+    queryKey: ['optimized-route', currentLocation, optimizeBy, completedOrders],
+    queryFn: async () => {
+      if (!currentLocation) return null;
+      
+      const pendingOrders = orders.filter(o => !completedOrders.includes(o.id));
+      if (pendingOrders.length === 0) return null;
 
-  // Fetch weather and air quality for current location
-  useEffect(() => {
-    if (driverLocation) {
-      fetchWeatherAndAirQuality(driverLocation.lat, driverLocation.lng);
-    }
-  }, [driverLocation]);
-
-  const optimizeRoute = async () => {
-    if (!driverLocation || orders.length === 0) return;
-
-    try {
-      const destinations = orders.map(order => ({
+      const destinations = pendingOrders.map(order => ({
+        orderId: order.id,
         lat: order.delivery_lat,
         lng: order.delivery_lng,
-        orderId: order.id
+        address: order.delivery_address,
+        orderTime: order.created_date
       }));
 
-      const response = await base44.functions.invoke('optimizeRoute', {
-        origin: driverLocation,
+      // Sort by time if optimizing by time
+      if (optimizeBy === 'time') {
+        destinations.sort((a, b) => new Date(a.orderTime) - new Date(b.orderTime));
+      }
+
+      const response = await base44.functions.invoke('getOptimizedRoute', {
+        origin: currentLocation,
         destinations,
         optimizeBy
       });
 
-      if (response.data.status === 'success') {
-        setRouteData(response.data);
-        toast.success('Route optimized!');
-      }
-    } catch (error) {
-      console.error('Route optimization failed:', error);
-      toast.error('Failed to optimize route');
-    }
-  };
+      return response.data;
+    },
+    enabled: !!currentLocation && orders.length > 0,
+    staleTime: 30000
+  });
 
-  const fetchWeatherAndAirQuality = async (lat, lng) => {
-    try {
-      const response = await base44.functions.invoke('getWeatherAndAirQuality', { lat, lng });
-      if (response.data.status === 'success') {
-        setWeatherData(response.data.weather);
-        setAirQualityData(response.data.airQuality);
-      }
-    } catch (error) {
-      console.error('Failed to fetch weather data:', error);
-    }
-  };
+  const { data: weatherData } = useQuery({
+    queryKey: ['weather', currentLocation],
+    queryFn: async () => {
+      if (!currentLocation) return null;
+      const response = await base44.functions.invoke('getWeatherAndAirQuality', currentLocation);
+      return response.data;
+    },
+    enabled: !!currentLocation,
+    refetchInterval: 300000 // 5 minutes
+  });
 
   const updateLocationMutation = useMutation({
-    mutationFn: async ({ orderId, lat, lng }) => {
-      return base44.functions.invoke('updateDriverLocation', {
-        orderId,
-        driverLat: lat,
-        driverLng: lng
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['driverOrders'] });
+    mutationFn: async (location) => {
+      const updatePromises = orders
+        .filter(o => !completedOrders.includes(o.id))
+        .map(order => 
+          base44.entities.Order.update(order.id, {
+            driver_lat: location.lat,
+            driver_lng: location.lng
+          })
+        );
+      await Promise.all(updatePromises);
     }
   });
 
-  const startTracking = () => {
-    if (!navigator.geolocation) {
-      toast.error('Geolocation not supported');
-      return;
-    }
-
-    const id = navigator.geolocation.watchPosition(
-      (position) => {
-        const newLocation = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        setDriverLocation(newLocation);
-
-        const currentOrder = orders[currentOrderIndex];
-        if (currentOrder) {
-          updateLocationMutation.mutate({
-            orderId: currentOrder.id,
-            lat: newLocation.lat,
-            lng: newLocation.lng
-          });
-        }
-      },
-      (error) => {
-        console.error('Location error:', error);
-        toast.error('Failed to get location');
-      },
-      { enableHighAccuracy: true, maximumAge: 0 }
-    );
-
-    setWatchId(id);
-    setIsTracking(true);
-    toast.success('Location tracking started');
-  };
-
-  const stopTracking = () => {
-    if (watchId) {
-      navigator.geolocation.clearWatch(watchId);
-      setWatchId(null);
-    }
-    setIsTracking(false);
-    toast.success('Location tracking stopped');
-  };
-
-  const completeDeliveryMutation = useMutation({
-    mutationFn: async (order) => {
-      await base44.entities.Order.update(order.id, { 
-        status: 'delivered',
-        driver_lat: driverLocation?.lat,
-        driver_lng: driverLocation?.lng
-      });
+  const markDeliveredMutation = useMutation({
+    mutationFn: (orderId) => base44.entities.Order.update(orderId, { status: 'delivered' }),
+    onSuccess: (_, orderId) => {
+      setCompletedOrders(prev => [...prev, orderId]);
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
+      toast.success('Order marked as delivered!');
       
-      await base44.functions.invoke('sendOrderEmail', {
-        orderId: order.id,
-        status: 'delivered',
-        customerEmail: order.customer_email,
-        customerName: order.customer_name
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['driverOrders'] });
-      toast.success('Delivery completed!');
+      // Move to next route
+      setCurrentRouteIndex(0);
+      setCurrentStepIndex(0);
       
-      // Move to next order
-      if (currentOrderIndex < orders.length - 1) {
-        setCurrentOrderIndex(currentOrderIndex + 1);
-        setCurrentStepIndex(0);
+      // Check if all orders are complete
+      if (completedOrders.length + 1 === orders.length) {
+        toast.success('All deliveries complete!');
+        setTimeout(() => navigate(createPageUrl('AdminOrders')), 2000);
       }
     }
   });
 
-  const handleCompleteDelivery = (order) => {
-    if (confirm(`Mark delivery for ${order.customer_name} as completed?`)) {
-      completeDeliveryMutation.mutate(order);
+  useEffect(() => {
+    if (navigator.geolocation && isTracking) {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setCurrentLocation(location);
+          updateLocationMutation.mutate(location);
+        },
+        (error) => console.error('Geolocation error:', error),
+        { enableHighAccuracy: true, maximumAge: 5000 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
     }
+  }, [isTracking, orders, completedOrders]);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      });
+    }
+  }, []);
+
+  const pendingOrders = useMemo(() => 
+    orders.filter(o => !completedOrders.includes(o.id)),
+    [orders, completedOrders]
+  );
+
+  const currentOrder = useMemo(() => {
+    if (!routeData || !routeData.routes || currentRouteIndex >= routeData.routes.length) return null;
+    const route = routeData.routes[currentRouteIndex];
+    return orders.find(o => o.id === route.orderId);
+  }, [routeData, currentRouteIndex, orders]);
+
+  const currentSteps = useMemo(() => {
+    if (!routeData || !routeData.routes || currentRouteIndex >= routeData.routes.length) return [];
+    return routeData.routes[currentRouteIndex].steps || [];
+  }, [routeData, currentRouteIndex]);
+
+  const routePolyline = useMemo(() => {
+    if (!routeData || !routeData.polyline) return [];
+    try {
+      return polyline.decode(routeData.polyline);
+    } catch (e) {
+      console.error('Error decoding polyline:', e);
+      return [];
+    }
+  }, [routeData]);
+
+  const mapBounds = useMemo(() => {
+    if (!currentLocation || pendingOrders.length === 0) return null;
+    
+    const points = [
+      [currentLocation.lat, currentLocation.lng],
+      ...pendingOrders.map(o => [o.delivery_lat, o.delivery_lng])
+    ];
+    
+    return L.latLngBounds(points);
+  }, [currentLocation, pendingOrders]);
+
+  const aqiColor = (level) => {
+    const colors = {
+      'Good': 'bg-green-500',
+      'Fair': 'bg-yellow-500',
+      'Moderate': 'bg-orange-500',
+      'Poor': 'bg-red-500',
+      'Very Poor': 'bg-purple-500'
+    };
+    return colors[level] || 'bg-gray-500';
   };
 
-  const handleNavigateToOrder = (order) => {
-    const index = orders.findIndex(o => o.id === order.id);
-    if (index !== -1) {
-      setCurrentOrderIndex(index);
-      setCurrentStepIndex(0);
-    }
-  };
-
-  if (isLoading) {
+  if (ordersLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
           <p className="text-emerald-600">Loading deliveries...</p>
         </div>
       </div>
     );
   }
 
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <Navigation className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-emerald-900 mb-2">No Active Deliveries</h2>
-          <p className="text-emerald-600">You don't have any deliveries assigned at the moment.</p>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentOrder = orders[currentOrderIndex];
-  const mapCenter = driverLocation || (currentOrder ? [currentOrder.delivery_lat, currentOrder.delivery_lng] : [40.7128, -74.0060]);
-  const routePolyline = routeData?.polyline ? decodePolyline(routeData.polyline) : [];
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Bar */}
-      <div className="bg-white border-b p-4 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-emerald-900">Delivery Navigation</h1>
-            <p className="text-sm text-emerald-600">
-              {orders.filter(o => o.status === 'delivered').length} of {orders.length} deliveries completed
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={optimizeBy === 'distance' ? 'default' : 'outline'}
-              onClick={() => {
-                setOptimizeBy('distance');
-                setRouteData(null);
-              }}
-            >
-              <Route className="w-4 h-4 mr-1" />
-              Shortest
-            </Button>
-            <Button
-              size="sm"
-              variant={optimizeBy === 'time' ? 'default' : 'outline'}
-              onClick={() => {
-                setOptimizeBy('time');
-                setRouteData(null);
-              }}
-            >
-              <Clock className="w-4 h-4 mr-1" />
-              By Order
-            </Button>
-            <Button
-              size="sm"
-              variant={isTracking ? 'destructive' : 'default'}
-              onClick={isTracking ? stopTracking : startTracking}
-            >
-              {isTracking ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-              {isTracking ? 'Stop' : 'Start'} Tracking
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Map Column */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="h-[500px] rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
-            <MapContainer
-              center={mapCenter}
+    <div className="h-screen flex flex-col bg-gray-900">
+      {/* Map */}
+      <div className="flex-1 relative">
+        {currentLocation && (
+          <MapContainer
+            center={[currentLocation.lat, currentLocation.lng]}
+            zoom={13}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; OpenStreetMap'
+            />
+            <MapUpdater 
+              center={[currentLocation.lat, currentLocation.lng]} 
               zoom={13}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <MapUpdater center={mapCenter} zoom={13} />
+              bounds={mapBounds}
+            />
+            
+            {/* Driver location */}
+            <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverIcon}>
+              <Popup>Your Location</Popup>
+            </Marker>
+            
+            {/* Delivery destinations */}
+            {pendingOrders.map((order, idx) => (
+              <Marker 
+                key={order.id}
+                position={[order.delivery_lat, order.delivery_lng]} 
+                icon={destinationIcon(idx)}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <p className="font-bold">{order.customer_name}</p>
+                    <p>{order.delivery_address}</p>
+                    <p className="text-emerald-600 font-bold">${order.total.toFixed(2)}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
 
-              {driverLocation && (
-                <Marker position={[driverLocation.lat, driverLocation.lng]} icon={driverIcon}>
-                  <Popup>Your Location</Popup>
-                </Marker>
-              )}
+            {/* Route polyline */}
+            {routePolyline.length > 0 && (
+              <Polyline
+                positions={routePolyline}
+                color="#10b981"
+                weight={4}
+              />
+            )}
+          </MapContainer>
+        )}
 
-              {orders.map((order, index) => (
-                <Marker
-                  key={order.id}
-                  position={[order.delivery_lat, order.delivery_lng]}
-                  icon={destinationIcon}
-                >
-                  <Popup>
-                    <div className="p-2">
-                      <p className="font-bold">{index + 1}. {order.customer_name}</p>
-                      <p className="text-sm">{order.delivery_address}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+        {/* Top Controls */}
+        <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center gap-2">
+          <Button
+            onClick={() => navigate(createPageUrl('AdminOrders'))}
+            size="icon"
+            className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
 
-              {routePolyline.length > 0 && (
-                <Polyline positions={routePolyline} color="#10b981" weight={4} opacity={0.7} />
-              )}
-            </MapContainer>
-          </div>
+          <Select value={optimizeBy} onValueChange={(v) => { setOptimizeBy(v); refetchRoute(); }}>
+            <SelectTrigger className="w-[180px] bg-white shadow-lg">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="distance">Shortest Route</SelectItem>
+              <SelectItem value="time">Order Time Priority</SelectItem>
+            </SelectContent>
+          </Select>
 
-          {/* Directions Panel */}
-          <DirectionsPanel
-            directions={routeData?.directions}
-            currentLegIndex={currentOrderIndex}
-            currentStepIndex={currentStepIndex}
-          />
-        </div>
+          <Button
+            onClick={() => setIsTracking(!isTracking)}
+            className={`shadow-lg ${isTracking ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white text-gray-900 hover:bg-gray-100'}`}
+          >
+            <Navigation2 className="w-4 h-4 mr-2" />
+            {isTracking ? 'Tracking On' : 'Start Tracking'}
+          </Button>
 
-        {/* Sidebar Column */}
-        <div className="space-y-4">
-          {/* Weather & Air Quality */}
-          <div className="grid grid-cols-1 gap-4">
-            <WeatherWidget weather={weatherData} isLoading={!weatherData && !!driverLocation} />
-            <AirQualityWidget airQuality={airQualityData} isLoading={!airQualityData && !!driverLocation} />
-          </div>
-
-          {/* Multi-Delivery Manager */}
-          <MultiDeliveryManager
-            orders={orders}
-            currentOrderIndex={currentOrderIndex}
-            onSelectOrder={handleNavigateToOrder}
-            onCompleteDelivery={handleCompleteDelivery}
-            onNavigateToOrder={handleNavigateToOrder}
-          />
+          {weatherData && (
+            <div className="ml-auto flex gap-2">
+              <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg flex items-center gap-2">
+                <Cloud className="w-5 h-5 text-blue-500" />
+                <div className="text-sm">
+                  <p className="font-bold">{weatherData.weather.temp}°F</p>
+                  <p className="text-xs text-gray-600">{weatherData.weather.condition}</p>
+                </div>
+              </div>
+              <div className={`${aqiColor(weatherData.airQuality.level)} text-white rounded-lg px-3 py-2 shadow-lg`}>
+                <p className="text-xs font-semibold">AQI</p>
+                <p className="text-sm font-bold">{weatherData.airQuality.level}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Bottom Panel */}
+      <Card className="rounded-t-3xl shadow-2xl border-t-4 border-emerald-500 max-h-[50vh] overflow-y-auto">
+        <div className="p-6 space-y-4">
+          {/* Route Summary */}
+          {routeData && (
+            <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-xl">
+              <div className="flex items-center gap-2 flex-1">
+                <Route className="w-6 h-6 text-emerald-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Total Distance</p>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {(routeData.totalDistance / 1609.34).toFixed(1)} mi
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <Clock className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Total Time</p>
+                  <p className="text-xl font-bold text-blue-600">
+                    {Math.ceil(routeData.totalDuration / 60)} min
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <Package className="w-6 h-6 text-purple-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Deliveries</p>
+                  <p className="text-xl font-bold text-purple-600">
+                    {completedOrders.length}/{orders.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Current Delivery */}
+          {currentOrder && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-emerald-500">Current Stop</Badge>
+                  <h3 className="font-bold text-lg">{currentOrder.customer_name}</h3>
+                </div>
+                <div className="flex gap-2">
+                  <a href={`tel:${currentOrder.customer_phone}`}>
+                    <Button size="icon" className="bg-green-500 hover:bg-green-600 rounded-full">
+                      <Phone className="w-4 h-4" />
+                    </Button>
+                  </a>
+                  <a href={`sms:${currentOrder.customer_phone}`}>
+                    <Button size="icon" className="bg-blue-500 hover:bg-blue-600 rounded-full">
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600">{currentOrder.delivery_address}</p>
+
+              {/* Turn-by-Turn Directions */}
+              {currentSteps.length > 0 && (
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Navigation className="w-5 h-5 text-emerald-600" />
+                    <p className="font-semibold">Directions</p>
+                  </div>
+                  {currentSteps.map((step, idx) => (
+                    <div 
+                      key={idx}
+                      className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                        idx === currentStepIndex ? 'bg-emerald-100 border-2 border-emerald-500' : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold ${
+                        idx === currentStepIndex ? 'bg-emerald-500 text-white' : 'bg-gray-300 text-gray-600'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">{step.instruction}</p>
+                        <p className="text-xs text-gray-600">{step.distance} • {step.duration}</p>
+                      </div>
+                      {idx === currentStepIndex && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => setCurrentStepIndex(Math.min(currentStepIndex + 1, currentSteps.length - 1))}
+                        >
+                          Next
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Order Items */}
+              <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+                <p className="font-semibold text-sm">Order Items</p>
+                {currentOrder.items?.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-sm">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between font-bold text-base border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-emerald-600">${currentOrder.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Complete Delivery Button */}
+              <Button
+                onClick={() => markDeliveredMutation.mutate(currentOrder.id)}
+                disabled={markDeliveredMutation.isPending}
+                className="w-full h-14 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-lg font-bold"
+              >
+                <CheckCircle className="w-6 h-6 mr-2" />
+                {markDeliveredMutation.isPending ? 'Completing...' : 'Complete Delivery'}
+              </Button>
+            </div>
+          )}
+
+          {/* Remaining Deliveries */}
+          {pendingOrders.length > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ListOrdered className="w-5 h-5 text-gray-600" />
+                <p className="font-semibold">Upcoming Deliveries</p>
+              </div>
+              {pendingOrders.slice(1).map((order, idx) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">
+                      {idx + 2}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{order.customer_name}</p>
+                      <p className="text-xs text-gray-600">{order.delivery_address}</p>
+                    </div>
+                  </div>
+                  <p className="font-bold text-emerald-600">${order.total.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Weather Details */}
+          {weatherData && (
+            <div className="grid grid-cols-4 gap-2">
+              <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+                <Wind className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Wind</p>
+                  <p className="text-sm font-bold">{weatherData.weather.windSpeed} mph</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-cyan-50 rounded-lg">
+                <Droplets className="w-5 h-5 text-cyan-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Humidity</p>
+                  <p className="text-sm font-bold">{weatherData.weather.humidity}%</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                <Eye className="w-5 h-5 text-purple-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Visibility</p>
+                  <p className="text-sm font-bold">{weatherData.weather.visibility} mi</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-orange-600" />
+                <div>
+                  <p className="text-xs text-gray-600">PM2.5</p>
+                  <p className="text-sm font-bold">{weatherData.airQuality.pm25.toFixed(1)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

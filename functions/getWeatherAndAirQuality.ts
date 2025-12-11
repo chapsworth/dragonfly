@@ -4,33 +4,38 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
-    const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const apiKey = Deno.env.get('OPENWEATHERMAP_API_KEY');
     if (!apiKey) {
-      return Response.json({ error: 'OpenWeather API key not set' }, { status: 500 });
+      return Response.json({ error: 'OpenWeatherMap API key not set' }, { status: 500 });
     }
 
     const { lat, lng } = await req.json();
     
     if (!lat || !lng) {
-      return Response.json({ error: 'Missing coordinates' }, { status: 400 });
+      return Response.json({ error: 'Missing lat/lng' }, { status: 400 });
     }
 
     // Fetch weather data
     const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=imperial`;
     const weatherResponse = await fetch(weatherUrl);
     const weatherData = await weatherResponse.json();
-
-    // Fetch air quality data
-    const airUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lng}&appid=${apiKey}`;
-    const airResponse = await fetch(airUrl);
-    const airData = await airResponse.json();
-
+    
     if (weatherData.cod !== 200) {
-      return Response.json({ error: 'Failed to fetch weather data' }, { status: 400 });
+      return Response.json({ error: 'Weather API error' }, { status: 400 });
     }
 
-    const aqiLevel = airData.list?.[0]?.main?.aqi || 0;
-    const aqiLabels = ['Good', 'Fair', 'Moderate', 'Poor', 'Very Poor'];
+    // Fetch air quality data
+    const airQualityUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lng}&appid=${apiKey}`;
+    const airQualityResponse = await fetch(airQualityUrl);
+    const airQualityData = await airQualityResponse.json();
+
+    const aqiLevels = ['Good', 'Fair', 'Moderate', 'Poor', 'Very Poor'];
+    const aqi = airQualityData.list?.[0]?.main?.aqi || 1;
 
     return Response.json({
       status: 'success',
@@ -42,15 +47,14 @@ Deno.serve(async (req) => {
         icon: weatherData.weather[0].icon,
         humidity: weatherData.main.humidity,
         windSpeed: Math.round(weatherData.wind.speed),
-        visibility: Math.round(weatherData.visibility / 1609.34) // meters to miles
+        visibility: Math.round(weatherData.visibility / 1609.34) // Convert meters to miles
       },
       airQuality: {
-        aqi: aqiLevel,
-        label: aqiLabels[aqiLevel - 1] || 'Unknown',
-        pm25: airData.list?.[0]?.components?.pm2_5 || 0,
-        pm10: airData.list?.[0]?.components?.pm10 || 0,
-        no2: airData.list?.[0]?.components?.no2 || 0,
-        o3: airData.list?.[0]?.components?.o3 || 0
+        aqi,
+        level: aqiLevels[aqi - 1],
+        pm25: airQualityData.list?.[0]?.components?.pm2_5 || 0,
+        pm10: airQualityData.list?.[0]?.components?.pm10 || 0,
+        o3: airQualityData.list?.[0]?.components?.o3 || 0
       }
     });
 
