@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus } from 'lucide-react';
+import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
@@ -29,6 +31,71 @@ export default function AdminOrders() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => base44.entities.Order.list('-created_date')
+  });
+
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: () => base44.entities.Contact.list()
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (orderData) => {
+      const order = await base44.entities.Order.create(orderData);
+      
+      // Update or create contact record
+      if (orderData.customer_id) {
+        const contact = contacts.find(c => c.id === orderData.customer_id);
+        if (contact) {
+          await base44.entities.Contact.update(contact.id, {
+            type: 'customer',
+            total_orders: (contact.total_orders || 0) + 1,
+            total_spent: (contact.total_spent || 0) + orderData.total,
+            last_order_date: new Date().toISOString().split('T')[0]
+          });
+        }
+      } else if (orderData.customer_email) {
+        // Create new contact if doesn't exist
+        const existingContact = contacts.find(c => c.email === orderData.customer_email);
+        if (!existingContact) {
+          await base44.entities.Contact.create({
+            full_name: orderData.customer_name,
+            email: orderData.customer_email,
+            phone: orderData.customer_phone,
+            type: 'customer',
+            total_orders: 1,
+            total_spent: orderData.total,
+            last_order_date: new Date().toISOString().split('T')[0]
+          });
+        }
+      }
+      
+      // Send confirmation email
+      try {
+        await base44.functions.invoke('sendOrderEmail', {
+          orderId: order.id,
+          status: order.status,
+          customerEmail: orderData.customer_email,
+          customerName: orderData.customer_name
+        });
+      } catch (e) {
+        console.error('Email error:', e);
+      }
+      
+      return order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setEditingOrder(null);
+      setFormData({});
+      setIsCreateOpen(false);
+      toast.success('Order created successfully');
+    }
   });
 
   const updateMutation = useMutation({
@@ -125,11 +192,40 @@ export default function AdminOrders() {
       total: 0,
       status: 'pending',
       delivery_address: '',
-      customer_name: '',
-      customer_phone: '',
-      customer_email: ''
+      customer_name: currentUser?.full_name || '',
+      customer_phone: currentUser?.phone || '',
+      customer_email: currentUser?.email || '',
+      customer_id: '',
+      customer_selection: 'self'
     });
     setIsCreateOpen(true);
+  };
+
+  const handleCreateOrder = () => {
+    if (formData.customer_selection === 'new' && !formData.new_customer_name) {
+      toast.error('Please enter customer name');
+      return;
+    }
+    
+    const orderData = {
+      items: formData.items || [],
+      total: parseFloat(formData.total) || 0,
+      status: formData.status,
+      delivery_address: formData.delivery_address,
+      customer_name: formData.customer_selection === 'self' ? currentUser?.full_name : 
+                     formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.full_name :
+                     formData.new_customer_name,
+      customer_phone: formData.customer_selection === 'self' ? currentUser?.phone :
+                      formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.phone :
+                      formData.new_customer_phone,
+      customer_email: formData.customer_selection === 'self' ? currentUser?.email :
+                      formData.customer_selection === 'existing' ? contacts.find(c => c.id === formData.customer_id)?.email :
+                      formData.new_customer_email,
+      customer_id: formData.customer_selection === 'existing' ? formData.customer_id : undefined,
+      notes: formData.notes
+    };
+    
+    createMutation.mutate(orderData);
   };
 
   const handleSave = () => {
@@ -519,80 +615,206 @@ export default function AdminOrders() {
           )}
 
           <Dialog open={!!editingOrder || isCreateOpen} onOpenChange={() => { setEditingOrder(null); setFormData({}); setIsCreateOpen(false); }}>
-            <DialogContent className="max-w-2xl bg-white/90 backdrop-blur-xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/90 backdrop-blur-xl">
               <DialogHeader>
                 <DialogTitle>{editingOrder ? 'Update Order' : 'Create Order'}</DialogTitle>
               </DialogHeader>
             <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Order ID</Label>
-                  <p className="text-sm text-emerald-600">#{editingOrder?.id.slice(0, 8)}</p>
-                </div>
-                <div>
-                  <Label>Customer</Label>
-                  <p className="text-sm text-emerald-900">{editingOrder?.customer_name}</p>
-                </div>
-              </div>
-              
-              <div>
-                <Label>Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map(s => (
-                      <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!editingOrder ? (
+                <>
+                  {/* Customer Selection */}
+                  <div>
+                    <Label className="text-base font-semibold mb-3 block">Customer</Label>
+                    <RadioGroup value={formData.customer_selection} onValueChange={(v) => setFormData({...formData, customer_selection: v})}>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="self" id="self" />
+                        <Label htmlFor="self" className="flex-1 cursor-pointer">Send to myself ({currentUser?.email})</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="existing" id="existing" />
+                        <Label htmlFor="existing" className="flex-1 cursor-pointer">Select existing customer</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-emerald-50">
+                        <RadioGroupItem value="new" id="new" />
+                        <Label htmlFor="new" className="flex-1 cursor-pointer">Create new customer</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
 
-              <div className="border-t border-emerald-100 pt-4">
-                <Label className="text-base font-semibold mb-3 block">Delivery Tracking Info</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Driver Name</Label>
-                    <Input 
-                      value={formData.driver_name || ''} 
-                      onChange={(e) => setFormData({...formData, driver_name: e.target.value})}
-                      placeholder="John Doe"
-                    />
+                  {formData.customer_selection === 'existing' && (
+                    <div>
+                      <Label>Select Customer</Label>
+                      <Select value={formData.customer_id} onValueChange={(v) => setFormData({...formData, customer_id: v})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a customer..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contacts.filter(c => c.type === 'customer' || c.email).map(contact => (
+                            <SelectItem key={contact.id} value={contact.id}>
+                              {contact.full_name} ({contact.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {formData.customer_selection === 'new' && (
+                    <div className="space-y-3 p-4 border rounded-lg bg-emerald-50/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <UserPlus className="w-5 h-5 text-emerald-600" />
+                        <Label className="font-semibold">New Customer Details</Label>
+                      </div>
+                      <div>
+                        <Label>Full Name *</Label>
+                        <Input 
+                          value={formData.new_customer_name || ''} 
+                          onChange={(e) => setFormData({...formData, new_customer_name: e.target.value})}
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div>
+                        <Label>Email *</Label>
+                        <Input 
+                          type="email"
+                          value={formData.new_customer_email || ''} 
+                          onChange={(e) => setFormData({...formData, new_customer_email: e.target.value})}
+                          placeholder="john@example.com"
+                        />
+                      </div>
+                      <div>
+                        <Label>Phone</Label>
+                        <Input 
+                          value={formData.new_customer_phone || ''} 
+                          onChange={(e) => setFormData({...formData, new_customer_phone: e.target.value})}
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Order Details */}
+                  <div className="border-t border-emerald-100 pt-4">
+                    <Label className="text-base font-semibold mb-3 block">Order Details</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Status</Label>
+                        <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map(s => (
+                              <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Total Amount ($)</Label>
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={formData.total || ''} 
+                          onChange={(e) => setFormData({...formData, total: e.target.value})}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <Label>Delivery Address</Label>
+                      <Input 
+                        value={formData.delivery_address || ''} 
+                        onChange={(e) => setFormData({...formData, delivery_address: e.target.value})}
+                        placeholder="123 Main St, City, State"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <Label>Notes</Label>
+                      <Textarea 
+                        value={formData.notes || ''} 
+                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                        placeholder="Special instructions..."
+                        rows={3}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label>Driver Phone</Label>
-                    <Input 
-                      value={formData.driver_phone || ''} 
-                      onChange={(e) => setFormData({...formData, driver_phone: e.target.value})}
-                      placeholder="(555) 123-4567"
-                    />
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Order ID</Label>
+                      <p className="text-sm text-emerald-600">#{editingOrder?.id.slice(0, 8)}</p>
+                    </div>
+                    <div>
+                      <Label>Customer</Label>
+                      <p className="text-sm text-emerald-900">{editingOrder?.customer_name}</p>
+                    </div>
                   </div>
+                  
                   <div>
-                    <Label>Delivery Latitude</Label>
-                    <Input 
-                      type="number"
-                      step="0.000001"
-                      value={formData.delivery_lat || ''} 
-                      onChange={(e) => setFormData({...formData, delivery_lat: e.target.value})}
-                      placeholder="34.0522"
-                    />
+                    <Label>Status</Label>
+                    <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map(s => (
+                          <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div>
-                    <Label>Delivery Longitude</Label>
-                    <Input 
-                      type="number"
-                      step="0.000001"
-                      value={formData.delivery_lng || ''} 
-                      onChange={(e) => setFormData({...formData, delivery_lng: e.target.value})}
-                      placeholder="-118.2437"
-                    />
+
+                  <div className="border-t border-emerald-100 pt-4">
+                    <Label className="text-base font-semibold mb-3 block">Delivery Tracking Info</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Driver Name</Label>
+                        <Input 
+                          value={formData.driver_name || ''} 
+                          onChange={(e) => setFormData({...formData, driver_name: e.target.value})}
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div>
+                        <Label>Driver Phone</Label>
+                        <Input 
+                          value={formData.driver_phone || ''} 
+                          onChange={(e) => setFormData({...formData, driver_phone: e.target.value})}
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                      <div>
+                        <Label>Delivery Latitude</Label>
+                        <Input 
+                          type="number"
+                          step="0.000001"
+                          value={formData.delivery_lat || ''} 
+                          onChange={(e) => setFormData({...formData, delivery_lat: e.target.value})}
+                          placeholder="34.0522"
+                        />
+                      </div>
+                      <div>
+                        <Label>Delivery Longitude</Label>
+                        <Input 
+                          type="number"
+                          step="0.000001"
+                          value={formData.delivery_lng || ''} 
+                          onChange={(e) => setFormData({...formData, delivery_lng: e.target.value})}
+                          placeholder="-118.2437"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => { setEditingOrder(null); setFormData({}); }} className="flex-1">Cancel</Button>
-                <Button onClick={handleSave} disabled={updateMutation.isPending} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500">
-                  {updateMutation.isPending ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
+                <Button variant="outline" onClick={() => { setEditingOrder(null); setFormData({}); setIsCreateOpen(false); }} className="flex-1">Cancel</Button>
+                <Button 
+                  onClick={editingOrder ? handleSave : handleCreateOrder} 
+                  disabled={updateMutation.isPending || createMutation.isPending} 
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500"
+                >
+                  {(updateMutation.isPending || createMutation.isPending) ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
                 </Button>
               </div>
               </div>
