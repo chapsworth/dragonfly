@@ -155,27 +155,28 @@ export default function CategoryCarousel({ category, products }) {
               )}
             </button>
           </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => scroll('left')}
+              className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5 text-emerald-700" />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
+            >
+              <ChevronRight className="w-5 h-5 text-emerald-700" />
+            </button>
+          </div>
         </div>
         
-        <div className="flex gap-2">
-          <button
-            onClick={() => scroll('left')}
-            className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
-          >
-            <ChevronLeft className="w-5 h-5 text-emerald-700" />
+        <Link to={`${createPageUrl('Shop')}?category=${category}`}>
+          <button className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:shadow-lg transition-all">
+            Show All
           </button>
-          <button
-            onClick={() => scroll('right')}
-            className="p-2 rounded-xl bg-white/60 backdrop-blur border border-white/40 hover:bg-white transition-colors shadow-sm"
-          >
-            <ChevronRight className="w-5 h-5 text-emerald-700" />
-          </button>
-          <Link to={`${createPageUrl('Shop')}?category=${category}`}>
-            <button className="px-4 py-2 rounded-xl bg-white text-black border border-black text-sm font-semibold hover:shadow-lg transition-all">
-              Show All
-            </button>
-          </Link>
-        </div>
+        </Link>
       </div>
 
       <div
