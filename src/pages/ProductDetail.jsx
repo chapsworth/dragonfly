@@ -70,7 +70,7 @@ export default function ProductDetail() {
   const currentPrice = selectedVariant?.price || product?.price || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-32 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-28 pb-40 px-4">
       <div className="max-w-6xl mx-auto">
         <Link to={createPageUrl('Shop')} className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6">
           <ArrowLeft className="w-5 h-5" />

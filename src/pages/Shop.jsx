@@ -113,7 +113,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-40">
       {/* Header Section */}
       <div className="pt-28 px-4 pb-4">
         <div className="max-w-7xl mx-auto">
