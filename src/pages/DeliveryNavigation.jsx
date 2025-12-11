@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,43 +14,7 @@ import {
   Package, DollarSign, ListOrdered, Route, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import L from 'leaflet';
 import polyline from 'npm:@mapbox/polyline@1.2.1';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet icons
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-const driverIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-});
-
-const destinationIcon = (index) => new L.Icon({
-  iconUrl: `data:image/svg+xml;base64,${btoa(`<svg width="40" height="50" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 0C8.954 0 0 8.954 0 20c0 14 20 30 20 30s20-16 20-30c0-11.046-8.954-20-20-20z" fill="#ef4444"/><circle cx="20" cy="20" r="10" fill="white"/><text x="20" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#ef4444">${index + 1}</text></svg>`)}`,
-  iconSize: [40, 50],
-  iconAnchor: [20, 50],
-});
-
-function MapUpdater({ center, zoom, bounds }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (bounds) {
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } else if (center) {
-      map.setView(center, zoom);
-    }
-  }, [center, zoom, bounds, map]);
-  
-  return null;
-}
 
 export default function DeliveryNavigation() {
   const navigate = useNavigate();
@@ -58,12 +22,19 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places', 'geometry']
+  });
+
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [map, setMap] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const [optimizeBy, setOptimizeBy] = useState('distance');
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentRouteIndex, setCurrentRouteIndex] = useState(0);
   const [completedOrders, setCompletedOrders] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['delivery-orders', orderIds],
@@ -200,23 +171,28 @@ export default function DeliveryNavigation() {
   const routePolyline = useMemo(() => {
     if (!routeData || !routeData.polyline) return [];
     try {
-      return polyline.decode(routeData.polyline);
+      const decoded = polyline.decode(routeData.polyline);
+      return decoded.map(([lat, lng]) => ({ lat, lng }));
     } catch (e) {
       console.error('Error decoding polyline:', e);
       return [];
     }
   }, [routeData]);
 
-  const mapBounds = useMemo(() => {
-    if (!currentLocation || pendingOrders.length === 0) return null;
-    
-    const points = [
-      [currentLocation.lat, currentLocation.lng],
-      ...pendingOrders.map(o => [o.delivery_lat, o.delivery_lng])
-    ];
-    
-    return L.latLngBounds(points);
-  }, [currentLocation, pendingOrders]);
+  const onMapLoad = useCallback((mapInstance) => {
+    setMap(mapInstance);
+  }, []);
+
+  useEffect(() => {
+    if (map && currentLocation && pendingOrders.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(new window.google.maps.LatLng(currentLocation.lat, currentLocation.lng));
+      pendingOrders.forEach(order => {
+        bounds.extend(new window.google.maps.LatLng(order.delivery_lat, order.delivery_lng));
+      });
+      map.fitBounds(bounds, 50);
+    }
+  }, [map, currentLocation, pendingOrders]);
 
   const aqiColor = (level) => {
     const colors = {
@@ -229,7 +205,7 @@ export default function DeliveryNavigation() {
     return colors[level] || 'bg-gray-500';
   };
 
-  if (ordersLoading) {
+  if (ordersLoading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
@@ -245,52 +221,76 @@ export default function DeliveryNavigation() {
       {/* Map */}
       <div className="flex-1 relative">
         {currentLocation && (
-          <MapContainer
-            center={[currentLocation.lat, currentLocation.lng]}
+          <GoogleMap
+            mapContainerStyle={{ width: '100%', height: '100%' }}
+            center={{ lat: currentLocation.lat, lng: currentLocation.lng }}
             zoom={13}
-            style={{ height: '100%', width: '100%' }}
+            onLoad={onMapLoad}
+            options={{
+              zoomControl: true,
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false
+            }}
           >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; OpenStreetMap'
-            />
-            <MapUpdater 
-              center={[currentLocation.lat, currentLocation.lng]} 
-              zoom={13}
-              bounds={mapBounds}
-            />
-            
             {/* Driver location */}
-            <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverIcon}>
-              <Popup>Your Location</Popup>
-            </Marker>
+            <Marker 
+              position={{ lat: currentLocation.lat, lng: currentLocation.lng }}
+              icon={{
+                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 20)
+              }}
+              onClick={() => setSelectedMarker('driver')}
+            />
+            {selectedMarker === 'driver' && (
+              <InfoWindow
+                position={{ lat: currentLocation.lat, lng: currentLocation.lng }}
+                onCloseClick={() => setSelectedMarker(null)}
+              >
+                <div className="text-sm font-semibold">Your Location</div>
+              </InfoWindow>
+            )}
             
             {/* Delivery destinations */}
             {pendingOrders.map((order, idx) => (
-              <Marker 
-                key={order.id}
-                position={[order.delivery_lat, order.delivery_lng]} 
-                icon={destinationIcon(idx)}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-bold">{order.customer_name}</p>
-                    <p>{order.delivery_address}</p>
-                    <p className="text-emerald-600 font-bold">${order.total.toFixed(2)}</p>
-                  </div>
-                </Popup>
-              </Marker>
+              <React.Fragment key={order.id}>
+                <Marker 
+                  position={{ lat: order.delivery_lat, lng: order.delivery_lng }}
+                  icon={{
+                    url: `data:image/svg+xml;base64,${btoa(`<svg width="40" height="50" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 0C8.954 0 0 8.954 0 20c0 14 20 30 20 30s20-16 20-30c0-11.046-8.954-20-20-20z" fill="#ef4444"/><circle cx="20" cy="20" r="10" fill="white"/><text x="20" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#ef4444">${idx + 1}</text></svg>`)}`,
+                    scaledSize: new window.google.maps.Size(40, 50),
+                    anchor: new window.google.maps.Point(20, 50)
+                  }}
+                  onClick={() => setSelectedMarker(order.id)}
+                />
+                {selectedMarker === order.id && (
+                  <InfoWindow
+                    position={{ lat: order.delivery_lat, lng: order.delivery_lng }}
+                    onCloseClick={() => setSelectedMarker(null)}
+                  >
+                    <div className="text-sm">
+                      <p className="font-bold">{order.customer_name}</p>
+                      <p>{order.delivery_address}</p>
+                      <p className="text-emerald-600 font-bold">${order.total.toFixed(2)}</p>
+                    </div>
+                  </InfoWindow>
+                )}
+              </React.Fragment>
             ))}
 
             {/* Route polyline */}
             {routePolyline.length > 0 && (
               <Polyline
-                positions={routePolyline}
-                color="#10b981"
-                weight={4}
+                path={routePolyline}
+                options={{
+                  strokeColor: '#10b981',
+                  strokeWeight: 4,
+                  strokeOpacity: 0.8
+                }}
               />
             )}
-          </MapContainer>
+          </GoogleMap>
         )}
 
         {/* Top Controls */}
