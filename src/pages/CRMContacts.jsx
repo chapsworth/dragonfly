@@ -11,8 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag } from 'lucide-react';
 import { toast } from 'sonner';
+import BiometricGuard from '@/components/auth/BiometricGuard';
 
 export default function CRMContacts() {
+  return (
+    <BiometricGuard>
+      <CRMContactsContent />
+    </BiometricGuard>
+  );
+}
+
+function CRMContactsContent() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [stageFilter, setStageFilter] = useState('all');
@@ -238,6 +247,7 @@ export default function CRMContacts() {
       />
     </div>
   );
+}
 }
 
 function ContactDialog({ contact, isOpen, onClose, onSave }) {
