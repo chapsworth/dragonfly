@@ -70,11 +70,16 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.Product.update(product.id, data);
+      if (product) {
+        return await base44.entities.Product.update(product.id, data);
+      } else {
+        return await base44.entities.Product.create(data);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       onClose();
+      toast.success(product ? 'Product updated!' : 'Product created!');
     }
   });
 
@@ -274,7 +279,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-emerald-900">
-            Edit Product
+            {product ? 'Edit Product' : 'Create New Product'}
           </DialogTitle>
         </DialogHeader>
 
@@ -759,7 +764,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
               disabled={saveMutation.isPending}
               className="bg-gradient-to-r from-emerald-500 to-green-500 text-white"
             >
-              {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {saveMutation.isPending ? 'Saving...' : product ? 'Save Changes' : 'Create Product'}
             </Button>
           </div>
         </div>
