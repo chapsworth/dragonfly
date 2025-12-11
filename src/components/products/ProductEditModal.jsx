@@ -51,7 +51,10 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         image_url: product.image_url || '',
         weight: product.weight || '',
         in_stock: product.in_stock !== undefined ? product.in_stock : true,
-        variants: product.variants || []
+        variants: product.variants || [],
+        stock_quantity: product.stock_quantity || 0,
+        low_stock_threshold: product.low_stock_threshold || 10,
+        sku: product.sku || ''
       });
     }
   }, [product]);
@@ -199,7 +202,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const handleSave = () => {
     const variants = formData.variants?.map(v => ({
       name: v.name,
-      price: parseFloat(v.price) || 0
+      price: parseFloat(v.price) || 0,
+      stock_quantity: parseInt(v.stock_quantity) || 0
     })).filter(v => v.name && v.price > 0);
 
     saveMutation.mutate({
@@ -207,6 +211,8 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       price: parseFloat(formData.price) || 0,
       thc_level: parseFloat(formData.thc_level) || 0,
       cbd_level: parseFloat(formData.cbd_level) || 0,
+      stock_quantity: parseInt(formData.stock_quantity) || 0,
+      low_stock_threshold: parseInt(formData.low_stock_threshold) || 10,
       variants: variants || []
     });
   };
@@ -537,6 +543,40 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </div>
           </div>
 
+          {/* Inventory Management */}
+          <div className="border-t border-emerald-100 pt-4">
+            <Label className="text-emerald-900 font-semibold mb-3 block">Inventory</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm">SKU</Label>
+                <Input
+                  value={formData.sku || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                  placeholder="Product SKU"
+                  className="border-emerald-200"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Stock Quantity</Label>
+                <Input
+                  type="number"
+                  value={formData.stock_quantity || 0}
+                  onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
+                  className="border-emerald-200"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Low Stock Threshold</Label>
+                <Input
+                  type="number"
+                  value={formData.low_stock_threshold || 10}
+                  onChange={(e) => setFormData(prev => ({ ...prev, low_stock_threshold: parseInt(e.target.value) || 10 }))}
+                  className="border-emerald-200"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Variants */}
           <div className="border-t border-emerald-100 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -567,7 +607,14 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                       placeholder="Price"
                       value={variant.price}
                       onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
-                      className="w-28 border-emerald-200 bg-white"
+                      className="w-24 border-emerald-200 bg-white"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Stock"
+                      value={variant.stock_quantity || 0}
+                      onChange={(e) => handleVariantChange(index, 'stock_quantity', e.target.value)}
+                      className="w-24 border-emerald-200 bg-white"
                     />
                     <Button
                       type="button"
