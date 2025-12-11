@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ShoppingCart, Package, Users, Building2, CheckSquare, Calendar, FileText, Bookmark } from 'lucide-react';
+import { PlusSquare, ShoppingCart, Package, Users, Building2, CheckSquare, Calendar, FileText, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function QuickCreateMenu() {
@@ -163,7 +163,7 @@ export default function QuickCreateMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
-            <Plus className="w-6 h-6 text-emerald-700" />
+            <PlusSquare className="w-6 h-6 text-emerald-700" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
