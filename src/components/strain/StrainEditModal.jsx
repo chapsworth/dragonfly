@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus } from 'lucide-react';
+import { RefreshCw, Upload, Search, Sparkles, Loader2, X, Plus, Clipboard } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StrainEditModal({ strain, isOpen, onClose }) {
@@ -195,17 +195,57 @@ export default function StrainEditModal({ strain, isOpen, onClose }) {
               </TabsContent>
 
               <TabsContent value="url" className="space-y-3">
-                <Input
-                  placeholder="Enter image URL..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Enter image URL..."
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="pr-20"
+                    />
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={async () => {
+                          try {
+                            const text = await navigator.clipboard.readText();
+                            setImageUrl(text);
+                            toast.success('URL pasted');
+                          } catch (error) {
+                            toast.error('Failed to paste');
+                          }
+                        }}
+                        title="Paste URL"
+                      >
+                        <Clipboard className="w-4 h-4" />
+                      </Button>
+                      {imageUrl && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setImageUrl('');
+                            setFormData({ ...formData, image_url: '' });
+                            toast.success('Image URL cleared');
+                          }}
+                          title="Clear URL"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 <Button
                   onClick={() => {
                     setFormData({ ...formData, image_url: imageUrl });
                     toast.success('Image URL updated');
                   }}
                   className="w-full"
+                  disabled={!imageUrl}
                 >
                   Set Image URL
                 </Button>
