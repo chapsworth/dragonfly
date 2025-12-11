@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,47 @@ export default function AdminDashboard() {
   const recentUsers = [...users]
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
     .slice(0, 5);
+
+  // Generate chart data for last 7 days
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      days.push(date.toISOString().split('T')[0]);
+    }
+    return days;
+  };
+
+  const last7Days = getLast7Days();
+
+  // Stock levels data (simulated - you can adjust based on your data)
+  const stockData = last7Days.map((day, i) => ({
+    day,
+    value: Math.max(20, products.length - i * 2)
+  }));
+
+  // Revenue data by day
+  const revenueData = last7Days.map(day => {
+    const dayOrders = orders.filter(o => 
+      o.created_date && new Date(o.created_date).toISOString().split('T')[0] === day
+    );
+    return {
+      day,
+      value: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+    };
+  });
+
+  // Customer signups by day
+  const signupData = last7Days.map(day => {
+    const dayUsers = users.filter(u => 
+      u.created_date && new Date(u.created_date).toISOString().split('T')[0] === day
+    );
+    return {
+      day,
+      value: dayUsers.length
+    };
+  });
 
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-700',
@@ -126,6 +168,98 @@ export default function AdminDashboard() {
             <div className="hidden lg:block mb-8">
               <h1 className="text-4xl font-bold text-emerald-900 mb-2">Dashboard</h1>
               <p className="text-emerald-600">Welcome to your admin panel</p>
+            </div>
+
+            {/* Mini Charts */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4">
+              {/* Stock Levels Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
+                  <p className="text-xs font-semibold text-emerald-900">Stock Levels</p>
+                </div>
+                <ResponsiveContainer width="100%" height={60}>
+                  <LineChart data={stockData}>
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="url(#stockGradient)" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <defs>
+                      <linearGradient id="stockGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#60a5fa" />
+                        <stop offset="100%" stopColor="#06b6d4" />
+                      </linearGradient>
+                    </defs>
+                  </LineChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              {/* Revenue Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-600" />
+                  <p className="text-xs font-semibold text-emerald-900">Revenue Trend</p>
+                </div>
+                <ResponsiveContainer width="100%" height={60}>
+                  <LineChart data={revenueData}>
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="url(#revenueGradient)" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                    </defs>
+                  </LineChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              {/* Customer Signups Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-violet-500" />
+                  <p className="text-xs font-semibold text-emerald-900">User Activity</p>
+                </div>
+                <ResponsiveContainer width="100%" height={60}>
+                  <LineChart data={signupData}>
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="url(#signupGradient)" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <defs>
+                      <linearGradient id="signupGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#c084fc" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                      </linearGradient>
+                    </defs>
+                  </LineChart>
+                </ResponsiveContainer>
+              </motion.div>
             </div>
 
             {/* Stats Grid - 3 columns on mobile */}
