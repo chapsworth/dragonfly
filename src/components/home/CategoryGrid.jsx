@@ -42,42 +42,33 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
 
 
   return (
-    <section className="">
+    <section className="px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="pb-4 flex items-center gap-3 overflow-x-auto md:overflow-visible md:justify-evenly md:flex-wrap scrollbar-hide">
-          {categories.map((category, i) =>
-          <motion.button
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {categories.map((category) =>
+          <button
             key={category.value}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.03 }}
             onClick={() => onCategoryChange(category.value)}
-            className="flex-shrink-0 relative">
+            className="flex-shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all hover:bg-white/30 min-w-[70px]">
 
-            <div className="flex flex-col items-center gap-2 p-3 rounded-2xl transition-all hover:bg-white/30">
-              <div className={cn(
-                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-md transition-all",
-                category.gradient
-              )}>
-                <category.icon className="w-6 h-6 text-white" strokeWidth={2} />
-              </div>
-              <div className="relative">
-                <p className={cn(
-                  "text-xs font-semibold transition-colors whitespace-nowrap",
-                  selectedCategory === category.value ? "text-emerald-700" : "text-emerald-600"
-                )}>
-                  {category.name}
-                </p>
-                {selectedCategory === category.value &&
-                <motion.div
-                  layoutId="categoryIndicator"
-                  className="absolute -bottom-1.5 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
-
-                }
-              </div>
+            <div className={cn(
+              "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-sm transition-all",
+              category.gradient
+            )}>
+              <category.icon className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
-          </motion.button>
+            <div className="relative">
+              <p className={cn(
+                "text-xs font-medium transition-colors whitespace-nowrap",
+                selectedCategory === category.value ? "text-emerald-700" : "text-emerald-600"
+              )}>
+                {category.name}
+              </p>
+              {selectedCategory === category.value &&
+              <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" />
+              }
+            </div>
+          </button>
           )}
         </div>
       </div>
