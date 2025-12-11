@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
+import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 
 export default function CRMContacts() {
   return (
@@ -396,10 +397,19 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
           {/* Address */}
           <div>
             <Label>Address</Label>
-            <Input
+            <AddressAutocomplete
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, address: val })}
               className="border-emerald-200"
+              onPlaceSelect={(details) => {
+                setFormData({
+                  ...formData,
+                  address: details.address,
+                  city: details.city,
+                  state: details.state,
+                  zip: details.zip
+                });
+              }}
             />
           </div>
 
