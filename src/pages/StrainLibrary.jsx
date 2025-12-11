@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -31,6 +32,9 @@ export default function StrainLibrary() {
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStrain, setSelectedStrain] = useState(null);
+  const [aiSearch, setAiSearch] = useState('');
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: strains = [], isLoading } = useQuery({
     queryKey: ['strains'],
@@ -45,6 +49,39 @@ export default function StrainLibrary() {
   });
 
   const popularStrains = strains.filter(s => s.popular).slice(0, 3);
+
+  const handleAiDiscover = async () => {
+    if (!aiSearch.trim()) {
+      toast.error('Please enter a strain name');
+      return;
+    }
+
+    setIsDiscovering(true);
+    try {
+      const response = await base44.functions.invoke('discoverStrain', {
+        strainName: aiSearch.trim()
+      });
+
+      if (response.data.success) {
+        queryClient.invalidateQueries({ queryKey: ['strains'] });
+        setSelectedStrain(response.data.strain);
+        setAiSearch('');
+        
+        if (response.data.isNew) {
+          toast.success('New strain discovered and added to library!');
+        } else {
+          toast.info('Strain already exists in library');
+        }
+      } else {
+        toast.error(response.data.error || 'Strain not found');
+      }
+    } catch (error) {
+      console.error('Discovery error:', error);
+      toast.error('Failed to discover strain. Please try again.');
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-24 pb-32 px-4">
@@ -110,17 +147,62 @@ export default function StrainLibrary() {
           </motion.div>
         )}
 
-        {/* Search & Filter */}
+        {/* AI Discovery Search */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 backdrop-blur">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <h3 className="font-bold text-purple-900">AI Strain Discovery</h3>
+            </div>
+            <p className="text-sm text-purple-700 mb-4">
+              Search for any cannabis strain and let AI compile comprehensive information and images for you
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter strain name to discover..."
+                value={aiSearch}
+                onChange={(e) => setAiSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAiDiscover()}
+                className="flex-1 bg-white border-purple-300 focus:border-purple-500"
+                disabled={isDiscovering}
+              />
+              <Button 
+                onClick={handleAiDiscover}
+                disabled={isDiscovering || !aiSearch.trim()}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              >
+                {isDiscovering ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Discovering...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Discover
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Search & Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="mb-6 space-y-4"
         >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-emerald-400" />
             <Input
-              placeholder="Search strains..."
+              placeholder="Search library..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 h-12 bg-white/80 backdrop-blur border-emerald-200 focus:border-emerald-400"
