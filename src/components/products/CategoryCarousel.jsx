@@ -98,10 +98,10 @@ export default function CategoryCarousel({ category, products }) {
           <AnimatePresence>
             {isFilterOpen && (
               <motion.div
-                initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-2 flex-wrap w-full"
+                initial={{ opacity: 0, width: 0, overflow: 'hidden' }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                className="flex items-center gap-2"
               >
                 <button
                   onClick={() => setSelectedStrain('all')}
