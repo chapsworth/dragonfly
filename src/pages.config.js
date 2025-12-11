@@ -15,6 +15,8 @@ import Radio from './pages/Radio';
 import AdminSettings from './pages/AdminSettings';
 import StrainLibrary from './pages/StrainLibrary';
 import AdminInventory from './pages/AdminInventory';
+import CRM from './pages/CRM';
+import CRMContacts from './pages/CRMContacts';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +38,8 @@ export const PAGES = {
     "AdminSettings": AdminSettings,
     "StrainLibrary": StrainLibrary,
     "AdminInventory": AdminInventory,
+    "CRM": CRM,
+    "CRMContacts": CRMContacts,
 }
 
 export const pagesConfig = {
