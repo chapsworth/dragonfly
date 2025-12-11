@@ -15,6 +15,7 @@ export default function Orders() {
     queryKey: ['orders'],
     queryFn: async () => {
       const user = await base44.auth.me();
+      if (!user) return [];
       return base44.entities.Order.filter(
         { customer_email: user.email },
         '-created_date'
