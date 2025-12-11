@@ -99,29 +99,31 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {product.variants?.length > 0 ? (
-          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.preventDefault()}>
-            {product.variants.map((variant, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedVariant(variant);
-                }}
-                className={`px-2 py-1 rounded-full text-xs font-medium border transition-all ${
-                  selectedVariant?.name === variant.name
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                    : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
-                }`}
-              >
-                {variant.name}
-              </button>
-            ))}
-          </div>
-        ) : (
-          product.weight && <p className="text-xs text-emerald-500 mb-2">{product.weight}</p>
-        )}
+        <div className="min-h-[36px] mb-2 flex items-start">
+          {product.variants?.length > 0 ? (
+            <div className="flex flex-wrap gap-1" onClick={(e) => e.preventDefault()}>
+              {product.variants.map((variant, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedVariant(variant);
+                  }}
+                  className={`px-2 py-1 rounded-full text-xs font-medium border transition-all ${
+                    selectedVariant?.name === variant.name
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                      : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  {variant.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            product.weight && <p className="text-xs text-emerald-500">{product.weight}</p>
+          )}
+        </div>
 
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-emerald-700">
