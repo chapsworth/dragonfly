@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, ShoppingBag, Leaf } from 'lucide-react';
+import { Menu, ShoppingBag, Leaf, Grid2x2 } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 
@@ -23,12 +23,19 @@ export default function Header({ onMenuClick }) {
       <div className="mx-4 mt-4 lg:mx-0 lg:mt-0">
         <div className="bg-white/60 lg:bg-white/0 backdrop-blur-md rounded-2xl lg:rounded-none border border-white/20 lg:border-none shadow-lg lg:shadow-none shadow-emerald-900/5 px-4 py-3">
           <div className="flex items-center justify-between">
-            <button
-              onClick={onMenuClick}
-              className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
-            >
-              <Menu className="w-6 h-6 text-emerald-700" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onMenuClick}
+                className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+              >
+                <Menu className="w-6 h-6 text-emerald-700" />
+              </button>
+              <Link to={createPageUrl('AdminLauncher')}>
+                <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                  <Grid2x2 className="w-6 h-6 text-emerald-700" />
+                </button>
+              </Link>
+            </div>
 
             <Link to={createPageUrl('Home')} className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
