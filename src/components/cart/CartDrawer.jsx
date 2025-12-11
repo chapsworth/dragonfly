@@ -19,7 +19,8 @@ export default function CartDrawer() {
     customer_email: '',
     customer_phone: '',
     delivery_address: '',
-    notes: ''
+    notes: '',
+    payment_method: 'pay_in_person'
   });
 
   const handleCheckout = async () => {
@@ -108,7 +109,8 @@ export default function CartDrawer() {
           customer_email: '',
           customer_phone: '',
           delivery_address: '',
-          notes: ''
+          notes: '',
+          payment_method: 'pay_in_person'
         });
       }, 3000);
     } catch (error) {
@@ -164,7 +166,7 @@ export default function CartDrawer() {
                 </div>
               ) : (
                 <>
-                  <div className="flex-1 overflow-auto py-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto py-4 space-y-3 max-h-[calc(100vh-320px)]">
                     {cartItems.map(item => (
                       <div key={item.cartItemKey} className="flex gap-3 p-3 rounded-2xl bg-white/60 backdrop-blur border border-white/40">
                         <img
@@ -227,7 +229,7 @@ export default function CartDrawer() {
               exit={{ opacity: 0, x: 20 }}
               className="flex flex-col h-[calc(100vh-140px)]"
             >
-              <div className="flex-1 overflow-auto py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto py-4 space-y-4 max-h-[calc(100vh-320px)]">
                 <div className="space-y-2">
                   <Label className="text-emerald-800">Full Name *</Label>
                   <Input
@@ -276,6 +278,33 @@ export default function CartDrawer() {
                     placeholder="Gate code, special instructions..."
                     rows={2}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-emerald-800">Payment Method *</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setFormData(p => ({ ...p, payment_method: 'pay_in_person' }))}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        formData.payment_method === 'pay_in_person'
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 bg-white/60'
+                      }`}
+                    >
+                      <div className="font-semibold text-sm text-emerald-900">Pay in Person</div>
+                      <div className="text-xs text-emerald-600 mt-1">Cash or card on delivery</div>
+                    </button>
+                    <button
+                      onClick={() => setFormData(p => ({ ...p, payment_method: 'online' }))}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        formData.payment_method === 'online'
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 bg-white/60'
+                      }`}
+                    >
+                      <div className="font-semibold text-sm text-emerald-900">Pay Online</div>
+                      <div className="text-xs text-emerald-600 mt-1">Coming soon</div>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="border-t border-emerald-100/50 pt-4 space-y-3">
