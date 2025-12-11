@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
+import { Cannabis, Truck, Shield, Clock, Leaf, Settings, Phone } from 'lucide-react';
 import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
@@ -111,7 +111,7 @@ export default function Home() {
             <Link to={createPageUrl('Shop')}>
               <Button className="h-14 px-8 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg shadow-xl shadow-black/20">
                 Order Now
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <Cannabis className="w-5 h-5 ml-2" />
               </Button>
             </Link>
           </motion.div>
