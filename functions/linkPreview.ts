@@ -14,6 +14,8 @@ Deno.serve(async (req) => {
     // Fetch actual product data
     try {
       const apiUrl = `https://mydragonfly.base44.com/api/entity/Product/${productId}`;
+      console.log('Fetching product:', apiUrl);
+      
       const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${Deno.env.get('BASE44_SERVICE_ROLE_KEY')}`
@@ -22,9 +24,22 @@ Deno.serve(async (req) => {
       
       if (response.ok) {
         const product = await response.json();
+        console.log('Product data:', product);
+        
         title = `${product.name || 'Product'} - Dragonfly`;
         description = product.description || 'Premium cannabis product - Order now for fast delivery';
-        imageUrl = product.image_url || imageUrl;
+        
+        // Ensure image URL is absolute and valid
+        if (product.image_url) {
+          imageUrl = product.image_url.startsWith('http') 
+            ? product.image_url 
+            : `https:${product.image_url}`;
+          console.log('Using image:', imageUrl);
+        } else {
+          console.log('No product image found, using default');
+        }
+      } else {
+        console.error('API response not OK:', response.status);
       }
     } catch (error) {
       console.error('Error fetching product:', error);
