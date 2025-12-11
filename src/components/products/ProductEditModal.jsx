@@ -58,12 +58,31 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         cbd_level: product.cbd_level || '',
         strain_type: product.strain_type || 'hybrid',
         image_url: product.image_url || '',
-        weight: product.weight || '',
+        weight: product.weight || '3.5g',
         in_stock: product.in_stock !== undefined ? product.in_stock : true,
+        published: product.published !== undefined ? product.published : true,
         variants: product.variants || [],
         stock_quantity: product.stock_quantity || 0,
         low_stock_threshold: product.low_stock_threshold || 10,
         sku: product.sku || ''
+      });
+    } else {
+      setFormData({
+        name: '',
+        category: 'flower',
+        description: '',
+        price: '',
+        thc_level: '',
+        cbd_level: '',
+        strain_type: 'hybrid',
+        image_url: '',
+        weight: '3.5g',
+        in_stock: true,
+        published: true,
+        variants: [],
+        stock_quantity: 0,
+        low_stock_threshold: 10,
+        sku: ''
       });
     }
   }, [product]);
@@ -647,6 +666,27 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </div>
           </div>
 
+          {/* Publishing Status */}
+          <div className="border-t border-emerald-100 pt-4">
+            <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+              <div>
+                <Label className="text-emerald-900 font-semibold">Product Visibility</Label>
+                <p className="text-xs text-emerald-600 mt-1">
+                  {formData.published ? 'Visible to customers' : 'Hidden from customers'}
+                </p>
+              </div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.published}
+                  onChange={(e) => setFormData(prev => ({ ...prev, published: e.target.checked }))}
+                  className="w-4 h-4 accent-emerald-600"
+                />
+                <span className="text-sm text-emerald-900">Published</span>
+              </label>
+            </div>
+          </div>
+
           {/* Inventory Management */}
           <div className="border-t border-emerald-100 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -677,8 +717,10 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                   <Label className="text-sm">Stock Quantity</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     value={formData.stock_quantity || 0}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
+                    onFocus={(e) => e.target.select()}
                     className="border-emerald-200"
                   />
                 </div>
@@ -686,8 +728,10 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                   <Label className="text-sm">Low Stock Threshold</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     value={formData.low_stock_threshold || 10}
                     onChange={(e) => setFormData(prev => ({ ...prev, low_stock_threshold: parseInt(e.target.value) || 10 }))}
+                    onFocus={(e) => e.target.select()}
                     className="border-emerald-200"
                   />
                 </div>
