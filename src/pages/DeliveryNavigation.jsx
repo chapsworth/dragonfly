@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Navigation, Phone, MessageSquare, CheckCircle, Play, Pause, Route, Clock, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import L from 'leaflet';
-import DirectionsPanel from '@/components/delivery/DirectionsPanel';
-import WeatherWidget from '@/components/delivery/WeatherWidget';
-import AirQualityWidget from '@/components/delivery/AirQualityWidget';
-import MultiDeliveryManager from '@/components/delivery/MultiDeliveryManager';
+import DirectionsPanel from '@/components/delivery/DirectionsPanel.jsx';
+import WeatherWidget from '@/components/delivery/WeatherWidget.jsx';
+import AirQualityWidget from '@/components/delivery/AirQualityWidget.jsx';
+import MultiDeliveryManager from '@/components/delivery/MultiDeliveryManager.jsx';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icon
