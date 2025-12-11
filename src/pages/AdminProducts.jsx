@@ -98,8 +98,8 @@ export default function AdminProducts() {
   };
 
   const copyShareLink = (product) => {
-    // Use mydragonfly.club for white-labeled sharing
-    const shareUrl = `https://mydragonfly.club/function/linkPreview?page=product&id=${product.id}`;
+    // Functions must use base44.com domain but will redirect to mydragonfly.club
+    const shareUrl = `https://mydragonfly.base44.com/function/linkPreview?page=product&id=${product.id}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success('Share link copied to clipboard!');
   };
