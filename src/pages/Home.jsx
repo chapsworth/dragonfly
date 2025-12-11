@@ -432,7 +432,7 @@ export default function Home() {
           settings={homeSettings}
         />
       </PageEditor>
-      </div>
+    </div>
     </>
   );
 }
