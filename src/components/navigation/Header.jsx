@@ -21,7 +21,10 @@ export default function Header({ onMenuClick }) {
             </button>
 
             <Link to={createPageUrl('Home')} className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Leaf className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent hidden sm:block">
                 Dragonfly
               </span>
             </Link>
