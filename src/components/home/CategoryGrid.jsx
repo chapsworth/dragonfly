@@ -44,7 +44,7 @@ export default function CategoryGrid({ selectedCategory, onCategoryChange }) {
   return (
     <section className="px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 overflow-x-auto md:overflow-visible md:grid md:grid-cols-9 md:gap-0 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex items-center gap-2 overflow-x-auto md:overflow-visible md:justify-between scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {categories.map((category) =>
           <button
             key={category.value}
