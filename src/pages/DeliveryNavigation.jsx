@@ -38,7 +38,7 @@ export default function DeliveryNavigation() {
   }, []);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
+    googleMapsApiKey: apiKey || '',
     libraries: ['places', 'geometry']
   });
 
@@ -246,7 +246,7 @@ export default function DeliveryNavigation() {
     return colors[level] || 'bg-gray-500';
   };
 
-  if (ordersLoading || !isLoaded || !apiKey) {
+  if (ordersLoading || !apiKey || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
