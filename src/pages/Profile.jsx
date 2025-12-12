@@ -106,13 +106,8 @@ export default function Profile() {
   const handleAddAddress = () => {
     setEditingAddress(null);
     setAddressForm({
-      user_email: user.email,
       label: '',
       full_address: '',
-      street: '',
-      city: '',
-      state: '',
-      zip: '',
       is_default: addresses.length === 0,
       delivery_instructions: ''
     });
@@ -142,10 +137,18 @@ export default function Profile() {
       return;
     }
 
+    // Clean data - remove empty strings for optional fields
+    const cleanData = Object.entries(addressForm).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
     if (editingAddress) {
-      updateAddressMutation.mutate({ id: editingAddress.id, data: addressForm });
+      updateAddressMutation.mutate({ id: editingAddress.id, data: cleanData });
     } else {
-      createAddressMutation.mutate({ ...addressForm, user_email: user.email });
+      createAddressMutation.mutate({ ...cleanData, user_email: user.email });
     }
   };
 
