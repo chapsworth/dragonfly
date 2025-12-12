@@ -3,13 +3,25 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { PanelLeft, ShoppingBag, Leaf, Grid2x2 } from 'lucide-react';
+import { PanelLeft, ShoppingBag, Leaf, Grid2x2, LogIn, User } from 'lucide-react';
 import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 import QuickCreateMenu from './QuickCreateMenu';
+import { Button } from '@/components/ui/button';
 
 export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
+  
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
   
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
@@ -74,6 +86,22 @@ export default function Header({ onMenuClick }) {
                   </motion.span>
                 )}
               </button>
+              {user ? (
+                <Link to={createPageUrl('Profile')}>
+                  <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                    <User className="w-6 h-6 text-emerald-700" />
+                  </button>
+                </Link>
+              ) : (
+                <Button 
+                  onClick={() => base44.auth.redirectToLogin()} 
+                  size="sm"
+                  className="bg-gradient-to-r from-emerald-500 to-green-500 h-9"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>
