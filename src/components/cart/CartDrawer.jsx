@@ -9,7 +9,7 @@ import { ShoppingBag, Plus, Minus, Trash2, X, ArrowRight, Check } from 'lucide-r
 import { useCart } from './CartContext';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
