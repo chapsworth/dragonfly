@@ -21,8 +21,15 @@ import { toast } from 'sonner';
 export default function QuickCreateMenu() {
   const [dialogType, setDialogType] = useState(null);
   const [formData, setFormData] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    base44.auth.me().then(user => {
+      setIsAdmin(user?.role === 'admin');
+    }).catch(() => setIsAdmin(false));
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: async ({ entity, data }) => {
