@@ -90,6 +90,19 @@ export default function AdminOrders() {
       } catch (e) {
         console.error('Email error:', e);
       }
+
+      // Notify admins of new order
+      try {
+        await base44.functions.invoke('notifyAdminsNewOrder', {
+          order_id: order.id,
+          order_number: order.id.slice(0, 8).toUpperCase(),
+          customer_name: orderData.customer_name || 'N/A',
+          total: orderData.total,
+          items_count: orderData.items?.length || 0
+        });
+      } catch (notifyError) {
+        console.error('Admin notification error:', notifyError);
+      }
       
       return order;
     },
