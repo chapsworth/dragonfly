@@ -165,6 +165,8 @@ export default function QuickCreateMenu() {
     bookmark: 'New Bookmark',
   };
 
+  if (!isAdmin) return null;
+
   return (
     <>
       <DropdownMenu>
