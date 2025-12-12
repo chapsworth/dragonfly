@@ -361,40 +361,6 @@ export default function Profile() {
                 }}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Street</Label>
-                <Input
-                  value={addressForm.street}
-                  onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
-                  placeholder="123 Main St"
-                />
-              </div>
-              <div>
-                <Label>City</Label>
-                <Input
-                  value={addressForm.city}
-                  onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                  placeholder="Los Angeles"
-                />
-              </div>
-              <div>
-                <Label>State</Label>
-                <Input
-                  value={addressForm.state}
-                  onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                  placeholder="CA"
-                />
-              </div>
-              <div>
-                <Label>ZIP Code</Label>
-                <Input
-                  value={addressForm.zip}
-                  onChange={(e) => setAddressForm({ ...addressForm, zip: e.target.value })}
-                  placeholder="90001"
-                />
-              </div>
-            </div>
             <div>
               <Label>Delivery Instructions</Label>
               <Textarea
