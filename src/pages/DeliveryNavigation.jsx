@@ -39,7 +39,8 @@ export default function DeliveryNavigation() {
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey || '',
-    libraries: ['places', 'geometry']
+    libraries: ['places', 'geometry'],
+    id: 'google-maps-script'
   });
 
   const [currentLocation, setCurrentLocation] = useState(null);
