@@ -9,7 +9,8 @@ export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKe
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey || '',
     libraries: ['places'],
-    id: 'customer-order-map'
+    id: 'customer-order-map',
+    preventGoogleFontsLoading: true
   });
 
   if (!order) return null;
@@ -67,7 +68,7 @@ export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKe
           </div>
 
           {/* Live Map for Out for Delivery */}
-          {showMap && isLoaded && (
+          {showMap && apiKey && isLoaded && (
             <div className="rounded-xl overflow-hidden border-2 border-emerald-200">
               <div className="bg-emerald-500 text-white px-4 py-2 flex items-center gap-2">
                 <Navigation2 className="w-5 h-5" />
