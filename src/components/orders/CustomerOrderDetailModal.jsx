@@ -3,16 +3,69 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package, DollarSign, Clock, Navigation2, Phone } from 'lucide-react';
 import { format } from 'date-fns';
-import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
-export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKey }) {
+// Separate component for map to avoid loader conflicts
+function OrderTrackingMap({ order, apiKey }) {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
+    googleMapsApiKey: apiKey,
     libraries: ['places'],
-    id: 'customer-order-map',
-    preventGoogleFontsLoading: true
+    id: 'customer-order-map'
   });
 
+  if (!isLoaded) {
+    return (
+      <div className="rounded-xl overflow-hidden border-2 border-emerald-200">
+        <div className="bg-emerald-500 text-white px-4 py-2 flex items-center gap-2">
+          <Navigation2 className="w-5 h-5" />
+          <span className="font-semibold">Live Tracking</span>
+        </div>
+        <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden border-2 border-emerald-200">
+      <div className="bg-emerald-500 text-white px-4 py-2 flex items-center gap-2">
+        <Navigation2 className="w-5 h-5" />
+        <span className="font-semibold">Live Tracking</span>
+      </div>
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '300px' }}
+        center={{ lat: order.driver_lat, lng: order.driver_lng }}
+        zoom={14}
+        options={{
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false
+        }}
+      >
+        <Marker 
+          position={{ lat: order.driver_lat, lng: order.driver_lng }}
+          icon={{
+            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
+            scaledSize: new window.google.maps.Size(40, 40)
+          }}
+          title="Your driver"
+        />
+        <Marker 
+          position={{ lat: order.delivery_lat, lng: order.delivery_lng }}
+          icon={{
+            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA0MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgMEM4Ljk1NCAwIDAgOC45NTQgMCAyMGMwIDE0IDIwIDMwIDIwIDMwczIwLTE2IDIwLTMwYzAtMTEuMDQ2LTguOTU0LTIwLTIwLTIweiIgZmlsbD0iI2VmNDQ0NCIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjgiIGZpbGw9IndoaXRlIi8+PC9zdmc+',
+            scaledSize: new window.google.maps.Size(40, 50)
+          }}
+          title="Your address"
+        />
+      </GoogleMap>
+    </div>
+  );
+}
+
+export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKey }) {
   if (!order) return null;
 
   const statusColors = {
@@ -68,44 +121,7 @@ export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKe
           </div>
 
           {/* Live Map for Out for Delivery */}
-          {showMap && apiKey && isLoaded && (
-            <div className="rounded-xl overflow-hidden border-2 border-emerald-200">
-              <div className="bg-emerald-500 text-white px-4 py-2 flex items-center gap-2">
-                <Navigation2 className="w-5 h-5" />
-                <span className="font-semibold">Live Tracking</span>
-              </div>
-              <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '300px' }}
-                center={{ lat: order.driver_lat, lng: order.driver_lng }}
-                zoom={14}
-                options={{
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false
-                }}
-              >
-                {/* Driver location */}
-                <Marker 
-                  position={{ lat: order.driver_lat, lng: order.driver_lng }}
-                  icon={{
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzEwYjk4MSIvPjxwYXRoIGQ9Ik0yMCA4TDI0IDE2SDE2TDIwIDhaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
-                    scaledSize: new window.google.maps.Size(40, 40)
-                  }}
-                  title="Your driver"
-                />
-                {/* Delivery destination */}
-                <Marker 
-                  position={{ lat: order.delivery_lat, lng: order.delivery_lng }}
-                  icon={{
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA0MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgMEM4Ljk1NCAwIDAgOC45NTQgMCAyMGMwIDE0IDIwIDMwIDIwIDMwczIwLTE2IDIwLTMwYzAtMTEuMDQ2LTguOTU0LTIwLTIwLTIweiIgZmlsbD0iI2VmNDQ0NCIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjgiIGZpbGw9IndoaXRlIi8+PC9zdmc+',
-                    scaledSize: new window.google.maps.Size(40, 50)
-                  }}
-                  title="Your address"
-                />
-              </GoogleMap>
-            </div>
-          )}
+          {showMap && apiKey && <OrderTrackingMap order={order} apiKey={apiKey} />}
 
           {/* Driver Info (if out for delivery) */}
           {order.status === 'out_for_delivery' && order.driver_name && (
