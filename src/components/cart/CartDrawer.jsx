@@ -177,8 +177,17 @@ export default function CartDrawer() {
           order_id: order.id,
           order_number: order.id.slice(0, 8).toUpperCase(),
           customer_name: currentUser.full_name,
+          customer_email: currentUser.email,
+          customer_phone: currentUser.phone || formData.customer_phone,
+          delivery_address: formData.delivery_address,
           total: cartTotal,
-          items_count: cartItems.length
+          items_count: cartItems.length,
+          items: cartItems.map(item => ({
+            name: item.name,
+            variant: item.selectedVariant?.name || null,
+            price: item.price,
+            quantity: item.quantity
+          }))
         });
       } catch (notifyError) {
         console.error('Admin notification error:', notifyError);

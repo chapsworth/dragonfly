@@ -97,8 +97,12 @@ export default function AdminOrders() {
           order_id: order.id,
           order_number: order.id.slice(0, 8).toUpperCase(),
           customer_name: orderData.customer_name || 'N/A',
+          customer_email: orderData.customer_email || '',
+          customer_phone: orderData.customer_phone || '',
+          delivery_address: orderData.delivery_address || '',
           total: orderData.total,
-          items_count: orderData.items?.length || 0
+          items_count: orderData.items?.length || 0,
+          items: orderData.items || []
         });
       } catch (notifyError) {
         console.error('Admin notification error:', notifyError);
