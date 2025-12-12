@@ -17,6 +17,8 @@ export default function CartDrawer() {
   const [step, setStep] = useState('cart');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isNewAddress, setIsNewAddress] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: '',
@@ -26,6 +28,51 @@ export default function CartDrawer() {
     payment_method: 'pay_in_person'
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
+
+  const { data: savedAddresses = [] } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.Address.list('-is_default');
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!user
+  });
+
+  // Pre-fill form when user data loads
+  React.useEffect(() => {
+    if (user && step === 'details') {
+      setFormData(prev => ({
+        ...prev,
+        customer_name: user.full_name || '',
+        customer_email: user.email || '',
+        customer_phone: user.phone || ''
+      }));
+      
+      // Auto-select default address if exists
+      const defaultAddr = savedAddresses.find(a => a.is_default);
+      if (defaultAddr && !selectedAddressId) {
+        setSelectedAddressId(defaultAddr.id);
+        setFormData(prev => ({
+          ...prev,
+          delivery_address: defaultAddr.full_address
+        }));
+      }
+    }
+  }, [user, step, savedAddresses]);
+
   const handleCheckout = async () => {
     if (step === 'cart') {
       setStep('details');
@@ -34,7 +81,24 @@ export default function CartDrawer() {
 
     setIsSubmitting(true);
     try {
-      const user = await base44.auth.me();
+      const currentUser = await base44.auth.me();
+      
+      // Save new address if creating one
+      if (isNewAddress && formData.delivery_address) {
+        try {
+          await base44.entities.Address.create({
+            user_email: currentUser.email,
+            label: formData.address_label || 'Home',
+            full_address: formData.delivery_address,
+            is_default: savedAddresses.length === 0,
+            delivery_instructions: formData.notes || ''
+          });
+          queryClient.invalidateQueries({ queryKey: ['addresses'] });
+        } catch (addrError) {
+          console.error('Address save error:', addrError);
+        }
+      }
+      
       const order = await base44.entities.Order.create({
         items: cartItems.map(item => ({
           product_id: item.id,
@@ -46,9 +110,9 @@ export default function CartDrawer() {
         })),
         subtotal: cartTotal,
         total: cartTotal,
-        customer_name: formData.customer_name || user.full_name,
-        customer_email: user.email,
-        customer_phone: formData.customer_phone,
+        customer_name: currentUser.full_name,
+        customer_email: currentUser.email,
+        customer_phone: currentUser.phone || formData.customer_phone,
         delivery_address: formData.delivery_address,
         notes: formData.notes,
         status: 'pending'
@@ -57,8 +121,8 @@ export default function CartDrawer() {
       // Award loyalty points (1 point per dollar)
       try {
         const pointsEarned = Math.floor(cartTotal);
-        const currentPoints = user.loyalty_points || 0;
-        const totalEarned = (user.total_points_earned || 0) + pointsEarned;
+        const currentPoints = currentUser.loyalty_points || 0;
+        const totalEarned = (currentUser.total_points_earned || 0) + pointsEarned;
         const newBalance = currentPoints + pointsEarned;
 
         // Determine tier based on total earned
@@ -75,7 +139,7 @@ export default function CartDrawer() {
 
         // Create points transaction record
         await base44.entities.PointsTransaction.create({
-          user_email: user.email,
+          user_email: currentUser.email,
           points: pointsEarned,
           transaction_type: 'earned',
           description: `Purchase - Order #${order.id.slice(0, 8)}`,
@@ -84,7 +148,7 @@ export default function CartDrawer() {
         });
 
         // Process referral bonus if this is first purchase
-        if (!user.referral_bonus_claimed && user.referred_by) {
+        if (!currentUser.referral_bonus_claimed && currentUser.referred_by) {
           try {
             await base44.functions.invoke('processReferral', {});
           } catch (refError) {
@@ -100,8 +164,8 @@ export default function CartDrawer() {
         await base44.functions.invoke('sendOrderEmail', {
           orderId: order.id,
           status: 'pending',
-          customerEmail: formData.customer_email,
-          customerName: formData.customer_name
+          customerEmail: currentUser.email,
+          customerName: currentUser.full_name
         });
       } catch (emailError) {
         console.error('Email error:', emailError);
@@ -114,6 +178,8 @@ export default function CartDrawer() {
         setIsCartOpen(false);
         setOrderComplete(false);
         setStep('cart');
+        setSelectedAddressId(null);
+        setIsNewAddress(false);
         setFormData({
           customer_name: '',
           customer_email: '',
@@ -247,6 +313,7 @@ export default function CartDrawer() {
                     onChange={(e) => setFormData(p => ({ ...p, customer_name: e.target.value }))}
                     className="h-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
                     placeholder="John Doe"
+                    readOnly
                   />
                 </div>
                 <div className="space-y-2">
@@ -254,9 +321,9 @@ export default function CartDrawer() {
                   <Input
                     type="email"
                     value={formData.customer_email}
-                    onChange={(e) => setFormData(p => ({ ...p, customer_email: e.target.value }))}
                     className="h-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
                     placeholder="john@example.com"
+                    readOnly
                   />
                 </div>
                 <div className="space-y-2">
@@ -269,14 +336,86 @@ export default function CartDrawer() {
                     placeholder="(555) 123-4567"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label className="text-emerald-800">Delivery Address *</Label>
-                  <AddressAutocomplete
-                    value={formData.delivery_address}
-                    onChange={(val) => setFormData(p => ({ ...p, delivery_address: val }))}
-                    className="h-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
-                    placeholder="123 Main St, Apt 4B, City, State 12345"
-                  />
+
+                  {savedAddresses.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {savedAddresses.map((addr) => (
+                          <button
+                            key={addr.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAddressId(addr.id);
+                              setIsNewAddress(false);
+                              setFormData(p => ({
+                                ...p,
+                                delivery_address: addr.full_address,
+                                notes: addr.delivery_instructions || ''
+                              }));
+                            }}
+                            className={`flex-1 min-w-[120px] p-3 rounded-xl border-2 text-left transition-all ${
+                              selectedAddressId === addr.id
+                                ? 'border-emerald-500 bg-emerald-50'
+                                : 'border-gray-200 bg-white/60 hover:border-emerald-300'
+                            }`}
+                          >
+                            <div className="font-semibold text-sm text-emerald-900">{addr.label}</div>
+                            <div className="text-xs text-emerald-600 line-clamp-2">{addr.full_address}</div>
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAddressId(null);
+                            setIsNewAddress(true);
+                            setFormData(p => ({ ...p, delivery_address: '', notes: '' }));
+                          }}
+                          className={`flex-1 min-w-[120px] p-3 rounded-xl border-2 text-center transition-all ${
+                            isNewAddress
+                              ? 'border-emerald-500 bg-emerald-50'
+                              : 'border-gray-200 bg-white/60 hover:border-emerald-300'
+                          }`}
+                        >
+                          <div className="font-semibold text-sm text-emerald-900">+ New Address</div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(isNewAddress || savedAddresses.length === 0) && (
+                    <>
+                      {savedAddresses.length === 0 && (
+                        <div className="text-xs text-emerald-600 mb-2">No saved addresses. Enter a new one:</div>
+                      )}
+                      {isNewAddress && (
+                        <div className="mb-2">
+                          <Input
+                            value={formData.address_label || ''}
+                            onChange={(e) => setFormData(p => ({ ...p, address_label: e.target.value }))}
+                            className="h-10 rounded-xl bg-white/60 border-emerald-200"
+                            placeholder="Label (e.g., Home, Work)"
+                          />
+                        </div>
+                      )}
+                      <AddressAutocomplete
+                        value={formData.delivery_address}
+                        onChange={(val) => setFormData(p => ({ ...p, delivery_address: val }))}
+                        className="h-12 rounded-xl bg-white/60 border-emerald-200 focus:border-emerald-400"
+                        placeholder="123 Main St, Apt 4B, City, State 12345"
+                      />
+                    </>
+                  )}
+
+                  {selectedAddressId && !isNewAddress && (
+                    <Input
+                      value={formData.delivery_address}
+                      readOnly
+                      className="h-12 rounded-xl bg-white/60 border-emerald-200"
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-emerald-800">Delivery Notes</Label>
@@ -331,7 +470,7 @@ export default function CartDrawer() {
                   </Button>
                   <Button
                     onClick={handleCheckout}
-                    disabled={isSubmitting || !formData.customer_name || !formData.customer_email || !formData.customer_phone || !formData.delivery_address}
+                    disabled={isSubmitting || !formData.delivery_address}
                     className="flex-1 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold shadow-lg shadow-emerald-500/30"
                   >
                     {isSubmitting ? 'Placing Order...' : 'Place Order'}
