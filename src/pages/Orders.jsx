@@ -8,12 +8,20 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
-import OrderDetailModal from '@/components/orders/OrderDetailModal';
+import CustomerOrderDetailModal from '@/components/orders/CustomerOrderDetailModal';
 import OrderStatusTracker from '@/components/orders/OrderStatusTracker';
 
 export default function Orders() {
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [apiKey, setApiKey] = useState(null);
+
+  // Fetch Google Maps API key
+  React.useEffect(() => {
+    base44.functions.invoke('getGoogleMapsKey', {}).then(res => {
+      setApiKey(res.data.key);
+    }).catch(() => {});
+  }, []);
 
   // Fetch current user
   const { data: user } = useQuery({
@@ -292,10 +300,11 @@ export default function Orders() {
       </div>
 
       {/* Order Detail Modal */}
-      <OrderDetailModal
+      <CustomerOrderDetailModal
         order={selectedOrder}
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        apiKey={apiKey}
       />
     </div>
   );
