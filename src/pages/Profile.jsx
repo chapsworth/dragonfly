@@ -46,6 +46,10 @@ export default function Profile() {
       setIsAddressDialogOpen(false);
       setAddressForm({});
       toast.success('Address added successfully');
+    },
+    onError: (error) => {
+      console.error('Address creation error:', error);
+      toast.error('Failed to add address: ' + (error.message || 'Unknown error'));
     }
   });
 
@@ -57,6 +61,10 @@ export default function Profile() {
       setEditingAddress(null);
       setAddressForm({});
       toast.success('Address updated successfully');
+    },
+    onError: (error) => {
+      console.error('Address update error:', error);
+      toast.error('Failed to update address: ' + (error.message || 'Unknown error'));
     }
   });
 
