@@ -22,6 +22,8 @@ export default function Header({ onMenuClick }) {
       }
     }
   });
+
+  const isAdmin = user?.role === 'admin';
   
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
