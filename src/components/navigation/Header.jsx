@@ -45,11 +45,13 @@ export default function Header({ onMenuClick }) {
               >
                 <PanelLeft className="w-6 h-6 text-emerald-700" />
               </button>
-              <Link to={createPageUrl('AdminLauncher')}>
-                <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
-                  <Grid2x2 className="w-6 h-6 text-emerald-700" />
-                </button>
-              </Link>
+              {isAdmin && (
+                <Link to={createPageUrl('AdminLauncher')}>
+                  <button className="p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                    <Grid2x2 className="w-6 h-6 text-emerald-700" />
+                  </button>
+                </Link>
+              )}
             </div>
 
             <Link to={createPageUrl('Home')} className="flex items-center gap-2">
