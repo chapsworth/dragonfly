@@ -171,6 +171,19 @@ export default function CartDrawer() {
         console.error('Email error:', emailError);
       }
 
+      // Notify admins of new order
+      try {
+        await base44.functions.invoke('notifyAdminsNewOrder', {
+          order_id: order.id,
+          order_number: order.id.slice(0, 8).toUpperCase(),
+          customer_name: currentUser.full_name,
+          total: cartTotal,
+          items_count: cartItems.length
+        });
+      } catch (notifyError) {
+        console.error('Admin notification error:', notifyError);
+      }
+
       setOrderComplete(true);
       clearCart();
       queryClient.invalidateQueries({ queryKey: ['orders'] });
