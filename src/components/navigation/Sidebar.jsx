@@ -51,15 +51,21 @@ const adminNavItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const [user, setUser] = useState(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
 
-  useEffect(() => {
-    base44.auth.me()
-      .then(setUser)
-      .catch(() => setUser(null));
-  }, []);
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000
+  });
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ['categories'],

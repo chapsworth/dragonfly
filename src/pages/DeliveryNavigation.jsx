@@ -32,9 +32,14 @@ export default function DeliveryNavigation() {
 
   useEffect(() => {
     // Fetch API key from backend function
-    base44.functions.invoke('getGoogleMapsKey', {}).then(res => {
-      setApiKey(res.data.key);
-    });
+    base44.functions.invoke('getGoogleMapsKey', {})
+      .then(res => {
+        setApiKey(res.data.key);
+      })
+      .catch(() => {
+        console.error('Failed to load Google Maps API key');
+        setApiKey('');
+      });
   }, []);
 
   const { isLoaded } = useJsApiLoader({
@@ -101,20 +106,30 @@ export default function DeliveryNavigation() {
     queryKey: ['weather', currentLocation],
     queryFn: async () => {
       if (!currentLocation) return null;
-      const response = await base44.functions.invoke('getWeatherAndAirQuality', currentLocation);
-      return response.data;
+      try {
+        const response = await base44.functions.invoke('getWeatherAndAirQuality', currentLocation);
+        return response.data;
+      } catch {
+        return null;
+      }
     },
     enabled: !!currentLocation,
+    retry: false,
     refetchInterval: 300000 // 5 minutes
   });
 
   const { data: unreadMessages = [] } = useQuery({
     queryKey: ['unread-messages'],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      const allMessages = await base44.entities.ChatMessage.list();
-      return allMessages.filter(m => !m.is_read && m.sender_email !== user.email);
+      try {
+        const user = await base44.auth.me();
+        const allMessages = await base44.entities.ChatMessage.list();
+        return allMessages.filter(m => !m.is_read && m.sender_email !== user.email);
+      } catch {
+        return [];
+      }
     },
+    retry: false,
     refetchInterval: 5000
   });
 
