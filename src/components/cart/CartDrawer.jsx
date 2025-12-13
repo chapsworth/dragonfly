@@ -36,7 +36,9 @@ export default function CartDrawer() {
       } catch {
         return null;
       }
-    }
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: savedAddresses = [] } = useQuery({

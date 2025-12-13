@@ -20,7 +20,9 @@ export default function Header({ onMenuClick }) {
       } catch {
         return null;
       }
-    }
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000
   });
 
   const isAdmin = user?.role === 'admin';
