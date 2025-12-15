@@ -266,7 +266,7 @@ export default function CartDrawer() {
                 </div>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto py-4 space-y-3 max-h-[calc(100vh-320px)]">
+                  <div className="flex-1 overflow-y-auto py-4 space-y-3 max-h-[calc(100vh-320px)] pb-6">
                     {cartItems.map(item => (
                       <div key={item.cartItemKey} className="flex gap-3 p-3 rounded-2xl bg-white/60 backdrop-blur border border-white/40">
                         <img
@@ -329,7 +329,7 @@ export default function CartDrawer() {
               exit={{ opacity: 0, x: 20 }}
               className="flex flex-col h-[calc(100vh-140px)]"
             >
-              <div className="flex-1 overflow-y-auto py-4 space-y-4 max-h-[calc(100vh-320px)]">
+              <div className="flex-1 overflow-y-auto py-4 space-y-4 max-h-[calc(100vh-320px)] pb-8">
                 <div className="space-y-2">
                   <Label className="text-emerald-800">Full Name *</Label>
                   <Input
