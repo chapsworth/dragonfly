@@ -26,6 +26,7 @@ import OrderTracking from './pages/OrderTracking';
 import AdminLauncher from './pages/AdminLauncher';
 import DeliveryNavigation from './pages/DeliveryNavigation';
 import Profile from './pages/Profile';
+import ProductLibrary from './pages/ProductLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -58,6 +59,7 @@ export const PAGES = {
     "AdminLauncher": AdminLauncher,
     "DeliveryNavigation": DeliveryNavigation,
     "Profile": Profile,
+    "ProductLibrary": ProductLibrary,
 }
 
 export const pagesConfig = {
