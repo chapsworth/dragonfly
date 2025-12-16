@@ -122,11 +122,13 @@ Be accurate and research-based. If the product doesn't exist or isn't a concentr
           continue;
         }
 
-        // Try to find an image
+        // Try to find an image using multiple sources
         let imageUrl = '';
+        
+        // Try Google Images first
         try {
-          const googleSearchResponse = await base44.functions.invoke('searchGoogleImages', {
-            query: `${name} cannabis concentrate product`
+          const googleSearchResponse = await base44.asServiceRole.functions.invoke('searchGoogleImages', {
+            query: `${productData.name} cannabis concentrate product photography`
           });
           
           if (googleSearchResponse.data?.results?.length > 0) {
@@ -136,11 +138,26 @@ Be accurate and research-based. If the product doesn't exist or isn't a concentr
           console.log('Google search failed:', e.message);
         }
 
+        // Try Unsplash if Google failed
+        if (!imageUrl) {
+          try {
+            const unsplashResponse = await base44.asServiceRole.functions.invoke('searchUnsplash', {
+              query: `${productData.name} cannabis concentrate product`
+            });
+            
+            if (unsplashResponse.data?.results?.length > 0) {
+              imageUrl = unsplashResponse.data.results[0].urls.regular;
+            }
+          } catch (e) {
+            console.log('Unsplash search failed:', e.message);
+          }
+        }
+
         // Fallback to AI generation
         if (!imageUrl) {
           try {
             const aiImage = await base44.integrations.Core.GenerateImage({
-              prompt: `Professional product photography of ${name} cannabis concentrate, high quality product shot, clean packaging, studio lighting, white background, commercial product photography style`
+              prompt: `Professional product photography of ${productData.name} cannabis concentrate, high quality product shot, clean packaging, studio lighting, white background, commercial product photography style`
             });
             imageUrl = aiImage.url;
           } catch (e) {
