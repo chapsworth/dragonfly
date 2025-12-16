@@ -9,6 +9,7 @@ import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2 } from 'lucide-
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
+import { toast } from 'sonner';
 
 const categoryColors = {
   'concentrated-oils': 'from-amber-400 to-yellow-500',
@@ -35,6 +36,10 @@ export default function ProductLibrary() {
   const [selectedStrain, setSelectedStrain] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [aiSearch, setAiSearch] = useState('');
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [batchCount, setBatchCount] = useState(10);
+  const queryClient = useQueryClient();
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
