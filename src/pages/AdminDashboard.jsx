@@ -8,7 +8,6 @@ import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Cl
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -231,7 +230,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
               <Link to={createPageUrl('AdminProducts')}>
                 <Button className="w-full h-20 bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 flex-col gap-2">
                   <Package className="w-5 h-5" />
@@ -254,6 +253,18 @@ export default function AdminDashboard() {
                 <Button className="w-full h-20 bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 flex-col gap-2">
                   <TrendingUp className="w-5 h-5" />
                   <span className="text-xs">Carousel</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('ProductLibrary')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 flex-col gap-2">
+                  <Package className="w-5 h-5" />
+                  <span className="text-xs">Product Library</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('StrainLibrary')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex-col gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="text-xs">Strain Library</span>
                 </Button>
               </Link>
             </div>
@@ -283,7 +294,7 @@ export default function AdminDashboard() {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <p className="font-semibold text-emerald-900 text-sm">Order #{order.id.slice(-8)}</p>
-                            <p className="text-xs text-emerald-600">{formatInTimeZone(new Date(order.created_date), 'America/Los_Angeles', 'MMM d, h:mm a')}</p>
+                            <p className="text-xs text-emerald-600">{format(new Date(order.created_date + 'Z'), 'MMM d, h:mm a')}</p>
                           </div>
                           <Badge className={statusColors[order.status]}>
                             {order.status.replace('_', ' ')}
