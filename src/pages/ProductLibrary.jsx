@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2 } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -40,7 +40,6 @@ export default function ProductLibrary() {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [batchCount, setBatchCount] = useState(10);
   const queryClient = useQueryClient();
-  const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -57,7 +56,62 @@ export default function ProductLibrary() {
     return matchesSearch && matchesCategory && matchesStrain && isNotFlower;
   });
 
-  const featuredProducts = products.filter(p => p.published && p.in_stock).slice(0, 3);
+  const featuredProducts = filteredProducts.filter(p => p.category === 'concentrates').slice(0, 3);
+
+  const handleAiDiscover = async (mode = 'single') => {
+    if (mode === 'single' && !aiSearch.trim()) {
+      toast.error('Please enter product name(s)');
+      return;
+    }
+
+    setIsDiscovering(true);
+    try {
+      let payload;
+      
+      if (mode === 'surprise' || mode === 'teachme') {
+        toast.info(`Finding ${batchCount} ${mode === 'teachme' ? 'educational' : 'interesting'} concentrate products...`);
+        const suggestResponse = await base44.functions.invoke('discoverProduct', {
+          mode,
+          count: batchCount
+        });
+        
+        if (!suggestResponse.data.success || !suggestResponse.data.productNames?.length) {
+          toast.error('No new products found');
+          setIsDiscovering(false);
+          return;
+        }
+        
+        toast.success(`Found ${suggestResponse.data.productNames.length} products to discover!`);
+        payload = { productNames: suggestResponse.data.productNames };
+      } else {
+        const names = aiSearch.split(',').map(n => n.trim()).filter(Boolean);
+        if (names.length > 20) {
+          toast.error('Maximum 20 products at a time');
+          setIsDiscovering(false);
+          return;
+        }
+        payload = { productNames: names };
+      }
+
+      toast.info('Discovering products... This may take a minute.');
+      const response = await base44.functions.invoke('discoverProduct', payload);
+
+      if (response.data.success) {
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        setAiSearch('');
+        
+        const { new: newCount, existing, failed } = response.data;
+        toast.success(`Added ${newCount} new products! (${existing} already existed, ${failed} failed)`);
+      } else {
+        toast.error(response.data.error || 'Discovery failed');
+      }
+    } catch (error) {
+      console.error('Discovery error:', error);
+      toast.error('Failed to discover products');
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-24 pb-32 px-4">
@@ -75,12 +129,89 @@ export default function ProductLibrary() {
           <p className="text-emerald-600 text-lg">Explore premium cannabis concentrates, extracts, tinctures & topicals</p>
         </motion.div>
 
+        {/* AI Discovery Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 backdrop-blur">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <h3 className="font-bold text-purple-900">AI Product Discovery</h3>
+            </div>
+            <p className="text-sm text-purple-700 mb-4">
+              Enter concentrate/derivative product name(s) separated by commas (max 20), or let AI find new products!
+            </p>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter product name(s) or use buttons below..."
+                  value={aiSearch}
+                  onChange={(e) => setAiSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAiDiscover('single')}
+                  className="flex-1 bg-white border-purple-300 focus:border-purple-500"
+                  disabled={isDiscovering}
+                />
+                <Button 
+                  onClick={() => handleAiDiscover('single')}
+                  disabled={isDiscovering || !aiSearch.trim()}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  {isDiscovering ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Discovering...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Discover
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleAiDiscover('teachme')}
+                  disabled={isDiscovering}
+                  variant="outline"
+                  className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  Teach Me ({batchCount})
+                </Button>
+                <Button
+                  onClick={() => handleAiDiscover('surprise')}
+                  disabled={isDiscovering}
+                  variant="outline"
+                  className="flex-1 border-pink-300 text-pink-700 hover:bg-pink-50"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Surprise Me ({batchCount})
+                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={batchCount}
+                  onChange={(e) => setBatchCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 10)))}
+                  className="w-20 border-purple-300"
+                  disabled={isDiscovering}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Featured Products Banner */}
         {featuredProducts.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.2 }}
             className="mb-8"
           >
             <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
@@ -135,7 +266,7 @@ export default function ProductLibrary() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="mb-6 space-y-4"
         >
           <div className="relative">
