@@ -15,6 +15,10 @@ export default function Orders() {
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [apiKey, setApiKey] = useState(null);
+  
+  // Check if redirected from checkout with order ID
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderIdFromUrl = urlParams.get('orderId');
 
   // Fetch Google Maps API key
   React.useEffect(() => {
@@ -48,6 +52,18 @@ export default function Orders() {
     enabled: !!user?.email,
     refetchInterval: 10000 // Refresh every 10 seconds
   });
+
+  // Auto-open order if redirected from checkout
+  React.useEffect(() => {
+    if (orderIdFromUrl && orders.length > 0) {
+      const order = orders.find(o => o.id === orderIdFromUrl);
+      if (order) {
+        setSelectedOrder(order);
+        // Remove the query param from URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [orderIdFromUrl, orders]);
 
   // Filter orders based on selected tab
   const filteredOrders = orders.filter(order => {

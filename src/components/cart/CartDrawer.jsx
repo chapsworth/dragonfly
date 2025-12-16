@@ -10,13 +10,17 @@ import { useCart } from './CartContext';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function CartDrawer() {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [step, setStep] = useState('cart');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [completedOrderId, setCompletedOrderId] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isNewAddress, setIsNewAddress] = useState(false);
   const [formData, setFormData] = useState({
@@ -196,14 +200,18 @@ export default function CartDrawer() {
       }
 
       setOrderComplete(true);
+      setCompletedOrderId(order.id);
       clearCart();
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
       setTimeout(() => {
         setIsCartOpen(false);
+        navigate(`${createPageUrl('Orders')}?orderId=${order.id}`);
         setOrderComplete(false);
         setStep('cart');
         setSelectedAddressId(null);
         setIsNewAddress(false);
+        setCompletedOrderId(null);
         setFormData({
           customer_name: '',
           customer_email: '',
@@ -212,7 +220,7 @@ export default function CartDrawer() {
           notes: '',
           payment_method: 'pay_in_person'
         });
-      }, 3000);
+      }, 2000);
     } catch (error) {
       console.error(error);
     }
