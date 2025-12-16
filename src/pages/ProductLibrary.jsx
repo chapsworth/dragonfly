@@ -11,19 +11,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ProductEditModal from '@/components/products/ProductEditModal';
 
 const categoryColors = {
-  flower: 'from-emerald-400 to-green-500',
-  'pre-rolls': 'from-orange-400 to-amber-500',
-  edibles: 'from-purple-400 to-indigo-500',
-  concentrates: 'from-yellow-400 to-amber-500',
-  vapes: 'from-cyan-400 to-blue-500',
-  tinctures: 'from-pink-400 to-rose-500',
-  topicals: 'from-lime-400 to-green-500',
-  accessories: 'from-gray-400 to-slate-500'
+  'concentrated-oils': 'from-amber-400 to-yellow-500',
+  'diamonds': 'from-cyan-400 to-blue-500',
+  'sugar': 'from-pink-400 to-rose-500',
+  'crumble': 'from-orange-400 to-amber-500',
+  'shatter': 'from-yellow-400 to-amber-500',
+  'sauce': 'from-purple-400 to-indigo-500',
+  'extracts': 'from-emerald-400 to-green-500',
+  'tinctures': 'from-lime-400 to-green-500',
+  'topicals': 'from-teal-400 to-cyan-500'
+};
+
+const strainColors = {
+  indica: 'from-purple-500 to-indigo-600',
+  sativa: 'from-orange-500 to-amber-600',
+  hybrid: 'from-emerald-500 to-green-600',
+  cbd: 'from-blue-500 to-cyan-600'
 };
 
 export default function ProductLibrary() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStrain, setSelectedStrain] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const queryClient = useQueryClient();
@@ -37,7 +46,10 @@ export default function ProductLibrary() {
     const matchesSearch = product.name?.toLowerCase().includes(search.toLowerCase()) ||
                          product.description?.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStrain = selectedStrain === 'all' || product.strain_type === selectedStrain;
+    // Exclude flower products
+    const isNotFlower = product.category !== 'flower' && product.category !== 'pre-rolls';
+    return matchesSearch && matchesCategory && matchesStrain && isNotFlower;
   });
 
   const featuredProducts = products.filter(p => p.published && p.in_stock).slice(0, 3);
@@ -55,7 +67,7 @@ export default function ProductLibrary() {
             <Package className="w-8 h-8 text-emerald-600" />
             <h1 className="text-4xl font-bold text-emerald-900">Product Library</h1>
           </div>
-          <p className="text-emerald-600 text-lg">Browse our complete product catalog</p>
+          <p className="text-emerald-600 text-lg">Explore premium cannabis concentrates, extracts, tinctures & topicals</p>
         </motion.div>
 
         {/* Featured Products Banner */}
@@ -68,7 +80,7 @@ export default function ProductLibrary() {
           >
             <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-yellow-500" />
-              Featured Products
+              Premium Concentrates
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
               {featuredProducts.map((product, i) => (
@@ -87,8 +99,15 @@ export default function ProductLibrary() {
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className={`absolute top-2 right-2 px-3 py-1 rounded-full bg-gradient-to-r ${categoryColors[product.category]} text-white text-xs font-bold`}>
-                        {product.category}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1">
+                        <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${categoryColors[product.category]} text-white text-xs font-bold`}>
+                          {product.category?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        </div>
+                        {product.strain_type && product.strain_type !== 'n/a' && (
+                          <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${strainColors[product.strain_type]} text-white text-xs font-bold`}>
+                            {product.strain_type}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <CardContent className="p-4">
@@ -124,18 +143,40 @@ export default function ProductLibrary() {
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {['all', 'flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'].map(category => (
-              <Button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category] || 'from-emerald-500 to-green-500'}` : ''}
-                size="sm"
-              >
-                {category === 'all' ? 'All Products' : category.charAt(0).toUpperCase() + category.slice(1)}
-              </Button>
-            ))}
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-emerald-700 mb-2 uppercase">Concentrate Type</p>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                {['all', 'concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => (
+                  <Button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category] || 'from-emerald-500 to-green-500'}` : ''}
+                    size="sm"
+                  >
+                    {category === 'all' ? 'All Types' : category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs font-semibold text-emerald-700 mb-2 uppercase">Strain Type</p>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                {['all', 'indica', 'sativa', 'hybrid', 'cbd'].map(strain => (
+                  <Button
+                    key={strain}
+                    onClick={() => setSelectedStrain(strain)}
+                    variant={selectedStrain === strain ? 'default' : 'outline'}
+                    className={selectedStrain === strain ? `bg-gradient-to-r ${strainColors[strain] || 'from-emerald-500 to-green-500'}` : ''}
+                    size="sm"
+                  >
+                    {strain === 'all' ? 'All Strains' : strain.charAt(0).toUpperCase() + strain.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -165,8 +206,15 @@ export default function ProductLibrary() {
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
-                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-full bg-gradient-to-r ${categoryColors[product.category]} text-white text-xs font-bold`}>
-                      {product.category}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      <div className={`px-2 py-1 rounded-full bg-gradient-to-r ${categoryColors[product.category]} text-white text-xs font-bold`}>
+                        {product.category?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      </div>
+                      {product.strain_type && product.strain_type !== 'n/a' && (
+                        <div className={`px-2 py-1 rounded-full bg-gradient-to-r ${strainColors[product.strain_type]} text-white text-xs font-bold`}>
+                          {product.strain_type}
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={(e) => {
@@ -212,10 +260,15 @@ export default function ProductLibrary() {
                   </div>
                   <div className="flex-1">
                     <DialogTitle className="text-2xl">{selectedProduct.name}</DialogTitle>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge className={`bg-gradient-to-r ${categoryColors[selectedProduct.category]} text-white`}>
-                        {selectedProduct.category}
+                        {selectedProduct.category?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                       </Badge>
+                      {selectedProduct.strain_type && selectedProduct.strain_type !== 'n/a' && (
+                        <Badge className={`bg-gradient-to-r ${strainColors[selectedProduct.strain_type]} text-white`}>
+                          {selectedProduct.strain_type}
+                        </Badge>
+                      )}
                       <Badge variant={selectedProduct.in_stock ? "default" : "secondary"}>
                         {selectedProduct.in_stock ? 'In Stock' : 'Out of Stock'}
                       </Badge>
