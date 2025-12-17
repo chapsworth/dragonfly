@@ -46,8 +46,12 @@ export default function Orders() {
       if (!user?.email) return [];
       // Fetch all orders for this customer
       const allOrders = await base44.entities.Order.list('-created_date');
-      // Filter by customer email
-      return allOrders.filter(order => order.customer_email === user.email);
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+      // Filter by customer email and exclude orders older than 4 hours
+      return allOrders.filter(order => 
+        order.customer_email === user.email && 
+        new Date(order.created_date) > fourHoursAgo
+      );
     },
     enabled: !!user?.email,
     refetchInterval: 10000 // Refresh every 10 seconds
