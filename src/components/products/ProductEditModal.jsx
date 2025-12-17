@@ -102,6 +102,19 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.Product.delete(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      onClose();
+      toast.success('Product deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete product');
+      console.error(error);
+    }
+  });
+
 
 
   const handleUnsplashSearch = async () => {
@@ -808,17 +821,42 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-emerald-100">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={saveMutation.isPending}
-              className="bg-gradient-to-r from-emerald-500 to-green-500 text-white"
-            >
-              {saveMutation.isPending ? 'Saving...' : product ? 'Save Changes' : 'Create Product'}
-            </Button>
+          <div className="flex justify-between gap-3 pt-4 border-t border-emerald-100">
+            {product && (
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this product?')) {
+                    deleteMutation.mutate();
+                  }
+                }}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Product
+                  </>
+                )}
+              </Button>
+            )}
+            <div className="flex gap-3 ml-auto">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+                className="bg-gradient-to-r from-emerald-500 to-green-500 text-white"
+              >
+                {saveMutation.isPending ? 'Saving...' : product ? 'Save Changes' : 'Create Product'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
