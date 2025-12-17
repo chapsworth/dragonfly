@@ -129,6 +129,31 @@ export default function ProductLibrary() {
           <p className="text-emerald-600 text-lg">Explore premium cannabis concentrates, extracts, tinctures & topicals</p>
         </motion.div>
 
+        {/* Stats Widgets */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 gap-4 mb-8"
+        >
+          <div className="p-4 rounded-2xl bg-white/60 backdrop-blur border border-emerald-200">
+            <p className="text-sm text-emerald-600 mb-1">Total Products</p>
+            <p className="text-3xl font-bold text-emerald-900">{products.length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white border border-amber-300">
+            <p className="text-sm text-amber-100 mb-1">Concentrates</p>
+            <p className="text-3xl font-bold">{products.filter(p => p.category === 'concentrates').length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-400 to-indigo-500 text-white border border-purple-300">
+            <p className="text-sm text-purple-100 mb-1">Tinctures</p>
+            <p className="text-3xl font-bold">{products.filter(p => p.category === 'tinctures').length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 text-white border border-teal-300">
+            <p className="text-sm text-teal-100 mb-1">Topicals</p>
+            <p className="text-3xl font-bold">{products.filter(p => p.category === 'topicals').length}</p>
+          </div>
+        </motion.div>
+
         {/* AI Discovery Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
