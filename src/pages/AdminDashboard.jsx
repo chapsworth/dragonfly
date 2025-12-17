@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -82,14 +83,7 @@ export default function AdminDashboard() {
     });
   }, [orders, users, products.length]);
 
-  const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    preparing: 'bg-purple-100 text-purple-700',
-    out_for_delivery: 'bg-orange-100 text-orange-700',
-    delivered: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700'
-  };
+
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -296,21 +290,7 @@ export default function AdminDashboard() {
                     <p className="text-emerald-600 text-sm text-center py-8">No orders yet</p>
                   ) : (
                     recentOrders.map(order => (
-                      <div key={order.id} className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-emerald-900 text-sm">Order #{order.id.slice(-8)}</p>
-                            <p className="text-xs text-emerald-600">{format(new Date(order.created_date + 'Z'), 'MMM d, h:mm a')}</p>
-                          </div>
-                          <Badge className={statusColors[order.status]}>
-                            {order.status.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-emerald-700">{order.items?.length || 0} items</p>
-                          <p className="font-bold text-emerald-900">${order.total?.toFixed(2)}</p>
-                        </div>
-                      </div>
+                      <InteractiveOrderCard key={order.id} order={order} />
                     ))
                   )}
                 </div>
