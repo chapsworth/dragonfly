@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { strainName, strainNames, mode, count } = await req.json();
+    const { strainName, strainNames, mode, count, allowFictional } = await req.json();
 
     // Handle batch discovery
     if (mode === 'surprise' || mode === 'teachme') {
@@ -241,13 +241,16 @@ Use ONLY verified, factual information from reputable cannabis databases.`,
       }
     }
 
+    const needsConfirmation = results.filter(r => r.needsConfirmation);
+    
     return Response.json({ 
-      success: true, 
+      success: needsConfirmation.length === 0,
       results,
       total: results.length,
       new: results.filter(r => r.isNew).length,
       existing: results.filter(r => !r.isNew && r.success).length,
-      failed: results.filter(r => !r.success).length
+      failed: results.filter(r => !r.success && !r.needsConfirmation).length,
+      needsConfirmation: needsConfirmation.map(r => r.strainName)
     });
 
   } catch (error) {

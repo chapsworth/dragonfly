@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { productName, productNames, mode, count } = await req.json();
+    const { productName, productNames, mode, count, allowFictional } = await req.json();
 
     // Handle batch discovery
     if (mode === 'surprise' || mode === 'teachme') {
@@ -65,6 +65,44 @@ Deno.serve(async (req) => {
             productName: name
           });
           continue;
+        }
+
+        // Verify product exists if not allowing fictional
+        if (!allowFictional) {
+          const verifyProduct = await base44.integrations.Core.InvokeLLM({
+            prompt: `Search online and verify if the cannabis concentrate/derivative product "${name}" is a REAL product that exists. Check dispensary menus, product databases, or manufacturer websites.
+
+CRITICAL: You MUST return {"exists": false} if:
+- The product is not found in any reputable cannabis product database
+- You cannot verify its existence with credible sources
+- It appears to be made up or fictional
+
+Only return {"exists": true} if you can confirm it's a real, documented product.
+
+Return ONLY valid JSON:
+{
+  "exists": boolean (true ONLY if product is verified to exist),
+  "sources": "list of sources where found or empty if not found"
+}`,
+            add_context_from_internet: true,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                exists: { type: "boolean" },
+                sources: { type: "string" }
+              }
+            }
+          });
+
+          if (!verifyProduct.exists) {
+            results.push({ 
+              success: false, 
+              error: `Product "${name}" not found in online databases. Sources checked: ${verifyProduct.sources || 'None'}`,
+              productName: name,
+              needsConfirmation: true
+            });
+            continue;
+          }
         }
 
         // Use AI to research the product
@@ -188,13 +226,16 @@ Be accurate and research-based. If the product doesn't exist or isn't a concentr
       }
     }
 
+    const needsConfirmation = results.filter(r => r.needsConfirmation);
+    
     return Response.json({ 
-      success: true, 
+      success: needsConfirmation.length === 0,
       results,
       total: results.length,
       new: results.filter(r => r.isNew).length,
       existing: results.filter(r => !r.isNew && r.success).length,
-      failed: results.filter(r => !r.success).length
+      failed: results.filter(r => !r.success && !r.needsConfirmation).length,
+      needsConfirmation: needsConfirmation.map(r => r.productName)
     });
 
   } catch (error) {
