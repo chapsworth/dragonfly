@@ -177,7 +177,7 @@ function CRMContactsContent() {
         state: '',
         zip: '',
         notes: '',
-        type: 'lead',
+        type: 'customer',
         stage: 'new'
       };
       
