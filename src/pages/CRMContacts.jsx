@@ -38,6 +38,10 @@ function CRMContactsContent() {
   const [isImporting, setIsImporting] = useState(false);
   const [contactStatus, setContactStatus] = useState({});
   const [importComplete, setImportComplete] = useState(false);
+  const [duplicates, setDuplicates] = useState([]);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [selectedDuplicates, setSelectedDuplicates] = useState({});
+  const [isScanning, setIsScanning] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -146,6 +150,91 @@ function CRMContactsContent() {
         delete updated[id];
         return updated;
       });
+    }
+  };
+
+  const scanForDuplicates = () => {
+    setIsScanning(true);
+    const duplicateGroups = [];
+    const processedIds = new Set();
+
+    contacts.forEach((contact, index) => {
+      if (processedIds.has(contact.id)) return;
+
+      const dupes = contacts.filter((c, idx) => {
+        if (idx <= index || processedIds.has(c.id)) return false;
+        
+        const emailMatch = contact.email && c.email && contact.email === c.email;
+        const nameMatch = contact.full_name && c.full_name && contact.full_name === c.full_name;
+        
+        return emailMatch || nameMatch;
+      });
+
+      if (dupes.length > 0) {
+        duplicateGroups.push({
+          original: contact,
+          duplicates: dupes
+        });
+        processedIds.add(contact.id);
+        dupes.forEach(d => processedIds.add(d.id));
+      }
+    });
+
+    setDuplicates(duplicateGroups);
+    setShowDuplicates(true);
+    setIsScanning(false);
+    
+    const totalDupes = duplicateGroups.reduce((sum, g) => sum + g.duplicates.length, 0);
+    if (totalDupes === 0) {
+      toast.success('No duplicates found!');
+    } else {
+      toast.info(`Found ${totalDupes} duplicate contact(s) in ${duplicateGroups.length} group(s)`);
+    }
+  };
+
+  const toggleDuplicateSelection = (groupIndex, dupeIndex) => {
+    const key = `${groupIndex}-${dupeIndex}`;
+    setSelectedDuplicates(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const selectAllDuplicates = () => {
+    const allSelected = {};
+    duplicates.forEach((group, gIdx) => {
+      group.duplicates.forEach((_, dIdx) => {
+        allSelected[`${gIdx}-${dIdx}`] = true;
+      });
+    });
+    setSelectedDuplicates(allSelected);
+  };
+
+  const removeDuplicates = async () => {
+    const toDelete = [];
+    duplicates.forEach((group, gIdx) => {
+      group.duplicates.forEach((dupe, dIdx) => {
+        if (selectedDuplicates[`${gIdx}-${dIdx}`]) {
+          toDelete.push(dupe.id);
+        }
+      });
+    });
+
+    if (toDelete.length === 0) {
+      toast.error('No duplicates selected');
+      return;
+    }
+
+    try {
+      for (const id of toDelete) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast.success(`Removed ${toDelete.length} duplicate(s)`);
+      setShowDuplicates(false);
+      setDuplicates([]);
+      setSelectedDuplicates({});
+    } catch (error) {
+      toast.error('Failed to remove duplicates');
     }
   };
 
@@ -499,6 +588,16 @@ function CRMContactsContent() {
             <p className="text-emerald-600">Manage customer relationships</p>
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={scanForDuplicates} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
+              disabled={isScanning}
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">{isScanning ? 'Scanning...' : 'Scan Duplicates'}</span>
+              <span className="sm:hidden">Scan</span>
+            </Button>
             <Button 
               onClick={importFromPhone} 
               variant="outline" 
@@ -1004,6 +1103,169 @@ function CRMContactsContent() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicates Dialog */}
+      <Dialog open={showDuplicates} onOpenChange={setShowDuplicates}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Duplicate Contacts Found</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex justify-between items-center gap-3 pt-2 pb-4 border-b border-emerald-200">
+            <p className="text-sm text-emerald-600">
+              {duplicates.reduce((sum, g) => sum + g.duplicates.length, 0)} duplicate(s) in {duplicates.length} group(s)
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={selectAllDuplicates}
+                size="sm"
+              >
+                Select All
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedDuplicates({})}
+                size="sm"
+              >
+                Deselect All
+              </Button>
+              <Button 
+                onClick={removeDuplicates}
+                disabled={Object.keys(selectedDuplicates).filter(k => selectedDuplicates[k]).length === 0}
+                className="bg-gradient-to-r from-red-500 to-orange-500"
+                size="sm"
+              >
+                Remove Selected
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-6 pb-6">
+            {duplicates.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-emerald-300 mx-auto mb-4" />
+                <p className="text-emerald-600">No duplicates found</p>
+              </div>
+            ) : (
+              duplicates.map((group, groupIndex) => (
+                <div key={groupIndex} className="border border-emerald-200 rounded-lg p-4 bg-emerald-50">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-emerald-900 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                      Original Contact (Keep)
+                    </h4>
+                    <Card className="bg-white border-emerald-300">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white font-bold">
+                            {group.original.full_name?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-emerald-900 mb-2">{group.original.full_name}</h3>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {group.original.email && (
+                                <div>
+                                  <span className="text-gray-500">Email:</span>
+                                  <span className="ml-2 text-emerald-900">{group.original.email}</span>
+                                </div>
+                              )}
+                              {group.original.phone && (
+                                <div>
+                                  <span className="text-gray-500">Phone:</span>
+                                  <span className="ml-2 text-emerald-900">{group.original.phone}</span>
+                                </div>
+                              )}
+                              {group.original.company && (
+                                <div>
+                                  <span className="text-gray-500">Company:</span>
+                                  <span className="ml-2 text-emerald-900">{group.original.company}</span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-gray-500">Type:</span>
+                                <Badge className="ml-2 bg-emerald-600 text-white">{group.original.type}</Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                      Duplicates ({group.duplicates.length}) - Select to Remove
+                    </h4>
+                    <div className="space-y-2">
+                      {group.duplicates.map((dupe, dupeIndex) => {
+                        const isSelected = selectedDuplicates[`${groupIndex}-${dupeIndex}`];
+                        return (
+                          <Card key={dupeIndex} className={`border-2 transition-all ${isSelected ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white'}`}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-4">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected || false}
+                                  onChange={() => toggleDuplicateSelection(groupIndex, dupeIndex)}
+                                  className="mt-1 w-5 h-5 text-red-600"
+                                />
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                                  {dupe.full_name?.[0]?.toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-bold text-gray-900 mb-2">{dupe.full_name}</h3>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    {dupe.email && (
+                                      <div>
+                                        <span className="text-gray-500">Email:</span>
+                                        <span className="ml-2 text-gray-900">{dupe.email}</span>
+                                      </div>
+                                    )}
+                                    {dupe.phone && (
+                                      <div>
+                                        <span className="text-gray-500">Phone:</span>
+                                        <span className="ml-2 text-gray-900">{dupe.phone}</span>
+                                      </div>
+                                    )}
+                                    {dupe.company && (
+                                      <div>
+                                        <span className="text-gray-500">Company:</span>
+                                        <span className="ml-2 text-gray-900">{dupe.company}</span>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="text-gray-500">Type:</span>
+                                      <Badge className="ml-2 bg-gray-600 text-white">{dupe.type}</Badge>
+                                    </div>
+                                    {dupe.address && (
+                                      <div className="col-span-2">
+                                        <span className="text-gray-500">Address:</span>
+                                        <span className="ml-2 text-gray-900">{dupe.address}</span>
+                                      </div>
+                                    )}
+                                    {dupe.notes && (
+                                      <div className="col-span-2">
+                                        <span className="text-gray-500">Notes:</span>
+                                        <span className="ml-2 text-gray-900">{dupe.notes}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>
