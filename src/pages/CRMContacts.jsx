@@ -754,27 +754,28 @@ function CRMContactsContent() {
           </DialogHeader>
           <div className="space-y-3 mt-4 pb-6">
             {/* Bulk Type Selector */}
-            <Card className="bg-emerald-50 border-emerald-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Label className="font-semibold">Set Type for All:</Label>
-                  <Select 
-                    onValueChange={(val) => {
-                      setImportPreview(prev => prev.map(c => ({ ...c, type: val })));
-                    }}
-                  >
-                    <SelectTrigger className="w-48 bg-white border-emerald-200">
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="customer">Customer</SelectItem>
-                      <SelectItem value="lead">Lead</SelectItem>
-                      <SelectItem value="vendor_contact">Vendor Contact</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-4 rounded-lg">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-white">
+                  <Tag className="w-5 h-5" />
+                  <span className="font-semibold">Change Type for All Contacts:</span>
                 </div>
-              </CardContent>
-            </Card>
+                <Select 
+                  onValueChange={(val) => {
+                    setImportPreview(prev => prev.map(c => ({ ...c, type: val })));
+                  }}
+                >
+                  <SelectTrigger className="w-56 bg-white border-0">
+                    <SelectValue placeholder="Customer (Current)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="vendor_contact">Vendor Contact</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             {importPreview.map((contact, index) => (
               <Card key={index} className="bg-white border-emerald-200">
                 <CardContent className="p-4">
