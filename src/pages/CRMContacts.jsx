@@ -36,6 +36,8 @@ function CRMContactsContent() {
   const [importProgress, setImportProgress] = useState({ imported: 0, skipped: 0, total: 0 });
   const [skippedContacts, setSkippedContacts] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [contactStatus, setContactStatus] = useState({});
+  const [importComplete, setImportComplete] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -356,15 +358,20 @@ function CRMContactsContent() {
 
   const saveImportedContacts = async () => {
     setIsImporting(true);
+    setImportComplete(false);
     setImportProgress({ imported: 0, skipped: 0, total: importPreview.length });
     setSkippedContacts([]);
+    setContactStatus({});
     
     try {
       const existingContacts = await base44.entities.Contact.list();
       const contactsToCreate = [];
       const skipped = [];
+      const statusMap = {};
 
-      for (const contact of importPreview) {
+      // Check for duplicates and mark status
+      for (let idx = 0; idx < importPreview.length; idx++) {
+        const contact = importPreview[idx];
         const isDuplicate = existingContacts.some(
           (existing) =>
             (contact.email && existing.email === contact.email && contact.email.length > 0) ||
@@ -373,22 +380,37 @@ function CRMContactsContent() {
 
         if (isDuplicate) {
           skipped.push(contact);
+          statusMap[idx] = 'skipped';
+          setContactStatus(prev => ({ ...prev, [idx]: 'skipped' }));
           setSkippedContacts(prev => [...prev, contact]);
           setImportProgress(prev => ({ ...prev, skipped: prev.skipped + 1 }));
         } else {
-          contactsToCreate.push(contact);
+          contactsToCreate.push({ ...contact, _originalIndex: idx });
         }
       }
 
       const BATCH_SIZE = 50;
       let importedCount = 0;
 
+      // Import in batches and update status
       for (let i = 0; i < contactsToCreate.length; i += BATCH_SIZE) {
         const batch = contactsToCreate.slice(i, i + BATCH_SIZE);
-        await base44.entities.Contact.bulkCreate(batch);
+        await base44.entities.Contact.bulkCreate(batch.map(c => {
+          const { _originalIndex, ...contact } = c;
+          return contact;
+        }));
+        
+        // Mark each contact in batch as imported
+        batch.forEach(contact => {
+          statusMap[contact._originalIndex] = 'imported';
+          setContactStatus(prev => ({ ...prev, [contact._originalIndex]: 'imported' }));
+        });
+        
         importedCount += batch.length;
         setImportProgress(prev => ({ ...prev, imported: importedCount }));
       }
+
+      setImportComplete(true);
 
       if (importedCount > 0) {
         toast.success(`Successfully imported ${importedCount} new contact(s)`);
@@ -408,14 +430,17 @@ function CRMContactsContent() {
         setShowImportPreview(false);
         setImportPreview([]);
         setIsImporting(false);
+        setImportComplete(false);
         setImportProgress({ imported: 0, skipped: 0, total: 0 });
         setSkippedContacts([]);
-      }, 2000);
+        setContactStatus({});
+      }, 3000);
 
     } catch (error) {
       console.error('Bulk import failed:', error);
       toast.error('Failed to import contacts');
       setIsImporting(false);
+      setImportComplete(false);
     }
   };
 
@@ -833,25 +858,35 @@ function CRMContactsContent() {
 
           {/* Live Progress Display */}
           {isImporting && (
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <Card className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold">{importProgress.total}</p>
-                  <p className="text-xs text-blue-100">Total</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold">{importProgress.imported}</p>
-                  <p className="text-xs text-green-100">Imported</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold">{importProgress.skipped}</p>
-                  <p className="text-xs text-orange-100">Skipped</p>
-                </CardContent>
-              </Card>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{importProgress.total}</p>
+                    <p className="text-xs text-blue-100">Total</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{importProgress.imported}</p>
+                    <p className="text-xs text-green-100">Imported</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{importProgress.skipped}</p>
+                    <p className="text-xs text-orange-100">Skipped</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {importComplete && (
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-lg text-center animate-pulse">
+                  <p className="text-lg font-bold flex items-center justify-center gap-2">
+                    ✅ Import Complete! All contacts have been processed.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -898,14 +933,26 @@ function CRMContactsContent() {
               </div>
             </div>
             {importPreview.map((contact, index) => (
-              <Card key={index} className="bg-white border-emerald-200">
+              <Card key={index} className={`border-emerald-200 ${
+                contactStatus[index] === 'imported' ? 'bg-green-50' : 
+                contactStatus[index] === 'skipped' ? 'bg-orange-50' : 
+                'bg-white'
+              }`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white font-bold flex-shrink-0">
                       {contact.full_name?.[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-emerald-900 mb-2">{contact.full_name}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-emerald-900">{contact.full_name}</h3>
+                        {contactStatus[index] === 'imported' && (
+                          <Badge className="bg-green-600 text-white">✅ Imported</Badge>
+                        )}
+                        {contactStatus[index] === 'skipped' && (
+                          <Badge className="bg-orange-600 text-white">⏭️ Skipped (Duplicate)</Badge>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                         {contact.email && (
                           <div>
