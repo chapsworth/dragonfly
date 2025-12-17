@@ -153,38 +153,46 @@ function CRMContactsContent() {
 
   const importFromPhone = async () => {
     try {
-      if ('contacts' in navigator && 'ContactsManager' in window) {
-        const props = ['name', 'email', 'tel', 'address'];
-        const opts = { multiple: true };
-        const contacts = await navigator.contacts.select(props, opts);
-        
-        for (const contact of contacts) {
-          const contactData = {
-            full_name: contact.name?.[0] || 'Unknown',
-            email: contact.email?.[0] || '',
-            phone: contact.tel?.[0] || '',
-            address: contact.address?.[0]?.addressLine || '',
-            city: contact.address?.[0]?.city || '',
-            state: contact.address?.[0]?.region || '',
-            zip: contact.address?.[0]?.postalCode || '',
-            type: 'lead',
-            stage: 'new'
-          };
-          await createMutation.mutateAsync(contactData);
-        }
-        toast.success(`Imported ${contacts.length} contact(s)`);
-      } else {
-        toast.error('Contact import not supported on this device');
+      const supported = ('contacts' in navigator && 'ContactsManager' in window);
+      if (!supported) {
+        toast.error('Contact import only works on Chrome/Edge for Android');
+        return;
       }
+
+      const props = ['name', 'email', 'tel', 'address'];
+      const opts = { multiple: true };
+      const contacts = await navigator.contacts.select(props, opts);
+      
+      if (contacts.length === 0) {
+        toast.info('No contacts selected');
+        return;
+      }
+
+      for (const contact of contacts) {
+        const contactData = {
+          full_name: contact.name?.[0] || 'Unknown',
+          email: contact.email?.[0] || '',
+          phone: contact.tel?.[0] || '',
+          address: contact.address?.[0]?.addressLine || '',
+          city: contact.address?.[0]?.city || '',
+          state: contact.address?.[0]?.region || '',
+          zip: contact.address?.[0]?.postalCode || '',
+          type: 'lead',
+          stage: 'new'
+        };
+        await createMutation.mutateAsync(contactData);
+      }
+      toast.success(`Imported ${contacts.length} contact(s)`);
     } catch (error) {
       if (error.name !== 'AbortError') {
+        console.error('Import error:', error);
         toast.error('Failed to import contacts');
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
