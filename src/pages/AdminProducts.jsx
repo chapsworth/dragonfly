@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle, Settings, Eye, EyeOff, Share2, LayoutGrid, Rows } from 'lucide-react';
+import { Plus, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, Trash2, GripVertical, Filter, CheckCircle, XCircle, Settings, Eye, EyeOff, Share2, LayoutGrid, Rows, Leaf, Sparkles, Cookie, Droplets, Wind, Beaker, Heart, Boxes } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -21,6 +21,17 @@ import CategoryManager from '@/components/admin/CategoryManager';
 
 const categories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories'];
 const strainTypes = ['indica', 'sativa', 'hybrid', 'cbd', 'n/a'];
+
+const categoryIcons = {
+  flower: Leaf,
+  'pre-rolls': Sparkles,
+  edibles: Cookie,
+  concentrates: Droplets,
+  vapes: Wind,
+  tinctures: Beaker,
+  topicals: Heart,
+  accessories: Boxes
+};
 
 export default function AdminProducts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -252,18 +263,33 @@ export default function AdminProducts() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 bg-white/60"
                 />
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-48 bg-white/60">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(c => (
-                      <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              </div>
+
+              {/* Category Filter Buttons */}
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                <Button
+                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('all')}
+                  className={selectedCategory === 'all' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  All Categories
+                </Button>
+                {categories.map(cat => {
+                  const Icon = categoryIcons[cat];
+                  return (
+                    <Button
+                      key={cat}
+                      variant={selectedCategory === cat ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={selectedCategory === cat ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      <span className="capitalize">{cat}</span>
+                    </Button>
+                  );
+                })}
               </div>
 
               {filteredProducts.length > 0 && (
