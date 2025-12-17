@@ -195,20 +195,28 @@ function CRMContactsContent() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-emerald-900 mb-2 flex items-center gap-3">
-              <Users className="w-10 h-10" />
+            <h1 className="text-3xl sm:text-4xl font-bold text-emerald-900 mb-2 flex items-center gap-3">
+              <Users className="w-8 h-8 sm:w-10 sm:h-10" />
               Contacts & Leads
             </h1>
             <p className="text-emerald-600">Manage customer relationships</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={importFromPhone} variant="outline" className="gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={importFromPhone} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
+            >
               <Phone className="w-4 h-4" />
-              Import from Phone
+              <span className="hidden sm:inline">Import from Phone</span>
+              <span className="sm:hidden">Import</span>
             </Button>
-            <Button onClick={() => setIsCreating(true)} className="bg-gradient-to-r from-emerald-500 to-green-500">
+            <Button 
+              onClick={() => setIsCreating(true)} 
+              className="bg-gradient-to-r from-emerald-500 to-green-500 flex-1 sm:flex-initial whitespace-nowrap"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>
