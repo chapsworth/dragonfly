@@ -36,7 +36,11 @@ export default function AdminOrders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date')
+    queryFn: async () => {
+      const allOrders = await base44.entities.Order.list('-created_date');
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+      return allOrders.filter(order => new Date(order.created_date) > fourHoursAgo);
+    }
   });
 
   const { data: contacts = [] } = useQuery({
