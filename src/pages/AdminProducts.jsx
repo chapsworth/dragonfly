@@ -418,6 +418,30 @@ export default function AdminProducts() {
                         <Package className="w-12 h-12 text-emerald-300" />
                       </div>
                     )}
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(product);
+                        }}
+                        className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateMutation.mutate({ id: product.id, data: { published: !product.published } });
+                        }}
+                        className={`h-8 w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
+                      >
+                        {product.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </div>
                   <div className="p-3">
                     <h3 className="font-bold text-emerald-900 text-sm mb-1 line-clamp-1">{product.name}</h3>
