@@ -717,6 +717,56 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
             </div>
           </div>
 
+          {/* Deal Settings */}
+          <div className="border-t border-emerald-100 pt-4">
+            <div className="p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <Label className="text-orange-900 font-semibold">Deal Badge</Label>
+                  <p className="text-xs text-orange-600 mt-1">
+                    Mark this product as a special deal
+                  </p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_deal || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_deal: e.target.checked }))}
+                    className="w-4 h-4 accent-orange-600"
+                  />
+                  <span className="text-sm text-orange-900">Enable Deal</span>
+                </label>
+              </div>
+
+              {formData.is_deal && (
+                <div>
+                  <Label className="text-sm mb-2 block">Deal Type</Label>
+                  <Select 
+                    value={formData.deal_type || 'weekly'} 
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, deal_type: val }))}
+                  >
+                    <SelectTrigger className="bg-white border-orange-200">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">🔥 Weekly Deal</SelectItem>
+                      <SelectItem value="smoking">💨 Smoking Deal</SelectItem>
+                      <SelectItem value="clearance">🏷️ Clearance</SelectItem>
+                      <SelectItem value="christmas">🎄 Christmas Deal</SelectItem>
+                      <SelectItem value="halloween">🎃 Halloween Deal</SelectItem>
+                      <SelectItem value="valentines">💝 Valentine's Deal</SelectItem>
+                      <SelectItem value="july4th">🎆 July 4th Deal</SelectItem>
+                      <SelectItem value="thanksgiving">🦃 Thanksgiving Deal</SelectItem>
+                      <SelectItem value="newyear">🎊 New Year Deal</SelectItem>
+                      <SelectItem value="stpatricks">🍀 St. Patrick's Deal</SelectItem>
+                      <SelectItem value="easter">🐰 Easter Deal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Inventory Management */}
           <div className="border-t border-emerald-100 pt-4">
             <div className="flex items-center justify-between mb-3">
