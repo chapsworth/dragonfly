@@ -266,37 +266,49 @@ export default function AdminProducts() {
                 </Select>
               </div>
 
-              {selectedProducts.length > 0 && (
+              {filteredProducts.length > 0 && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-white/60 backdrop-blur-xl border border-white/40">
-                  <Badge variant="secondary" className="px-3 py-1">{selectedProducts.length} selected</Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">Bulk Actions</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem onClick={() => handleBulkEdit('published', true)}>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Publish
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkEdit('published', false)}>
-                        <EyeOff className="w-4 h-4 mr-2" />
-                        Hide
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', true)}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Mark In Stock
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', false)}>
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Mark Out of Stock
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleBulkDelete} className="text-red-600">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Selected
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedProducts([])}>Clear</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={toggleAllProducts}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    {selectedProducts.length === filteredProducts.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  {selectedProducts.length > 0 && (
+                    <>
+                      <Badge variant="secondary" className="px-3 py-1">{selectedProducts.length} selected</Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">Bulk Actions</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => handleBulkEdit('published', true)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Publish
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleBulkEdit('published', false)}>
+                            <EyeOff className="w-4 h-4 mr-2" />
+                            Hide
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', true)}>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Mark In Stock
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleBulkEdit('in_stock', false)}>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Mark Out of Stock
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleBulkDelete} className="text-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Selected
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedProducts([])}>Clear</Button>
+                    </>
+                  )}
                 </div>
               )}
 
