@@ -27,6 +27,7 @@ import AdminLauncher from './pages/AdminLauncher';
 import DeliveryNavigation from './pages/DeliveryNavigation';
 import Profile from './pages/Profile';
 import ProductLibrary from './pages/ProductLibrary';
+import GlassPortal from './pages/GlassPortal';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "DeliveryNavigation": DeliveryNavigation,
     "Profile": Profile,
     "ProductLibrary": ProductLibrary,
+    "GlassPortal": GlassPortal,
 }
 
 export const pagesConfig = {
