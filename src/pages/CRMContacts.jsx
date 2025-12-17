@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
@@ -151,6 +151,50 @@ function CRMContactsContent() {
     negotiation: 'bg-orange-500',
     won: 'bg-green-500',
     lost: 'bg-red-500'
+  };
+
+  const parseCSV = (csvText) => {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const contacts = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim());
+      const contact = {
+        full_name: '',
+        email: '',
+        phone: '',
+        company: '',
+        role: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        type: 'lead',
+        stage: 'new'
+      };
+      
+      headers.forEach((header, index) => {
+        const value = values[index] || '';
+        if (header.includes('name')) contact.full_name = value;
+        else if (header.includes('email')) contact.email = value;
+        else if (header.includes('phone')) contact.phone = value;
+        else if (header.includes('company')) contact.company = value;
+        else if (header.includes('role') || header.includes('title')) contact.role = value;
+        else if (header.includes('address')) contact.address = value;
+        else if (header.includes('city')) contact.city = value;
+        else if (header.includes('state')) contact.state = value;
+        else if (header.includes('zip')) contact.zip = value;
+      });
+      
+      if (contact.full_name || contact.email || contact.phone) {
+        contacts.push(contact);
+      }
+    }
+    
+    return contacts;
   };
 
   const parseVCard = (vcardText) => {
@@ -299,6 +343,36 @@ function CRMContactsContent() {
     setImportPreview(prev => prev.filter((_, i) => i !== index));
   };
 
+  const importFromCSV = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,text/csv';
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const parsedContacts = parseCSV(text);
+        
+        if (parsedContacts.length === 0) {
+          toast.error('No valid contacts found in CSV');
+          return;
+        }
+        
+        setImportPreview(parsedContacts);
+        setShowImportPreview(true);
+        toast.success(`Found ${parsedContacts.length} contact(s)`);
+      } catch (error) {
+        console.error('CSV parse error:', error);
+        toast.error('Failed to parse CSV file');
+      }
+    };
+    
+    input.click();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
@@ -319,14 +393,23 @@ function CRMContactsContent() {
             >
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">Import from Phone</span>
-              <span className="sm:hidden">Import</span>
+              <span className="sm:hidden">Phone</span>
+            </Button>
+            <Button 
+              onClick={importFromCSV} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
+            >
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Import CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
             <Button 
               onClick={() => setIsCreating(true)} 
               className="bg-gradient-to-r from-emerald-500 to-green-500 flex-1 sm:flex-initial whitespace-nowrap"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Contact
+              Add
             </Button>
           </div>
         </div>
