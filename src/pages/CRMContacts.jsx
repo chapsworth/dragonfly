@@ -163,6 +163,8 @@ function CRMContactsContent() {
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
       const contact = {
+        first_name: '',
+        last_name: '',
         full_name: '',
         email: '',
         phone: '',
@@ -178,16 +180,28 @@ function CRMContactsContent() {
       
       headers.forEach((header, index) => {
         const value = values[index] || '';
-        if (header.includes('name')) contact.full_name = value;
+        if (header.includes('first') && header.includes('name')) contact.first_name = value;
+        else if (header.includes('last') && header.includes('name')) contact.last_name = value;
+        else if (header.includes('full') && header.includes('name')) contact.full_name = value;
+        else if (header === 'name') contact.full_name = value;
         else if (header.includes('email')) contact.email = value;
-        else if (header.includes('phone')) contact.phone = value;
-        else if (header.includes('company')) contact.company = value;
-        else if (header.includes('role') || header.includes('title')) contact.role = value;
-        else if (header.includes('address')) contact.address = value;
+        else if (header.includes('phone') || header.includes('tel')) contact.phone = value;
+        else if (header.includes('company') || header.includes('organization')) contact.company = value;
+        else if (header.includes('role') || header.includes('title') || header.includes('position')) contact.role = value;
+        else if (header.includes('address') && !header.includes('email')) contact.address = value;
         else if (header.includes('city')) contact.city = value;
-        else if (header.includes('state')) contact.state = value;
-        else if (header.includes('zip')) contact.zip = value;
+        else if (header.includes('state') || header.includes('province')) contact.state = value;
+        else if (header.includes('zip') || header.includes('postal')) contact.zip = value;
       });
+      
+      // Combine first and last name if full name is not provided
+      if (!contact.full_name && (contact.first_name || contact.last_name)) {
+        contact.full_name = `${contact.first_name} ${contact.last_name}`.trim();
+      }
+      
+      // Remove temporary fields
+      delete contact.first_name;
+      delete contact.last_name;
       
       if (contact.full_name || contact.email || contact.phone) {
         contacts.push(contact);
