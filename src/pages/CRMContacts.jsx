@@ -753,6 +753,28 @@ function CRMContactsContent() {
             <DialogTitle>Review Imported Contacts ({importPreview.length})</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-4 pb-6">
+            {/* Bulk Type Selector */}
+            <Card className="bg-emerald-50 border-emerald-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Label className="font-semibold">Set Type for All:</Label>
+                  <Select 
+                    onValueChange={(val) => {
+                      setImportPreview(prev => prev.map(c => ({ ...c, type: val })));
+                    }}
+                  >
+                    <SelectTrigger className="w-48 bg-white border-emerald-200">
+                      <SelectValue placeholder="Select type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer">Customer</SelectItem>
+                      <SelectItem value="lead">Lead</SelectItem>
+                      <SelectItem value="vendor_contact">Vendor Contact</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
             {importPreview.map((contact, index) => (
               <Card key={index} className="bg-white border-emerald-200">
                 <CardContent className="p-4">
