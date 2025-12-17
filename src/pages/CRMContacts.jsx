@@ -353,13 +353,51 @@ function CRMContactsContent() {
 
   const saveImportedContacts = async () => {
     try {
+      const existingContacts = await base44.entities.Contact.list();
+      const contactsToCreate = [];
+      const duplicates = [];
+
       for (const contact of importPreview) {
-        await createMutation.mutateAsync(contact);
+        const isDuplicate = existingContacts.some(
+          (existing) =>
+            (contact.email && existing.email === contact.email && contact.email.length > 0) ||
+            (contact.full_name && existing.full_name === contact.full_name && contact.full_name.length > 0)
+        );
+
+        if (isDuplicate) {
+          duplicates.push(contact.full_name || contact.email || 'Unknown Contact');
+        } else {
+          contactsToCreate.push(contact);
+        }
       }
-      toast.success(`Imported ${importPreview.length} contact(s)`);
+
+      const BATCH_SIZE = 50;
+      let importedCount = 0;
+
+      for (let i = 0; i < contactsToCreate.length; i += BATCH_SIZE) {
+        const batch = contactsToCreate.slice(i, i + BATCH_SIZE);
+        await base44.entities.Contact.bulkCreate(batch);
+        importedCount += batch.length;
+      }
+
+      if (importedCount > 0) {
+        toast.success(`Successfully imported ${importedCount} new contact(s)`);
+      }
+
+      if (duplicates.length > 0) {
+        toast.info(`Skipped ${duplicates.length} duplicate(s)`);
+      }
+
+      if (importedCount === 0 && duplicates.length === 0) {
+        toast.info('No new contacts to import');
+      }
+
       setShowImportPreview(false);
       setImportPreview([]);
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+
     } catch (error) {
+      console.error('Bulk import failed:', error);
       toast.error('Failed to import contacts');
     }
   };
