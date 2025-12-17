@@ -226,15 +226,24 @@ function CRMContactsContent() {
     }
 
     try {
+      toast.loading(`Deleting ${toDelete.length} duplicate(s)...`);
+      
       for (const id of toDelete) {
-        await deleteMutation.mutateAsync(id);
+        await base44.entities.Contact.delete(id);
       }
-      toast.success(`Removed ${toDelete.length} duplicate(s)`);
+      
+      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      
+      toast.dismiss();
+      toast.success(`Successfully removed ${toDelete.length} duplicate(s)`);
+      
       setShowDuplicates(false);
       setDuplicates([]);
       setSelectedDuplicates({});
     } catch (error) {
-      toast.error('Failed to remove duplicates');
+      console.error('Delete error:', error);
+      toast.dismiss();
+      toast.error('Failed to remove duplicates: ' + error.message);
     }
   };
 
