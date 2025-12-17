@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy, Flame, Wine, Disc, FileText, Wind, Box } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -21,6 +21,15 @@ const categoryColors = {
   'storage': 'from-emerald-400 to-green-500',
   'accessories': 'from-lime-400 to-green-500',
   'cleaning': 'from-teal-400 to-cyan-500'
+};
+
+const categoryIcons = {
+  'pipe': Flame,
+  'bong': Wine,
+  'grinder': Disc,
+  'paper': FileText,
+  'vaporizer': Wind,
+  'storage': Box
 };
 
 export default function GlassPortal() {
@@ -437,17 +446,21 @@ export default function GlassPortal() {
                 </div>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                {['all', 'pipe', 'bong', 'grinder', 'paper', 'vaporizer', 'storage'].map(category => (
-                  <Button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    variant={selectedCategory === category ? 'default' : 'outline'}
-                    className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category + 's'] || 'from-purple-500 to-pink-500'}` : ''}
-                    size="sm"
-                  >
-                    {category === 'all' ? 'All Products' : category.charAt(0).toUpperCase() + category.slice(1) + 's'}
-                  </Button>
-                ))}
+                {['all', 'pipe', 'bong', 'grinder', 'paper', 'vaporizer', 'storage'].map(category => {
+                  const Icon = categoryIcons[category];
+                  return (
+                    <Button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      variant={selectedCategory === category ? 'default' : 'outline'}
+                      className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category + 's'] || 'from-purple-500 to-pink-500'}` : ''}
+                      size="sm"
+                    >
+                      {Icon && <Icon className="w-4 h-4 mr-2" />}
+                      {category === 'all' ? 'All Products' : category.charAt(0).toUpperCase() + category.slice(1) + 's'}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           </div>
