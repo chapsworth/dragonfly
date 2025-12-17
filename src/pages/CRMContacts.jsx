@@ -31,6 +31,8 @@ function CRMContactsContent() {
   const [expandedContacts, setExpandedContacts] = useState({});
   const [editingNotes, setEditingNotes] = useState({});
   const [editingProducts, setEditingProducts] = useState({});
+  const [importPreview, setImportPreview] = useState([]);
+  const [showImportPreview, setShowImportPreview] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -151,25 +153,66 @@ function CRMContactsContent() {
     lost: 'bg-red-500'
   };
 
-  const importFromPhone = async () => {
-    try {
-      const supported = ('contacts' in navigator && 'ContactsManager' in window);
-      if (!supported) {
-        toast.error('Contact import only works on Chrome/Edge for Android');
-        return;
-      }
-
-      const props = ['name', 'email', 'tel', 'address'];
-      const opts = { multiple: true };
-      const contacts = await navigator.contacts.select(props, opts);
+  const parseVCard = (vcardText) => {
+    const contacts = [];
+    const vcards = vcardText.split('BEGIN:VCARD');
+    
+    vcards.forEach(vcard => {
+      if (!vcard.trim()) return;
       
-      if (contacts.length === 0) {
-        toast.info('No contacts selected');
-        return;
+      const lines = vcard.split('\n');
+      const contact = {
+        full_name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        type: 'lead',
+        stage: 'new'
+      };
+      
+      lines.forEach(line => {
+        if (line.startsWith('FN:')) {
+          contact.full_name = line.replace('FN:', '').trim();
+        } else if (line.includes('EMAIL')) {
+          const email = line.split(':')[1];
+          if (email) contact.email = email.trim();
+        } else if (line.includes('TEL')) {
+          const tel = line.split(':')[1];
+          if (tel) contact.phone = tel.trim();
+        } else if (line.startsWith('ADR')) {
+          const parts = line.split(':')[1]?.split(';') || [];
+          contact.address = parts[2] || '';
+          contact.city = parts[3] || '';
+          contact.state = parts[4] || '';
+          contact.zip = parts[5] || '';
+        }
+      });
+      
+      if (contact.full_name) {
+        contacts.push(contact);
       }
+    });
+    
+    return contacts;
+  };
 
-      for (const contact of contacts) {
-        const contactData = {
+  const importFromPhone = async () => {
+    // Try Contact Picker API first (Android Chrome/Edge)
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+      try {
+        const props = ['name', 'email', 'tel', 'address'];
+        const opts = { multiple: true };
+        const contacts = await navigator.contacts.select(props, opts);
+        
+        if (contacts.length === 0) {
+          toast.info('No contacts selected');
+          return;
+        }
+
+        const parsedContacts = contacts.map(contact => ({
           full_name: contact.name?.[0] || 'Unknown',
           email: contact.email?.[0] || '',
           phone: contact.tel?.[0] || '',
@@ -179,16 +222,71 @@ function CRMContactsContent() {
           zip: contact.address?.[0]?.postalCode || '',
           type: 'lead',
           stage: 'new'
-        };
-        await createMutation.mutateAsync(contactData);
-      }
-      toast.success(`Imported ${contacts.length} contact(s)`);
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Import error:', error);
-        toast.error('Failed to import contacts');
+        }));
+
+        setImportPreview(parsedContacts);
+        setShowImportPreview(true);
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        console.error('Contact Picker failed:', error);
       }
     }
+
+    // Fallback to file upload (iOS and other browsers)
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.vcf,.vcard,text/vcard,text/x-vcard';
+    input.multiple = false;
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const parsedContacts = parseVCard(text);
+        
+        if (parsedContacts.length === 0) {
+          toast.error('No valid contacts found in file');
+          return;
+        }
+        
+        setImportPreview(parsedContacts);
+        setShowImportPreview(true);
+        toast.success(`Found ${parsedContacts.length} contact(s)`);
+      } catch (error) {
+        console.error('vCard parse error:', error);
+        toast.error('Failed to parse contact file');
+      }
+    };
+    
+    input.click();
+  };
+
+  const saveImportedContacts = async () => {
+    try {
+      for (const contact of importPreview) {
+        await createMutation.mutateAsync(contact);
+      }
+      toast.success(`Imported ${importPreview.length} contact(s)`);
+      setShowImportPreview(false);
+      setImportPreview([]);
+    } catch (error) {
+      toast.error('Failed to import contacts');
+    }
+  };
+
+  const updateImportContactType = (index, type) => {
+    setImportPreview(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], type };
+      return updated;
+    });
+  };
+
+  const removeImportContact = (index) => {
+    setImportPreview(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -521,6 +619,94 @@ function CRMContactsContent() {
           }
         }}
       />
+
+      {/* Import Preview Dialog */}
+      <Dialog open={showImportPreview} onOpenChange={setShowImportPreview}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review Imported Contacts ({importPreview.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-4 pb-6">
+            {importPreview.map((contact, index) => (
+              <Card key={index} className="bg-white border-emerald-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                      {contact.full_name?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-emerald-900 mb-2">{contact.full_name}</h3>
+                      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                        {contact.email && (
+                          <div>
+                            <span className="text-gray-500">Email:</span>
+                            <span className="ml-2 text-emerald-900">{contact.email}</span>
+                          </div>
+                        )}
+                        {contact.phone && (
+                          <div>
+                            <span className="text-gray-500">Phone:</span>
+                            <span className="ml-2 text-emerald-900">{contact.phone}</span>
+                          </div>
+                        )}
+                        {contact.address && (
+                          <div className="col-span-2">
+                            <span className="text-gray-500">Address:</span>
+                            <span className="ml-2 text-emerald-900">
+                              {contact.address}, {contact.city} {contact.state} {contact.zip}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Select 
+                          value={contact.type} 
+                          onValueChange={(val) => updateImportContactType(index, val)}
+                        >
+                          <SelectTrigger className="w-40 h-8 text-xs border-emerald-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer">Customer</SelectItem>
+                            <SelectItem value="lead">Lead</SelectItem>
+                            <SelectItem value="vendor_contact">Vendor Contact</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeImportContact(index)}
+                          className="h-8 text-red-600"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            <div className="flex justify-end gap-3 pt-4 border-t border-emerald-200">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowImportPreview(false);
+                  setImportPreview([]);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={saveImportedContacts}
+                disabled={importPreview.length === 0 || createMutation.isPending}
+                className="bg-gradient-to-r from-emerald-500 to-green-500"
+              >
+                {createMutation.isPending ? 'Importing...' : `Import ${importPreview.length} Contact${importPreview.length !== 1 ? 's' : ''}`}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
