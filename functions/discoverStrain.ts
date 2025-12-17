@@ -93,15 +93,18 @@ Return ONLY valid JSON:
           }
         });
 
-        // If strain doesn't exist, skip it
+        // If strain doesn't exist and not allowed to create fictional, return for confirmation
         if (!verifyStrain.exists) {
-          results.push({ 
-            success: false, 
-            error: `Strain "${name}" not found in online databases. Sources checked: ${verifyStrain.sources || 'None'}`,
-            strainName: name,
-            notFound: true
-          });
-          continue;
+          if (!allowFictional) {
+            results.push({ 
+              success: false, 
+              error: `Strain "${name}" not found in online databases. Sources checked: ${verifyStrain.sources || 'None'}`,
+              strainName: name,
+              needsConfirmation: true
+            });
+            continue;
+          }
+          // If fictional is allowed, proceed with generic research
         }
 
         // Use AI to research the strain

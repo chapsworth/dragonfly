@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2, Grid2X2, Rows, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import StrainEditModal from '@/components/strain/StrainEditModal';
 
@@ -38,6 +38,7 @@ export default function StrainLibrary() {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [batchCount, setBatchCount] = useState(10);
   const [viewMode, setViewMode] = useState('grid2x2'); // grid2x2, grid1x1, carousel
+  const [confirmationModal, setConfirmationModal] = useState(null); // { names: [], mode: '' }
   const queryClient = useQueryClient();
 
   const { data: strains = [], isLoading } = useQuery({
@@ -94,6 +95,16 @@ export default function StrainLibrary() {
       toast.info('Discovering strains... This may take a minute.');
       const response = await base44.functions.invoke('discoverStrain', payload);
 
+      if (response.data.needsConfirmation && response.data.needsConfirmation.length > 0) {
+        setConfirmationModal({
+          names: response.data.needsConfirmation,
+          payload: payload,
+          mode: mode
+        });
+        setIsDiscovering(false);
+        return;
+      }
+
       if (response.data.success) {
         queryClient.invalidateQueries({ queryKey: ['strains'] });
         setAiSearch('');
@@ -107,6 +118,30 @@ export default function StrainLibrary() {
       console.error('Discovery error:', error);
       toast.error('Failed to discover strains');
     } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  const handleConfirmFictional = async () => {
+    setIsDiscovering(true);
+    try {
+      const payload = { ...confirmationModal.payload, allowFictional: true };
+      toast.info('Creating fictional strains...');
+      const response = await base44.functions.invoke('discoverStrain', payload);
+
+      if (response.data.success) {
+        queryClient.invalidateQueries({ queryKey: ['strains'] });
+        setAiSearch('');
+        const { new: newCount, existing, failed } = response.data;
+        toast.success(`Added ${newCount} new strains! (${existing} already existed, ${failed} failed)`);
+      } else {
+        toast.error(response.data.error || 'Creation failed');
+      }
+    } catch (error) {
+      console.error('Creation error:', error);
+      toast.error('Failed to create strains');
+    } finally {
+      setConfirmationModal(null);
       setIsDiscovering(false);
     }
   };
@@ -447,6 +482,36 @@ export default function StrainLibrary() {
         isOpen={!!editingStrain}
         onClose={() => setEditingStrain(null)}
       />
+
+      {/* Confirmation Modal */}
+      <Dialog open={!!confirmationModal} onOpenChange={() => setConfirmationModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Strains Not Found Online</DialogTitle>
+            <DialogDescription>
+              The following strains were not found in online databases. Would you like to create them as fictional strains?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4">
+            <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+              <p className="text-sm font-semibold text-yellow-900 mb-2">Not Found:</p>
+              <ul className="list-disc list-inside text-sm text-yellow-700">
+                {confirmationModal?.names.map((name, i) => (
+                  <li key={i}>{name}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmationModal(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmFictional} disabled={isDiscovering}>
+              {isDiscovering ? 'Creating...' : 'Create as Fictional'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Strain Detail Modal */}
       <Dialog open={!!selectedStrain} onOpenChange={() => setSelectedStrain(null)}>
