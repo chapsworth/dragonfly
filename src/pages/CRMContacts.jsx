@@ -151,6 +151,38 @@ function CRMContactsContent() {
     lost: 'bg-red-500'
   };
 
+  const importFromPhone = async () => {
+    try {
+      if ('contacts' in navigator && 'ContactsManager' in window) {
+        const props = ['name', 'email', 'tel', 'address'];
+        const opts = { multiple: true };
+        const contacts = await navigator.contacts.select(props, opts);
+        
+        for (const contact of contacts) {
+          const contactData = {
+            full_name: contact.name?.[0] || 'Unknown',
+            email: contact.email?.[0] || '',
+            phone: contact.tel?.[0] || '',
+            address: contact.address?.[0]?.addressLine || '',
+            city: contact.address?.[0]?.city || '',
+            state: contact.address?.[0]?.region || '',
+            zip: contact.address?.[0]?.postalCode || '',
+            type: 'lead',
+            stage: 'new'
+          };
+          await createMutation.mutateAsync(contactData);
+        }
+        toast.success(`Imported ${contacts.length} contact(s)`);
+      } else {
+        toast.error('Contact import not supported on this device');
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        toast.error('Failed to import contacts');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4">
       <div className="max-w-7xl mx-auto">
@@ -163,10 +195,16 @@ function CRMContactsContent() {
             </h1>
             <p className="text-emerald-600">Manage customer relationships</p>
           </div>
-          <Button onClick={() => setIsCreating(true)} className="bg-gradient-to-r from-emerald-500 to-green-500">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Contact
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={importFromPhone} variant="outline" className="gap-2">
+              <Phone className="w-4 h-4" />
+              Import from Phone
+            </Button>
+            <Button onClick={() => setIsCreating(true)} className="bg-gradient-to-r from-emerald-500 to-green-500">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Contact
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -524,12 +562,12 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{contact ? 'Edit Contact' : 'New Contact'}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-6 mt-4 pb-6">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
