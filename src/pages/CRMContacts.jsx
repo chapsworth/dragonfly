@@ -200,6 +200,16 @@ function CRMContactsContent() {
   };
 
   const importFromPhone = async () => {
+    // Detect iOS
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // Show iOS instructions
+      toast.info('On iOS: Open Contacts app → Select contact(s) → Share → Export vCard → Then upload here', {
+        duration: 6000
+      });
+    }
+    
     // Try Contact Picker API first (Android Chrome/Edge)
     if ('contacts' in navigator && 'ContactsManager' in window) {
       try {
