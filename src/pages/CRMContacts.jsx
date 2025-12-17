@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
@@ -28,6 +28,9 @@ function CRMContactsContent() {
   const [stageFilter, setStageFilter] = useState('all');
   const [editingContact, setEditingContact] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [expandedContacts, setExpandedContacts] = useState({});
+  const [editingNotes, setEditingNotes] = useState({});
+  const [editingProducts, setEditingProducts] = useState({});
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -61,6 +64,22 @@ function CRMContactsContent() {
     }
   });
 
+  const updateNotesMutation = useMutation({
+    mutationFn: ({ id, notes }) => base44.entities.Contact.update(id, { notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success('Notes saved');
+    }
+  });
+
+  const updateProductsMutation = useMutation({
+    mutationFn: ({ id, products }) => base44.entities.Contact.update(id, { vendor_products: products }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success('Products updated');
+    }
+  });
+
   const filteredContacts = contacts.filter(c => {
     const matchesSearch = c.full_name?.toLowerCase().includes(search.toLowerCase()) ||
                          c.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,6 +88,67 @@ function CRMContactsContent() {
     const matchesStage = stageFilter === 'all' || c.stage === stageFilter;
     return matchesSearch && matchesType && matchesStage;
   });
+
+  // Group by first letter
+  const groupedContacts = filteredContacts.reduce((acc, contact) => {
+    const firstLetter = (contact.full_name?.[0] || '?').toUpperCase();
+    if (!acc[firstLetter]) acc[firstLetter] = [];
+    acc[firstLetter].push(contact);
+    return acc;
+  }, {});
+
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const availableLetters = Object.keys(groupedContacts).sort();
+
+  const scrollToLetter = (letter) => {
+    const element = document.getElementById(`letter-${letter}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedContacts(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleCall = (phone) => {
+    if (phone) window.location.href = `tel:${phone}`;
+  };
+
+  const handleText = (phone, name) => {
+    if (phone) {
+      const message = encodeURIComponent(`Hi ${name}, `);
+      window.location.href = `sms:${phone}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${message}`;
+    }
+  };
+
+  const handleEmail = (email) => {
+    if (email) window.location.href = `mailto:${email}`;
+  };
+
+  const saveNotes = (id) => {
+    const notes = editingNotes[id];
+    if (notes !== undefined) {
+      updateNotesMutation.mutate({ id, notes });
+      setEditingNotes(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+    }
+  };
+
+  const saveProducts = (id) => {
+    const products = editingProducts[id];
+    if (products !== undefined) {
+      updateProductsMutation.mutate({ id, products });
+      setEditingProducts(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+    }
+  };
 
   const stageColors = {
     new: 'bg-gray-500',
@@ -143,81 +223,249 @@ function CRMContactsContent() {
           </CardContent>
         </Card>
 
-        {/* Contact Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredContacts.map(contact => (
-            <Card key={contact.id} className="bg-white border-emerald-200 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-emerald-900 text-lg mb-1">{contact.full_name}</h3>
-                    {contact.company && (
-                      <p className="text-sm text-emerald-600">{contact.company}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => setEditingContact(contact)}>
-                      <Edit2 className="w-4 h-4 text-emerald-600" />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="ghost"
-                      onClick={() => {
-                        if (confirm('Delete this contact?')) {
-                          deleteMutation.mutate(contact.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
-                  </div>
+        {/* Contact List with Alphabet Index */}
+        <div className="relative">
+          {/* Contacts List */}
+          <div className="pr-12">
+            {availableLetters.map(letter => (
+              <div key={letter} id={`letter-${letter}`} className="mb-6">
+                <div className="sticky top-20 bg-gradient-to-r from-emerald-50 to-white py-2 px-4 rounded-lg mb-3 z-10">
+                  <h2 className="text-2xl font-bold text-emerald-900">{letter}</h2>
                 </div>
+                <div className="space-y-2">
+                  {groupedContacts[letter].map(contact => {
+                    const isExpanded = expandedContacts[contact.id];
+                    return (
+                      <Card key={contact.id} className="bg-white border-emerald-200">
+                        <CardContent className="p-0">
+                          {/* Collapsed View */}
+                          <button
+                            onClick={() => toggleExpand(contact.id)}
+                            className="w-full p-4 flex items-center justify-between hover:bg-emerald-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white font-bold">
+                                {contact.full_name?.[0]?.toUpperCase()}
+                              </div>
+                              <div className="text-left flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-emerald-900">{contact.full_name}</h3>
+                                  <Badge className={`${stageColors[contact.stage]} text-white text-xs`}>
+                                    {contact.stage}
+                                  </Badge>
+                                  <Badge variant="outline" className="border-emerald-300 text-emerald-700 text-xs">
+                                    {contact.type}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-emerald-600">
+                                  {contact.company && `${contact.company} • `}
+                                  {contact.phone || contact.email}
+                                </p>
+                              </div>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUp className="w-5 h-5 text-emerald-600" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-emerald-600" />
+                            )}
+                          </button>
 
-                <div className="space-y-2 mb-4">
-                  {contact.email && (
-                    <a href={`mailto:${contact.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-600">
-                      <Mail className="w-4 h-4" />
-                      {contact.email}
-                    </a>
-                  )}
-                  {contact.phone && (
-                    <a href={`tel:${contact.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-600">
-                      <Phone className="w-4 h-4" />
-                      {contact.phone}
-                    </a>
-                  )}
-                  {contact.address && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      {contact.city}, {contact.state}
-                    </div>
-                  )}
+                          {/* Expanded View */}
+                          {isExpanded && (
+                            <div className="px-4 pb-4 space-y-4 border-t border-emerald-100">
+                              {/* Action Buttons */}
+                              <div className="flex gap-2 pt-4">
+                                {contact.phone && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleCall(contact.phone)}
+                                      className="bg-gradient-to-r from-blue-500 to-cyan-500 gap-2"
+                                    >
+                                      <Phone className="w-4 h-4" />
+                                      Call
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleText(contact.phone, contact.full_name)}
+                                      className="bg-gradient-to-r from-green-500 to-emerald-500 gap-2"
+                                    >
+                                      <MessageSquare className="w-4 h-4" />
+                                      Text
+                                    </Button>
+                                  </>
+                                )}
+                                {contact.email && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleEmail(contact.email)}
+                                    className="bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
+                                  >
+                                    <Mail className="w-4 h-4" />
+                                    Email
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setEditingContact(contact)}
+                                  className="gap-2 ml-auto"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (confirm('Delete this contact?')) {
+                                      deleteMutation.mutate(contact.id);
+                                    }
+                                  }}
+                                  className="gap-2 text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </Button>
+                              </div>
+
+                              {/* Contact Details */}
+                              <div className="grid grid-cols-2 gap-4">
+                                {contact.email && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Email</p>
+                                    <p className="text-sm font-medium text-emerald-900">{contact.email}</p>
+                                  </div>
+                                )}
+                                {contact.phone && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Phone</p>
+                                    <p className="text-sm font-medium text-emerald-900">{contact.phone}</p>
+                                  </div>
+                                )}
+                                {contact.company && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Company</p>
+                                    <p className="text-sm font-medium text-emerald-900">{contact.company}</p>
+                                  </div>
+                                )}
+                                {contact.role && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Role</p>
+                                    <p className="text-sm font-medium text-emerald-900">{contact.role}</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {(contact.address || contact.city) && (
+                                <div>
+                                  <p className="text-xs text-gray-600 mb-1">Address</p>
+                                  <p className="text-sm font-medium text-emerald-900">
+                                    {contact.address && `${contact.address}, `}
+                                    {contact.city && `${contact.city}, `}
+                                    {contact.state} {contact.zip}
+                                  </p>
+                                </div>
+                              )}
+
+                              {contact.preferred_strain_type && contact.preferred_strain_type !== 'no_preference' && (
+                                <div>
+                                  <p className="text-xs text-gray-600 mb-1">Preferred Strain</p>
+                                  <Badge className="bg-purple-500 text-white">{contact.preferred_strain_type}</Badge>
+                                </div>
+                              )}
+
+                              {contact.type === 'customer' && (
+                                <div className="pt-3 border-t border-emerald-100 grid grid-cols-3 gap-4">
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Total Orders</p>
+                                    <p className="text-lg font-bold text-emerald-900">{contact.total_orders || 0}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Total Spent</p>
+                                    <p className="text-lg font-bold text-green-700">${(contact.total_spent || 0).toFixed(0)}</p>
+                                  </div>
+                                  {contact.last_order_date && (
+                                    <div>
+                                      <p className="text-xs text-gray-600 mb-1">Last Order</p>
+                                      <p className="text-sm font-medium text-emerald-900">
+                                        {new Date(contact.last_order_date).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Notes Section */}
+                              <div className="pt-3 border-t border-emerald-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-xs font-semibold text-gray-600 uppercase">Notes</p>
+                                  {editingNotes[contact.id] !== undefined && (
+                                    <Button size="sm" onClick={() => saveNotes(contact.id)} className="h-7">
+                                      Save
+                                    </Button>
+                                  )}
+                                </div>
+                                <Textarea
+                                  value={editingNotes[contact.id] !== undefined ? editingNotes[contact.id] : contact.notes || ''}
+                                  onChange={(e) => setEditingNotes({ ...editingNotes, [contact.id]: e.target.value })}
+                                  placeholder="Add notes about this contact..."
+                                  className="border-emerald-200 text-sm"
+                                  rows={3}
+                                />
+                              </div>
+
+                              {/* Vendor Products Section */}
+                              {contact.type === 'vendor_contact' && (
+                                <div className="pt-3 border-t border-emerald-100">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs font-semibold text-gray-600 uppercase flex items-center gap-2">
+                                      <Package className="w-4 h-4" />
+                                      Vendor Products
+                                    </p>
+                                    {editingProducts[contact.id] !== undefined && (
+                                      <Button size="sm" onClick={() => saveProducts(contact.id)} className="h-7">
+                                        Save
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Textarea
+                                    value={editingProducts[contact.id] !== undefined ? editingProducts[contact.id] : contact.vendor_products || ''}
+                                    onChange={(e) => setEditingProducts({ ...editingProducts, [contact.id]: e.target.value })}
+                                    placeholder="List products this vendor supplies..."
+                                    className="border-emerald-200 text-sm"
+                                    rows={3}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
+              </div>
+            ))}
+          </div>
 
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge className={`${stageColors[contact.stage]} text-white`}>
-                    {contact.stage}
-                  </Badge>
-                  <Badge variant="outline" className="border-emerald-300 text-emerald-700">
-                    {contact.type}
-                  </Badge>
-                </div>
-
-                {contact.type === 'customer' && (
-                  <div className="pt-4 border-t border-emerald-100 grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-600">Total Orders</p>
-                      <p className="font-bold text-emerald-900">{contact.total_orders || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Total Spent</p>
-                      <p className="font-bold text-green-700">${(contact.total_spent || 0).toFixed(0)}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+          {/* Alphabet Index */}
+          <div className="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-white/90 backdrop-blur p-2 rounded-lg shadow-lg border border-emerald-200 z-20">
+            {alphabet.map(letter => (
+              <button
+                key={letter}
+                onClick={() => scrollToLetter(letter)}
+                disabled={!availableLetters.includes(letter)}
+                className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded transition-colors ${
+                  availableLetters.includes(letter)
+                    ? 'text-emerald-600 hover:bg-emerald-100 cursor-pointer'
+                    : 'text-gray-300 cursor-not-allowed'
+                }`}
+              >
+                {letter}
+              </button>
+            ))}
+          </div>
         </div>
 
         {filteredContacts.length === 0 && (
@@ -269,7 +517,8 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
     medical_card_expiry: '',
     notes: '',
     source: '',
-    tags: []
+    tags: [],
+    vendor_products: ''
   });
 
   React.useEffect(() => {
@@ -294,7 +543,8 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
         medical_card_expiry: '',
         notes: '',
         source: '',
-        tags: []
+        tags: [],
+        vendor_products: ''
       });
     }
   }, [contact, isOpen]);
@@ -491,6 +741,19 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
               className="border-emerald-200 h-24"
             />
           </div>
+
+          {/* Vendor Products */}
+          {formData.type === 'vendor_contact' && (
+            <div>
+              <Label>Vendor Products</Label>
+              <Textarea
+                value={formData.vendor_products}
+                onChange={(e) => setFormData({ ...formData, vendor_products: e.target.value })}
+                placeholder="List products this vendor supplies..."
+                className="border-emerald-200 h-24"
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-emerald-200">
