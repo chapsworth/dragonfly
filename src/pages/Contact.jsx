@@ -25,7 +25,7 @@ export default function Contact() {
   };
 
   const contactInfo = [
-    { icon: Phone, label: 'Phone', value: '(555) 420-1234', href: 'tel:+15554201234' },
+    { icon: Phone, label: 'Phone', value: '(628) 788-6777', href: 'tel:+16287886777' },
     { icon: Mail, label: 'Email', value: 'hello@greenleaf.com', href: 'mailto:hello@greenleaf.com' },
     { icon: MapPin, label: 'Address', value: '123 Cannabis Lane, Green City, CA 90210' },
     { icon: Clock, label: 'Hours', value: 'Mon-Sat: 9AM-9PM, Sun: 10AM-6PM' }
