@@ -97,15 +97,7 @@ function CRMContactsContent() {
     return acc;
   }, {});
 
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const availableLetters = Object.keys(groupedContacts).sort();
-
-  const scrollToLetter = (letter) => {
-    const element = document.getElementById(`letter-${letter}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   const toggleExpand = (id) => {
     setExpandedContacts(prev => ({ ...prev, [id]: !prev[id] }));
@@ -223,10 +215,9 @@ function CRMContactsContent() {
           </CardContent>
         </Card>
 
-        {/* Contact List with Alphabet Index */}
-        <div className="relative">
-          {/* Contacts List */}
-          <div className="pr-12">
+        {/* Contact List */}
+        <div>
+          <div>
             {availableLetters.map(letter => (
               <div key={letter} id={`letter-${letter}`} className="mb-6">
                 <div className="sticky top-20 bg-gradient-to-r from-emerald-50 to-white py-2 px-4 rounded-lg mb-3 z-10">
@@ -446,24 +437,6 @@ function CRMContactsContent() {
                   })}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Alphabet Index */}
-          <div className="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-white/90 backdrop-blur p-2 rounded-lg shadow-lg border border-emerald-200 z-20">
-            {alphabet.map(letter => (
-              <button
-                key={letter}
-                onClick={() => scrollToLetter(letter)}
-                disabled={!availableLetters.includes(letter)}
-                className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded transition-colors ${
-                  availableLetters.includes(letter)
-                    ? 'text-emerald-600 hover:bg-emerald-100 cursor-pointer'
-                    : 'text-gray-300 cursor-not-allowed'
-                }`}
-              >
-                {letter}
-              </button>
             ))}
           </div>
         </div>
