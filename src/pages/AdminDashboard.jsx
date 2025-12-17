@@ -230,7 +230,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
               <Link to={createPageUrl('AdminProducts')}>
                 <Button className="w-full h-20 bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 flex-col gap-2">
                   <Package className="w-5 h-5" />
@@ -265,6 +265,12 @@ export default function AdminDashboard() {
                 <Button className="w-full h-20 bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex-col gap-2">
                   <TrendingUp className="w-5 h-5" />
                   <span className="text-xs">Strain Library</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('GlassPortal')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex-col gap-2">
+                  <Package className="w-5 h-5" />
+                  <span className="text-xs">Glass Portal</span>
                 </Button>
               </Link>
             </div>

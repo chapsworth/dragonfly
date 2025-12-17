@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Home, ShoppingBag, Phone, Leaf, Cannabis, Cookie, Droplets, 
   Wind, Sparkles, Flame, Package, X, ClipboardList, LayoutDashboard, Cigarette,
-  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User, Users, FolderTree, Settings, Image, Briefcase
+  ShoppingCart, Heart, Candy, ChevronDown, LogOut, User, Users, FolderTree, Settings, Image, Briefcase, Glasses
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -33,6 +33,7 @@ const navItems = [
   { name: 'Shop', page: 'Shop', icon: ShoppingBag },
   { name: 'Strain Library', page: 'StrainLibrary', icon: Leaf },
   { name: 'Product Library', page: 'ProductLibrary', icon: Package },
+  { name: 'Glass Portal', page: 'GlassPortal', icon: Glasses },
   { name: 'Radio', page: 'Radio', icon: Wind },
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
