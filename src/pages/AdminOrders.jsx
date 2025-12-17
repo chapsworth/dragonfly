@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import ProductSelector from '@/components/orders/ProductSelector';
 import OrderDetailModal from '@/components/orders/OrderDetailModal';
+import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
 
 const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -536,179 +537,33 @@ export default function AdminOrders() {
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {orders.map((order) => {
-                const quickActions = getQuickActions(order);
-                const statusColors = {
-                  pending: 'bg-yellow-100 text-yellow-700',
-                  confirmed: 'bg-blue-100 text-blue-700',
-                  preparing: 'bg-purple-100 text-purple-700',
-                  out_for_delivery: 'bg-cyan-100 text-cyan-700',
-                  delivered: 'bg-green-100 text-green-700',
-                  cancelled: 'bg-red-100 text-red-700',
-                };
-                
-                return (
-                  <div key={order.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-2">
-                        <Checkbox
-                          checked={selectedOrders.includes(order.id)}
-                          onCheckedChange={() => toggleOrderSelection(order.id)}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-bold text-emerald-900 text-sm">#{order.id.slice(0, 8)}</p>
-                          <p className="text-xs text-emerald-600">{order.customer_name}</p>
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setViewingOrder(order)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(order)}>Edit Details</DropdownMenuItem>
-                          {(order.status === 'confirmed' || order.status === 'preparing') && (
-                            <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
-                              <Truck className="w-4 h-4 mr-2" />
-                              Take This Delivery
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleResendEmail(order)}>
-                            <Mail className="w-4 h-4 mr-2" />
-                            Resend Email
-                          </DropdownMenuItem>
-                          {order.status !== 'cancelled' && (
-                            <DropdownMenuItem onClick={() => handleCancelOrder(order)} className="text-red-600">
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Cancel
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-emerald-600">{format(new Date(order.created_date), 'MMM d, yyyy')}</span>
-                        <span className="font-bold text-emerald-900">${order.total?.toFixed(2)}</span>
-                      </div>
-                      <Badge className={statusColors[order.status] + ' text-xs'}>
-                        {order.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    {quickActions.length > 0 && (
-                      <div className="flex gap-1 flex-wrap">
-                        {quickActions.map((action) => (
-                          <Button
-                            key={action.status}
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleQuickStatusUpdate(order, action.status)}
-                            className="h-7 text-xs flex-1"
-                          >
-                            <action.icon className="w-3 h-3 mr-1" />
-                            {action.label}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+              {orders.map((order) => (
+                <div key={order.id} className="flex items-start gap-2">
+                  <Checkbox
+                    checked={selectedOrders.includes(order.id)}
+                    onCheckedChange={() => toggleOrderSelection(order.id)}
+                    className="mt-4"
+                  />
+                  <div className="flex-1">
+                    <InteractiveOrderCard order={order} />
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           ) : (
             <div className="space-y-3">
-              {orders.map((order) => {
-                const quickActions = getQuickActions(order);
-                const statusColors = {
-                  pending: 'bg-yellow-100 text-yellow-700',
-                  confirmed: 'bg-blue-100 text-blue-700',
-                  preparing: 'bg-purple-100 text-purple-700',
-                  out_for_delivery: 'bg-cyan-100 text-cyan-700',
-                  delivered: 'bg-green-100 text-green-700',
-                  cancelled: 'bg-red-100 text-red-700',
-                };
-                
-                return (
-                  <div key={order.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedOrders.includes(order.id)}
-                        onCheckedChange={() => toggleOrderSelection(order.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div>
-                            <p className="font-bold text-emerald-900 text-sm">#{order.id.slice(0, 8)}</p>
-                            <p className="text-xs text-emerald-600">{order.customer_name}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-emerald-900 text-sm">${order.total?.toFixed(2)}</p>
-                            <p className="text-xs text-emerald-600">{format(new Date(order.created_date), 'MMM d')}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <Badge className={statusColors[order.status] + ' text-xs'}>
-                            {order.status.replace('_', ' ')}
-                          </Badge>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="ghost" className="h-7">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setViewingOrder(order)}>
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(order)}>Edit</DropdownMenuItem>
-                              {(order.status === 'confirmed' || order.status === 'preparing') && (
-                                <DropdownMenuItem onClick={() => handleTakeDelivery(order)} className="text-emerald-600">
-                                  <Truck className="w-4 h-4 mr-2" />
-                                  Take This Delivery
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem onClick={() => handleResendEmail(order)}>
-                                <Mail className="w-4 h-4 mr-2" />
-                                Resend Email
-                              </DropdownMenuItem>
-                              {order.status !== 'cancelled' && (
-                                <DropdownMenuItem onClick={() => handleCancelOrder(order)} className="text-red-600">
-                                  <XCircle className="w-4 h-4 mr-2" />
-                                  Cancel
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        {quickActions.length > 0 && (
-                          <div className="flex gap-1 flex-wrap">
-                            {quickActions.map((action) => (
-                              <Button
-                                key={action.status}
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleQuickStatusUpdate(order, action.status)}
-                                className="h-7 text-xs"
-                              >
-                                <action.icon className="w-3 h-3 mr-1" />
-                                {action.label}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+              {orders.map((order) => (
+                <div key={order.id} className="flex items-start gap-2">
+                  <Checkbox
+                    checked={selectedOrders.includes(order.id)}
+                    onCheckedChange={() => toggleOrderSelection(order.id)}
+                    className="mt-4"
+                  />
+                  <div className="flex-1">
+                    <InteractiveOrderCard order={order} />
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
 
