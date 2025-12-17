@@ -367,7 +367,7 @@ export default function ProductLibrary() {
         )}
 
         {/* Bulk Actions */}
-        {selectedProducts.length > 0 && (
+        {filteredProducts.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -375,18 +375,36 @@ export default function ProductLibrary() {
           >
             <Button
               size="sm"
-              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: true } })}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Publish Selected ({selectedProducts.length})
-            </Button>
-            <Button
-              size="sm"
               variant="outline"
-              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: false } })}
+              onClick={() => {
+                if (selectedProducts.length === filteredProducts.length) {
+                  setSelectedProducts([]);
+                } else {
+                  setSelectedProducts(filteredProducts.map(p => p.id));
+                }
+              }}
             >
-              Unpublish Selected ({selectedProducts.length})
+              <Package className="w-4 h-4 mr-2" />
+              {selectedProducts.length === filteredProducts.length ? 'Deselect All' : 'Select All'}
             </Button>
+            {selectedProducts.length > 0 && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: true } })}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Publish ({selectedProducts.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: false } })}
+                >
+                  Unpublish ({selectedProducts.length})
+                </Button>
+              </>
+            )}
           </motion.div>
         )}
 
