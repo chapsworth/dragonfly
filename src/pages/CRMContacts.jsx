@@ -161,37 +161,49 @@ function CRMContactsContent() {
     const contacts = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
+      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       const contact = {
         first_name: '',
         last_name: '',
         full_name: '',
         email: '',
         phone: '',
+        mobile_phone: '',
+        home_phone: '',
         company: '',
         role: '',
         address: '',
         city: '',
         state: '',
         zip: '',
+        notes: '',
         type: 'lead',
         stage: 'new'
       };
       
       headers.forEach((header, index) => {
         const value = values[index] || '';
+        if (!value) return;
+        
         if (header.includes('first') && header.includes('name')) contact.first_name = value;
         else if (header.includes('last') && header.includes('name')) contact.last_name = value;
         else if (header.includes('full') && header.includes('name')) contact.full_name = value;
-        else if (header === 'name') contact.full_name = value;
+        else if (header === 'name' && !header.includes('company')) contact.full_name = value;
         else if (header.includes('email')) contact.email = value;
-        else if (header.includes('phone') || header.includes('tel')) contact.phone = value;
-        else if (header.includes('company') || header.includes('organization')) contact.company = value;
-        else if (header.includes('role') || header.includes('title') || header.includes('position')) contact.role = value;
-        else if (header.includes('address') && !header.includes('email')) contact.address = value;
+        else if (header.includes('mobile') || header.includes('cell')) contact.mobile_phone = value;
+        else if (header.includes('home') && header.includes('phone')) contact.home_phone = value;
+        else if (header.includes('phone') || header.includes('tel')) {
+          if (!contact.phone) contact.phone = value;
+        }
+        else if (header.includes('company') || header.includes('organization') || header.includes('business')) contact.company = value;
+        else if (header.includes('role') || header.includes('title') || header.includes('position') || header.includes('job')) contact.role = value;
+        else if (header.includes('street') || (header.includes('address') && !header.includes('email'))) contact.address = value;
         else if (header.includes('city')) contact.city = value;
-        else if (header.includes('state') || header.includes('province')) contact.state = value;
+        else if (header.includes('state') || header.includes('province') || header.includes('region')) contact.state = value;
         else if (header.includes('zip') || header.includes('postal')) contact.zip = value;
+        else if (header.includes('note') || header.includes('comment') || header.includes('description')) {
+          contact.notes = contact.notes ? `${contact.notes}\n${value}` : value;
+        }
       });
       
       // Combine first and last name if full name is not provided
@@ -199,9 +211,16 @@ function CRMContactsContent() {
         contact.full_name = `${contact.first_name} ${contact.last_name}`.trim();
       }
       
+      // Prioritize phone numbers: mobile > home > generic phone
+      if (!contact.phone) {
+        contact.phone = contact.mobile_phone || contact.home_phone;
+      }
+      
       // Remove temporary fields
       delete contact.first_name;
       delete contact.last_name;
+      delete contact.mobile_phone;
+      delete contact.home_phone;
       
       if (contact.full_name || contact.email || contact.phone) {
         contacts.push(contact);
