@@ -798,9 +798,10 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                     />
                     <Input
                       type="number"
-                      placeholder="Price"
-                      value={variant.price}
+                      placeholder="0.00"
+                      value={variant.price === 0 || variant.price === '' ? '' : variant.price}
                       onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       className="w-24 border-emerald-200 bg-white"
                     />
                     <Input
