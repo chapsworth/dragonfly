@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
       const existingNames = existingStrains.map(s => s.name.toLowerCase());
       
       const prompt = mode === 'surprise' 
-        ? `Suggest ${requestCount} interesting and diverse cannabis strains that users should know about. Include a mix of indica, sativa, hybrid, and CBD strains. Make them popular and well-documented strains.`
-        : `Suggest ${requestCount} educational cannabis strains that would be great for teaching people about cannabis diversity. Include strains with unique characteristics, interesting histories, or medical benefits.`;
+        ? `Suggest ${requestCount} REAL, VERIFIED cannabis strains from reputable sources like Leafly or Weedmaps. Only suggest strains that actually exist and are well-documented. Include a mix of indica, sativa, hybrid, and CBD strains. Focus on popular, widely-available strains.`
+        : `Suggest ${requestCount} REAL, educational cannabis strains from verified databases that would be great for teaching people about cannabis diversity. Only include strains that are documented in Leafly, Weedmaps, or other reputable sources. Include strains with unique characteristics, interesting histories, or medical benefits.`;
       
       const suggestions = await base44.integrations.Core.InvokeLLM({
         prompt: `${prompt} Return ONLY a JSON array of strain names: ["Strain1", "Strain2", ...]`,
@@ -67,35 +67,72 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // First, verify the strain exists online
+        const verifyStrain = await base44.integrations.Core.InvokeLLM({
+          prompt: `Search online and verify if the cannabis strain "${name}" is a REAL, documented strain that exists. Check Leafly, Weedmaps, Seedfinder, or other reputable cannabis databases.
+
+CRITICAL: You MUST return {"exists": false} if:
+- The strain is not found in any reputable cannabis database
+- You cannot verify its existence with credible sources
+- It appears to be made up or fictional
+
+Only return {"exists": true} if you can confirm it's a real, documented strain with actual sources.
+
+Return ONLY valid JSON:
+{
+  "exists": boolean (true ONLY if strain is verified to exist in online cannabis databases),
+  "sources": "list of sources where found (Leafly, Weedmaps, etc.) or empty if not found"
+}`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              exists: { type: "boolean" },
+              sources: { type: "string" }
+            }
+          }
+        });
+
+        // If strain doesn't exist, skip it
+        if (!verifyStrain.exists) {
+          results.push({ 
+            success: false, 
+            error: `Strain "${name}" not found in online databases. Sources checked: ${verifyStrain.sources || 'None'}`,
+            strainName: name,
+            notFound: true
+          });
+          continue;
+        }
+
         // Use AI to research the strain
         const strainData = await base44.integrations.Core.InvokeLLM({
-          prompt: `You're a passionate cannabis connoisseur with deep knowledge of strains. Research the cannabis strain "${name}" and write about it in an engaging, vivid way that captures its essence and character.
+          prompt: `Research the VERIFIED cannabis strain "${name}" using reputable sources like Leafly, Weedmaps, or Seedfinder. Write accurate, factual information.
 
-Write a compelling 2-3 sentence description that:
-- Paints a sensory picture of the experience
-- Highlights what makes this strain unique or special
-- Uses evocative language that brings the strain to life
-- Feels natural and conversational, not clinical
+Write a compelling 2-3 sentence description based on verified data that:
+- Accurately describes the documented effects and characteristics
+- Highlights what makes this strain unique based on real reviews
+- Uses engaging language while staying factual
+- References real parent genetics if known
 
 Return ONLY valid JSON (no markdown, no code blocks):
 {
   "name": "exact strain name",
   "type": "indica, sativa, hybrid, or cbd",
-  "thc_min": number (min THC %),
-  "thc_max": number (max THC %),
-  "cbd_min": number (min CBD %),
-  "cbd_max": number (max CBD %),
-  "description": "your engaging, vivid 2-3 sentence description here",
-  "effects": ["array", "of", "effects"],
-  "flavors": ["array", "of", "flavors"],
-  "medical_uses": ["array", "of", "medical", "uses"],
-  "genetics": "parent strains or lineage",
+  "thc_min": number (min THC % from verified sources),
+  "thc_max": number (max THC % from verified sources),
+  "cbd_min": number (min CBD % from verified sources),
+  "cbd_max": number (max CBD % from verified sources),
+  "description": "your accurate 2-3 sentence description based on real data",
+  "effects": ["array", "of", "documented", "effects"],
+  "flavors": ["array", "of", "documented", "flavors"],
+  "medical_uses": ["array", "of", "documented", "medical", "uses"],
+  "genetics": "verified parent strains or lineage",
   "growing_difficulty": "easy, moderate, or difficult",
-  "flowering_time": "time range like 8-9 weeks",
-  "popular": false
+  "flowering_time": "documented time range like 8-9 weeks",
+  "popular": boolean (true if commonly found/popular)
 }
 
-Be accurate and research-based. If the strain doesn't exist or you're not confident, return: {"error": "Strain not found or verified"}`,
+Use ONLY verified, factual information from reputable cannabis databases.`,
           add_context_from_internet: true,
           response_json_schema: {
         type: "object",
