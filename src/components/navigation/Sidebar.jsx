@@ -47,7 +47,6 @@ const adminNavItems = [
   { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
   { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
   { name: 'Users', page: 'AdminUsers', icon: Users },
-  { name: 'Finance Reports', page: 'FinanceReports', icon: DollarSign },
   { name: 'CRM', page: 'CRM', icon: Briefcase },
   { name: 'Carousel', page: 'AdminCarousel', icon: Image },
   { name: 'Settings', page: 'AdminSettings', icon: Settings },
