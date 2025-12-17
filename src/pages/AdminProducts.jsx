@@ -572,15 +572,15 @@ export default function AdminProducts() {
                       <Package className="w-5 h-5" />
                       {category.charAt(0).toUpperCase() + category.slice(1)}
                     </h2>
-                    <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                       {categoryProducts.map(product => (
-                        <div key={product.id} className="min-w-[280px] rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
+                        <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
                           <Checkbox
                             checked={selectedProducts.includes(product.id)}
                             onCheckedChange={() => toggleProductSelection(product.id)}
                             className="absolute top-2 left-2 z-10 bg-white"
                           />
-                          <div className="h-32 bg-emerald-100 relative">
+                          <div className="aspect-square bg-emerald-100 relative">
                             {product.image_url ? (
                               <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
