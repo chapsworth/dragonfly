@@ -250,15 +250,23 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     if (!strain) return;
 
     setSelectedStrainId(strainId);
-    setFormData(prev => ({
-      ...prev,
-      name: prev.name || strain.name,
-      description: prev.description || strain.description || '',
-      thc_level: strain.thc_min ? ((strain.thc_min + (strain.thc_max || strain.thc_min)) / 2).toFixed(1) : prev.thc_level,
-      cbd_level: strain.cbd_min ? ((strain.cbd_min + (strain.cbd_max || strain.cbd_min)) / 2).toFixed(1) : prev.cbd_level,
-      strain_type: strain.type || prev.strain_type,
-      image_url: prev.image_url || strain.image_url || ''
-    }));
+    setFormData({
+      name: strain.name,
+      category: 'flower',
+      description: strain.description || '',
+      price: '',
+      thc_level: strain.thc_min ? ((strain.thc_min + (strain.thc_max || strain.thc_min)) / 2).toFixed(1) : '',
+      cbd_level: strain.cbd_min ? ((strain.cbd_min + (strain.cbd_max || strain.cbd_min)) / 2).toFixed(1) : '',
+      strain_type: strain.type || 'hybrid',
+      image_url: strain.image_url || '',
+      weight: '3.5g',
+      in_stock: true,
+      published: true,
+      variants: [],
+      stock_quantity: 0,
+      low_stock_threshold: 10,
+      sku: ''
+    });
     toast.success(`Pre-filled with ${strain.name} strain data`);
   };
 
