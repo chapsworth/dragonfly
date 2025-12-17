@@ -33,6 +33,9 @@ function CRMContactsContent() {
   const [editingProducts, setEditingProducts] = useState({});
   const [importPreview, setImportPreview] = useState([]);
   const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importProgress, setImportProgress] = useState({ imported: 0, skipped: 0, total: 0 });
+  const [skippedContacts, setSkippedContacts] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -352,10 +355,14 @@ function CRMContactsContent() {
   };
 
   const saveImportedContacts = async () => {
+    setIsImporting(true);
+    setImportProgress({ imported: 0, skipped: 0, total: importPreview.length });
+    setSkippedContacts([]);
+    
     try {
       const existingContacts = await base44.entities.Contact.list();
       const contactsToCreate = [];
-      const duplicates = [];
+      const skipped = [];
 
       for (const contact of importPreview) {
         const isDuplicate = existingContacts.some(
@@ -365,7 +372,9 @@ function CRMContactsContent() {
         );
 
         if (isDuplicate) {
-          duplicates.push(contact.full_name || contact.email || 'Unknown Contact');
+          skipped.push(contact);
+          setSkippedContacts(prev => [...prev, contact]);
+          setImportProgress(prev => ({ ...prev, skipped: prev.skipped + 1 }));
         } else {
           contactsToCreate.push(contact);
         }
@@ -378,27 +387,35 @@ function CRMContactsContent() {
         const batch = contactsToCreate.slice(i, i + BATCH_SIZE);
         await base44.entities.Contact.bulkCreate(batch);
         importedCount += batch.length;
+        setImportProgress(prev => ({ ...prev, imported: importedCount }));
       }
 
       if (importedCount > 0) {
         toast.success(`Successfully imported ${importedCount} new contact(s)`);
       }
 
-      if (duplicates.length > 0) {
-        toast.info(`Skipped ${duplicates.length} duplicate(s)`);
+      if (skipped.length > 0) {
+        toast.info(`Skipped ${skipped.length} duplicate(s)`);
       }
 
-      if (importedCount === 0 && duplicates.length === 0) {
+      if (importedCount === 0 && skipped.length === 0) {
         toast.info('No new contacts to import');
       }
 
-      setShowImportPreview(false);
-      setImportPreview([]);
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      
+      setTimeout(() => {
+        setShowImportPreview(false);
+        setImportPreview([]);
+        setIsImporting(false);
+        setImportProgress({ imported: 0, skipped: 0, total: 0 });
+        setSkippedContacts([]);
+      }, 2000);
 
     } catch (error) {
       console.error('Bulk import failed:', error);
       toast.error('Failed to import contacts');
+      setIsImporting(false);
     }
   };
 
@@ -790,7 +807,72 @@ function CRMContactsContent() {
           <DialogHeader>
             <DialogTitle>Review Imported Contacts ({importPreview.length})</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 mt-4 pb-6">
+
+          {/* Action Buttons at Top */}
+          <div className="flex justify-end gap-3 pt-2 pb-4 border-b border-emerald-200">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowImportPreview(false);
+                setImportPreview([]);
+                setImportProgress({ imported: 0, skipped: 0, total: 0 });
+                setSkippedContacts([]);
+              }}
+              disabled={isImporting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={saveImportedContacts}
+              disabled={importPreview.length === 0 || isImporting}
+              className="bg-gradient-to-r from-emerald-500 to-green-500"
+            >
+              {isImporting ? 'Importing...' : `Import ${importPreview.length} Contact${importPreview.length !== 1 ? 's' : ''}`}
+            </Button>
+          </div>
+
+          {/* Live Progress Display */}
+          {isImporting && (
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <Card className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold">{importProgress.total}</p>
+                  <p className="text-xs text-blue-100">Total</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold">{importProgress.imported}</p>
+                  <p className="text-xs text-green-100">Imported</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold">{importProgress.skipped}</p>
+                  <p className="text-xs text-orange-100">Skipped</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Skipped Contacts Display */}
+          {skippedContacts.length > 0 && (
+            <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <h4 className="font-semibold text-orange-900 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                Skipped Duplicates ({skippedContacts.length})
+              </h4>
+              <div className="max-h-32 overflow-y-auto space-y-1">
+                {skippedContacts.map((contact, idx) => (
+                  <p key={idx} className="text-sm text-orange-700">
+                    • {contact.full_name || contact.email || 'Unknown'}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3 pb-6">
             {/* Bulk Type Selector */}
             <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-4 rounded-lg">
               <div className="flex items-center justify-between gap-3">
@@ -802,6 +884,7 @@ function CRMContactsContent() {
                   onValueChange={(val) => {
                     setImportPreview(prev => prev.map(c => ({ ...c, type: val })));
                   }}
+                  disabled={isImporting}
                 >
                   <SelectTrigger className="w-56 bg-white border-0">
                     <SelectValue placeholder="Customer (Current)" />
@@ -864,6 +947,7 @@ function CRMContactsContent() {
                           variant="outline"
                           onClick={() => removeImportContact(index)}
                           className="h-8 text-red-600"
+                          disabled={isImporting}
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -873,24 +957,6 @@ function CRMContactsContent() {
                 </CardContent>
               </Card>
             ))}
-            <div className="flex justify-end gap-3 pt-4 border-t border-emerald-200">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowImportPreview(false);
-                  setImportPreview([]);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={saveImportedContacts}
-                disabled={importPreview.length === 0 || createMutation.isPending}
-                className="bg-gradient-to-r from-emerald-500 to-green-500"
-              >
-                {createMutation.isPending ? 'Importing...' : `Import ${importPreview.length} Contact${importPreview.length !== 1 ? 's' : ''}`}
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
