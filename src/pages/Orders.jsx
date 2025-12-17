@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,7 +17,10 @@ export default function Orders() {
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [apiKey, setApiKey] = useState(null);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   
+  const queryClient = useQueryClient();
+
   // Check if redirected from checkout with order ID
   const urlParams = new URLSearchParams(window.location.search);
   const orderIdFromUrl = urlParams.get('orderId');
@@ -96,6 +101,44 @@ export default function Orders() {
     cancelled: 'Cancelled'
   };
 
+  const deleteOrdersMutation = useMutation({
+    mutationFn: async (orderIds) => {
+      for (const id of orderIds) {
+        await base44.entities.Order.delete(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+      setSelectedOrders([]);
+      toast.success('Orders deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete orders');
+    }
+  });
+
+  const toggleOrderSelection = (orderId) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedOrders.length === 0) return;
+    if (confirm(`Delete ${selectedOrders.length} selected order(s)?`)) {
+      deleteOrdersMutation.mutate(selectedOrders);
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (filteredOrders.length === 0) return;
+    if (confirm(`Delete all ${filteredOrders.length} order(s)?`)) {
+      deleteOrdersMutation.mutate(filteredOrders.map(o => o.id));
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center p-4">
@@ -146,6 +189,37 @@ export default function Orders() {
           </Tabs>
         </motion.div>
 
+        {/* Bulk Actions */}
+        {filteredOrders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-4 flex gap-2"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteSelected}
+              disabled={selectedOrders.length === 0 || deleteOrdersMutation.isPending}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected ({selectedOrders.length})
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteAll}
+              disabled={deleteOrdersMutation.isPending}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete All
+            </Button>
+          </motion.div>
+        )}
+
         {/* Loading State */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20">
@@ -194,12 +268,21 @@ export default function Orders() {
                   layout
                 >
                   <Card
-                    className="bg-white/60 backdrop-blur-xl border-white/40 shadow-lg hover:shadow-xl transition-all cursor-pointer overflow-hidden"
-                    onClick={() => setSelectedOrder(order)}
+                    className="bg-white/60 backdrop-blur-xl border-white/40 shadow-lg hover:shadow-xl transition-all overflow-hidden"
                   >
                     <CardContent className="p-4 sm:p-6">
                       {/* Order Header */}
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3 mb-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleOrderSelection(order.id);
+                          }}
+                          className="w-5 h-5 mt-1 text-emerald-600 rounded cursor-pointer"
+                        />
+                        <div className="flex-1 flex items-start justify-between cursor-pointer" onClick={() => setSelectedOrder(order)}>
                         <div>
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-bold text-lg text-emerald-900">
@@ -217,6 +300,7 @@ export default function Orders() {
                         <div className="text-right">
                           <p className="text-2xl font-bold text-emerald-900">${order.total?.toFixed(2)}</p>
                           <p className="text-sm text-emerald-600">{order.items?.length || 0} items</p>
+                        </div>
                         </div>
                       </div>
 
