@@ -28,6 +28,7 @@ import DeliveryNavigation from './pages/DeliveryNavigation';
 import Profile from './pages/Profile';
 import ProductLibrary from './pages/ProductLibrary';
 import GlassPortal from './pages/GlassPortal';
+import FinanceReports from './pages/FinanceReports';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "Profile": Profile,
     "ProductLibrary": ProductLibrary,
     "GlassPortal": GlassPortal,
+    "FinanceReports": FinanceReports,
 }
 
 export const pagesConfig = {
