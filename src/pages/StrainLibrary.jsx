@@ -126,6 +126,31 @@ export default function StrainLibrary() {
           <p className="text-emerald-600 text-lg">Explore our comprehensive cannabis strain database</p>
         </motion.div>
 
+        {/* Stats Widgets */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 gap-4 mb-8"
+        >
+          <div className="p-4 rounded-2xl bg-white/60 backdrop-blur border border-emerald-200">
+            <p className="text-sm text-emerald-600 mb-1">Total Strains</p>
+            <p className="text-3xl font-bold text-emerald-900">{strains.length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white border border-purple-300">
+            <p className="text-sm text-purple-100 mb-1">Indica</p>
+            <p className="text-3xl font-bold">{strains.filter(s => s.type === 'indica').length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white border border-orange-300">
+            <p className="text-sm text-orange-100 mb-1">Sativa</p>
+            <p className="text-3xl font-bold">{strains.filter(s => s.type === 'sativa').length}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white border border-emerald-300">
+            <p className="text-sm text-emerald-100 mb-1">Hybrid</p>
+            <p className="text-3xl font-bold">{strains.filter(s => s.type === 'hybrid').length}</p>
+          </div>
+        </motion.div>
+
         {/* Popular Strains Banner */}
         {popularStrains.length > 0 && (
           <motion.div
