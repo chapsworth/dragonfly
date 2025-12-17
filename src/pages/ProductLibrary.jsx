@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -39,6 +39,7 @@ export default function ProductLibrary() {
   const [aiSearch, setAiSearch] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [batchCount, setBatchCount] = useState(10);
+  const [viewMode, setViewMode] = useState('grid2x2'); // grid2x2, grid1x1, carousel
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
@@ -306,7 +307,35 @@ export default function ProductLibrary() {
 
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-semibold text-emerald-700 mb-2 uppercase">Concentrate Type</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-emerald-700 uppercase">Concentrate Type</p>
+                <div className="flex gap-1 border border-emerald-200 rounded-lg p-1 bg-white/60">
+                  <Button
+                    size="icon"
+                    variant={viewMode === 'grid2x2' ? 'default' : 'ghost'}
+                    onClick={() => setViewMode('grid2x2')}
+                    className="h-8 w-8"
+                  >
+                    <Grid2X2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant={viewMode === 'grid1x1' ? 'default' : 'ghost'}
+                    onClick={() => setViewMode('grid1x1')}
+                    className="h-8 w-8"
+                  >
+                    <Rows className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant={viewMode === 'carousel' ? 'default' : 'ghost'}
+                    onClick={() => setViewMode('carousel')}
+                    className="h-8 w-8"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
                 {['all', 'concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => (
                   <Button
@@ -341,7 +370,7 @@ export default function ProductLibrary() {
           </div>
         </motion.div>
 
-        {/* Product Grid */}
+        {/* Product Display */}
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
@@ -350,8 +379,54 @@ export default function ProductLibrary() {
           <div className="text-center py-20">
             <p className="text-emerald-600">No products found.</p>
           </div>
+        ) : viewMode === 'carousel' ? (
+          <div className="space-y-8">
+            {['concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => {
+              const categoryProducts = products.filter(p => p.category === category && (selectedCategory === 'all' || selectedCategory === category));
+              if (categoryProducts.length === 0) return null;
+              return (
+                <div key={category}>
+                  <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category]}`} />
+                    {category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                  </h2>
+                  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                    {categoryProducts.map(product => (
+                      <Card key={product.id} className="min-w-[280px] overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedProduct(product)}>
+                        <div className="h-32 relative">
+                          <img 
+                            src={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=300'} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 left-2 flex flex-col gap-1">
+                            <div className={`px-2 py-1 rounded-full bg-gradient-to-r ${categoryColors[product.category]} text-white text-xs font-bold`}>
+                              {product.category?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingProduct(product);
+                            }}
+                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                          >
+                            <Edit2 className="w-4 h-4 text-emerald-600" />
+                          </button>
+                        </div>
+                        <CardContent className="p-3">
+                          <h3 className="font-bold text-emerald-900 mb-1 text-sm">{product.name}</h3>
+                          <p className="font-bold text-emerald-900">${product.price?.toFixed(2)}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4'}>
             {filteredProducts.map((product, i) => (
               <motion.div
                 key={product.id}
@@ -361,7 +436,7 @@ export default function ProductLibrary() {
                 className="relative"
               >
                 <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedProduct(product)}>
-                  <div className="h-40 relative">
+                  <div className={viewMode === 'grid2x2' ? 'h-32' : 'h-48'} className="relative">
                     <img 
                       src={product.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=300'} 
                       alt={product.name}
@@ -389,7 +464,7 @@ export default function ProductLibrary() {
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-emerald-900 mb-2">{product.name}</h3>
-                    <p className="text-xs text-emerald-600 mb-3 line-clamp-2">{product.description}</p>
+                    {viewMode === 'grid1x1' && <p className="text-xs text-emerald-600 mb-3 line-clamp-2">{product.description}</p>}
                     <div className="flex items-center justify-between">
                       <p className="font-bold text-lg text-emerald-900">${product.price?.toFixed(2)}</p>
                       <ChevronRight className="w-4 h-4 text-emerald-400" />

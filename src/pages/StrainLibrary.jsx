@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2 } from 'lucide-react';
+import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2, Grid2X2, Rows, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ export default function StrainLibrary() {
   const [aiSearch, setAiSearch] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [batchCount, setBatchCount] = useState(10);
+  const [viewMode, setViewMode] = useState('grid2x2'); // grid2x2, grid1x1, carousel
   const queryClient = useQueryClient();
 
   const { data: strains = [], isLoading } = useQuery({
@@ -293,22 +294,50 @@ export default function StrainLibrary() {
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {['all', 'indica', 'sativa', 'hybrid', 'cbd'].map(type => (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
+              {['all', 'indica', 'sativa', 'hybrid', 'cbd'].map(type => (
+                <Button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
+                  variant={selectedType === type ? 'default' : 'outline'}
+                  className={selectedType === type ? `bg-gradient-to-r ${strainColors[type] || 'from-emerald-500 to-green-500'}` : ''}
+                  size="sm"
+                >
+                  {type === 'all' ? 'All Strains' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-1 border border-emerald-200 rounded-lg p-1 bg-white/60">
               <Button
-                key={type}
-                onClick={() => setSelectedType(type)}
-                variant={selectedType === type ? 'default' : 'outline'}
-                className={selectedType === type ? `bg-gradient-to-r ${strainColors[type] || 'from-emerald-500 to-green-500'}` : ''}
-                size="sm"
+                size="icon"
+                variant={viewMode === 'grid2x2' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('grid2x2')}
+                className="h-8 w-8"
               >
-                {type === 'all' ? 'All Strains' : type.charAt(0).toUpperCase() + type.slice(1)}
+                <Grid2X2 className="w-4 h-4" />
               </Button>
-            ))}
+              <Button
+                size="icon"
+                variant={viewMode === 'grid1x1' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('grid1x1')}
+                className="h-8 w-8"
+              >
+                <Rows className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant={viewMode === 'carousel' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('carousel')}
+                className="h-8 w-8"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </motion.div>
 
-        {/* Strain Grid */}
+        {/* Strain Display */}
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
@@ -317,8 +346,54 @@ export default function StrainLibrary() {
           <div className="text-center py-20">
             <p className="text-emerald-600">No strains found.</p>
           </div>
+        ) : viewMode === 'carousel' ? (
+          <div className="space-y-8">
+            {['indica', 'sativa', 'hybrid', 'cbd'].map(type => {
+              const typeStrains = strains.filter(s => s.type === type && (selectedType === 'all' || selectedType === type));
+              if (typeStrains.length === 0) return null;
+              return (
+                <div key={type}>
+                  <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${strainColors[type]}`} />
+                    {type.charAt(0).toUpperCase() + type.slice(1)} Strains
+                  </h2>
+                  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                    {typeStrains.map(strain => (
+                      <Card key={strain.id} className="min-w-[280px] overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedStrain(strain)}>
+                        <div className="h-32 relative">
+                          <img 
+                            src={strain.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=300'} 
+                            alt={strain.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className={`absolute top-2 left-2 px-2 py-1 rounded-full bg-gradient-to-r ${strainColors[strain.type]} text-white text-xs font-bold`}>
+                            {strain.type}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingStrain(strain);
+                            }}
+                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                          >
+                            <Edit2 className="w-4 h-4 text-emerald-600" />
+                          </button>
+                        </div>
+                        <CardContent className="p-3">
+                          <h3 className="font-bold text-emerald-900 mb-1 text-sm">{strain.name}</h3>
+                          <Badge variant="outline" className="text-xs border-emerald-300">
+                            THC {strain.thc_min}-{strain.thc_max}%
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4'}>
             {filteredStrains.map((strain, i) => (
               <motion.div
                 key={strain.id}
@@ -328,7 +403,7 @@ export default function StrainLibrary() {
                 className="relative"
               >
                 <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedStrain(strain)}>
-                  <div className="h-40 relative">
+                  <div className={viewMode === 'grid2x2' ? 'h-32' : 'h-48'} className="relative">
                     <img 
                       src={strain.image_url || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=300'} 
                       alt={strain.name}
@@ -349,7 +424,7 @@ export default function StrainLibrary() {
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-emerald-900 mb-2">{strain.name}</h3>
-                    <p className="text-xs text-emerald-600 mb-3 line-clamp-2">{strain.description}</p>
+                    {viewMode === 'grid1x1' && <p className="text-xs text-emerald-600 mb-3 line-clamp-2">{strain.description}</p>}
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
                         <Badge variant="outline" className="text-xs border-emerald-300">
