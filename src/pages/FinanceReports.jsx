@@ -35,7 +35,9 @@ const categoryColors = {
 
 export default function FinanceReports() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [editingIncome, setEditingIncome] = useState(null);
   const [dateRange, setDateRange] = useState('this_month');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -51,6 +53,11 @@ export default function FinanceReports() {
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['orders'],
     queryFn: () => base44.entities.Order.list()
+  });
+
+  const { data: manualIncome = [], isLoading: loadingIncome } = useQuery({
+    queryKey: ['manual-income'],
+    queryFn: () => base44.entities.Income.list('-date')
   });
 
   const createExpenseMutation = useMutation({
@@ -79,6 +86,35 @@ export default function FinanceReports() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       toast.success('Expense deleted');
+    }
+  });
+
+  const createIncomeMutation = useMutation({
+    mutationFn: (data) => base44.entities.Income.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manual-income'] });
+      setIsIncomeModalOpen(false);
+      setFormData({});
+      toast.success('Income added');
+    }
+  });
+
+  const updateIncomeMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Income.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manual-income'] });
+      setIsIncomeModalOpen(false);
+      setEditingIncome(null);
+      setFormData({});
+      toast.success('Income updated');
+    }
+  });
+
+  const deleteIncomeMutation = useMutation({
+    mutationFn: (id) => base44.entities.Income.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manual-income'] });
+      toast.success('Income deleted');
     }
   });
 
@@ -124,7 +160,7 @@ export default function FinanceReports() {
     return { start, end };
   };
 
-  const { filteredExpenses, filteredOrders, totalIncome, totalExpenses, netProfit, categoryBreakdown, monthlyData } = useMemo(() => {
+  const { filteredExpenses, filteredOrders, filteredIncome, totalIncome, totalExpenses, netProfit, categoryBreakdown, monthlyData } = useMemo(() => {
     const { start, end } = getDateRangeFilter();
 
     const filteredExp = expenses.filter(exp => {
@@ -139,7 +175,14 @@ export default function FinanceReports() {
       return orderDate >= start && orderDate <= end && order.status === 'delivered';
     });
 
-    const income = filteredOrd.reduce((sum, o) => sum + (o.total || 0), 0);
+    const filteredInc = manualIncome.filter(inc => {
+      const incDate = new Date(inc.date);
+      return incDate >= start && incDate <= end;
+    });
+
+    const orderIncome = filteredOrd.reduce((sum, o) => sum + (o.total || 0), 0);
+    const manualInc = filteredInc.reduce((sum, i) => sum + (i.amount || 0), 0);
+    const income = orderIncome + manualInc;
     const expense = filteredExp.reduce((sum, e) => sum + (e.amount || 0), 0);
     const profit = income - expense;
 
@@ -157,6 +200,11 @@ export default function FinanceReports() {
       if (!monthlyMap[month]) monthlyMap[month] = { income: 0, expenses: 0 };
       monthlyMap[month].income += order.total || 0;
     });
+    filteredInc.forEach(inc => {
+      const month = format(new Date(inc.date), 'MMM yyyy');
+      if (!monthlyMap[month]) monthlyMap[month] = { income: 0, expenses: 0 };
+      monthlyMap[month].income += inc.amount || 0;
+    });
     filteredExp.forEach(exp => {
       const month = format(new Date(exp.date), 'MMM yyyy');
       if (!monthlyMap[month]) monthlyMap[month] = { income: 0, expenses: 0 };
@@ -173,13 +221,14 @@ export default function FinanceReports() {
     return {
       filteredExpenses: filteredExp,
       filteredOrders: filteredOrd,
+      filteredIncome: filteredInc,
       totalIncome: income,
       totalExpenses: expense,
       netProfit: profit,
       categoryBreakdown: Object.entries(catBreakdown).map(([name, value]) => ({ name, value })),
       monthlyData: monthly
     };
-  }, [expenses, orders, dateRange, customStartDate, customEndDate, categoryFilter]);
+  }, [expenses, orders, manualIncome, dateRange, customStartDate, customEndDate, categoryFilter]);
 
   const handleSaveExpense = () => {
     if (!formData.description || !formData.amount || !formData.date) {
@@ -211,11 +260,42 @@ export default function FinanceReports() {
     }
   };
 
+  const handleSaveIncome = () => {
+    if (!formData.description || !formData.amount || !formData.date) {
+      toast.error('Please fill required fields');
+      return;
+    }
+
+    const data = {
+      ...formData,
+      amount: parseFloat(formData.amount)
+    };
+
+    if (editingIncome) {
+      updateIncomeMutation.mutate({ id: editingIncome.id, data });
+    } else {
+      createIncomeMutation.mutate(data);
+    }
+  };
+
+  const handleEditIncome = (income) => {
+    setEditingIncome(income);
+    setFormData(income);
+    setIsIncomeModalOpen(true);
+  };
+
+  const handleDeleteIncome = (id) => {
+    if (confirm('Delete this income?')) {
+      deleteIncomeMutation.mutate(id);
+    }
+  };
+
   const handleExportReport = () => {
     const csvRows = [
       ['Type', 'Description', 'Amount', 'Date', 'Category'],
       ...filteredExpenses.map(e => ['Expense', e.description, e.amount, e.date, e.category]),
-      ...filteredOrders.map(o => ['Income', `Order #${o.id.slice(0, 8)}`, o.total, format(new Date(o.created_date), 'yyyy-MM-dd'), 'Sales'])
+      ...filteredOrders.map(o => ['Income', `Order #${o.id.slice(0, 8)}`, o.total, format(new Date(o.created_date), 'yyyy-MM-dd'), 'Sales']),
+      ...filteredIncome.map(i => ['Income', i.description, i.amount, i.date, i.category || 'Manual'])
     ];
 
     const csv = csvRows.map(row => row.join(',')).join('\n');
@@ -228,7 +308,7 @@ export default function FinanceReports() {
     toast.success('Report exported');
   };
 
-  const isLoading = loadingExpenses || loadingOrders;
+  const isLoading = loadingExpenses || loadingOrders || loadingIncome;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-24 pb-12 px-4">
@@ -244,7 +324,11 @@ export default function FinanceReports() {
               <Download className="w-4 h-4" />
               Export Report
             </Button>
-            <Button onClick={() => { setEditingExpense(null); setFormData({}); setIsExpenseModalOpen(true); }} className="bg-gradient-to-r from-emerald-500 to-green-500 gap-2">
+            <Button onClick={() => { setEditingIncome(null); setFormData({}); setIsIncomeModalOpen(true); }} className="bg-gradient-to-r from-green-500 to-emerald-500 gap-2">
+              <Plus className="w-4 h-4" />
+              Add Income
+            </Button>
+            <Button onClick={() => { setEditingExpense(null); setFormData({}); setIsExpenseModalOpen(true); }} className="bg-gradient-to-r from-red-500 to-orange-500 gap-2">
               <Plus className="w-4 h-4" />
               Add Expense
             </Button>
@@ -332,7 +416,7 @@ export default function FinanceReports() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold">${totalIncome.toFixed(2)}</p>
-                    <p className="text-xs text-green-100 mt-1">{filteredOrders.length} orders</p>
+                    <p className="text-xs text-green-100 mt-1">{filteredOrders.length} orders + {filteredIncome.length} manual</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -418,6 +502,54 @@ export default function FinanceReports() {
               </Card>
             </div>
 
+            {/* Income List */}
+            <Card className="bg-white/60 backdrop-blur border-emerald-200 mb-8">
+              <CardHeader>
+                <CardTitle>Manual Income Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {filteredIncome.length === 0 ? (
+                    <p className="text-center py-8 text-emerald-600">No manual income recorded</p>
+                  ) : (
+                    filteredIncome.map((income) => (
+                      <div key={income.id} className="flex items-center justify-between p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-semibold text-emerald-900">{income.description}</p>
+                            <Badge className="bg-green-600 text-white text-xs">
+                              {income.category || 'Manual'}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-emerald-600">
+                            <span>{format(new Date(income.date), 'MMM d, yyyy')}</span>
+                            {income.customer_name && <span>• {income.customer_name}</span>}
+                            {income.payment_method && <span>• {income.payment_method}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <p className="text-lg font-bold text-green-600">+${income.amount.toFixed(2)}</p>
+                          <div className="flex gap-1">
+                            {income.invoice_url && (
+                              <Button variant="ghost" size="icon" onClick={() => window.open(income.invoice_url, '_blank')} className="h-8 w-8">
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => handleEditIncome(income)} className="h-8 w-8">
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteIncome(income.id)} className="h-8 w-8 text-red-600">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Expense List */}
             <Card className="bg-white/60 backdrop-blur border-emerald-200">
               <CardHeader>
@@ -468,6 +600,125 @@ export default function FinanceReports() {
             </Card>
           </>
         )}
+
+        {/* Add/Edit Income Modal */}
+        <Dialog open={isIncomeModalOpen} onOpenChange={setIsIncomeModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingIncome ? 'Edit Income' : 'Add Income'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label>Description *</Label>
+                <Input
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Consulting fee"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Amount * ($)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="500.00"
+                  />
+                </div>
+                <div>
+                  <Label>Date *</Label>
+                  <Input
+                    type="date"
+                    value={formData.date || ''}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Category</Label>
+                  <Select value={formData.category || 'other'} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sales">Sales</SelectItem>
+                      <SelectItem value="services">Services</SelectItem>
+                      <SelectItem value="investment">Investment</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Payment Method</Label>
+                  <Select value={formData.payment_method || 'card'} onValueChange={(v) => setFormData({ ...formData, payment_method: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="check">Check</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Customer/Client Name</Label>
+                <Input
+                  value={formData.customer_name || ''}
+                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  value={formData.notes || ''}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Additional details..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Invoice/Receipt</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileUpload}
+                    className="flex-1"
+                  />
+                  {formData.invoice_url && (
+                    <Button variant="outline" size="icon" onClick={() => window.open(formData.invoice_url, '_blank')}>
+                      <FileText className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setIsIncomeModalOpen(false)}>Cancel</Button>
+                <Button 
+                  onClick={handleSaveIncome}
+                  disabled={createIncomeMutation.isPending || updateIncomeMutation.isPending}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500"
+                >
+                  {(createIncomeMutation.isPending || updateIncomeMutation.isPending) ? 'Saving...' : 'Save Income'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Add/Edit Expense Modal */}
         <Dialog open={isExpenseModalOpen} onOpenChange={setIsExpenseModalOpen}>
