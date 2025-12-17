@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import ProductEditModal from './ProductEditModal';
+import DealBadge from './DealBadge';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -61,11 +62,16 @@ export default function ProductCard({ product }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         
-        {product.strain_type && product.strain_type !== 'n/a' && (
-          <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${strainColors[product.strain_type]} shadow-lg`}>
-            {product.strain_type.charAt(0).toUpperCase() + product.strain_type.slice(1)}
-          </span>
-        )}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {product.is_deal && product.deal_type && (
+            <DealBadge dealType={product.deal_type} size="sm" />
+          )}
+          {product.strain_type && product.strain_type !== 'n/a' && (
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${strainColors[product.strain_type]} shadow-lg`}>
+              {product.strain_type.charAt(0).toUpperCase() + product.strain_type.slice(1)}
+            </span>
+          )}
+        </div>
 
         {user?.role === 'admin' && (
           <button
