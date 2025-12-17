@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 
 const categoryColors = {
   'pipes': 'from-amber-400 to-yellow-500',
@@ -33,6 +34,7 @@ export default function GlassPortal() {
   const [viewMode, setViewMode] = useState('grid2x2');
   const [confirmationModal, setConfirmationModal] = useState(null);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
@@ -157,6 +159,27 @@ export default function GlassPortal() {
     } finally {
       setIsDuplicating(false);
     }
+  };
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({ ids, data }) => {
+      for (const id of ids) {
+        await base44.entities.Product.update(id, data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      setSelectedProducts([]);
+      toast.success('Products updated');
+    }
+  });
+
+  const toggleProductSelection = (productId) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   return (
@@ -323,6 +346,30 @@ export default function GlassPortal() {
           </motion.div>
         )}
 
+        {/* Bulk Actions */}
+        {selectedProducts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex gap-2"
+          >
+            <Button
+              size="sm"
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: true } })}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Publish Selected ({selectedProducts.length})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: false } })}
+            >
+              Unpublish Selected ({selectedProducts.length})
+            </Button>
+          </motion.div>
+        )}
+
         {/* Search & Filter */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -407,6 +454,13 @@ export default function GlassPortal() {
                 transition={{ delay: i * 0.03 }}
                 className="relative"
               >
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.includes(product.id)}
+                  onChange={() => toggleProductSelection(product.id)}
+                  className="absolute top-3 left-3 w-5 h-5 z-10 cursor-pointer text-purple-600 rounded"
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-purple-200 hover:border-purple-400 cursor-pointer" onClick={() => setSelectedProduct(product)}>
                   <div className={viewMode === 'grid2x2' ? 'h-32' : 'h-48'} className="relative">
                     <img 

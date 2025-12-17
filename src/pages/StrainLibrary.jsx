@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import StrainEditModal from '@/components/strain/StrainEditModal';
+import { useMutation } from '@tanstack/react-query';
 
 const strainColors = {
   indica: 'from-purple-400 to-indigo-500',
@@ -39,6 +40,7 @@ export default function StrainLibrary() {
   const [batchCount, setBatchCount] = useState(10);
   const [viewMode, setViewMode] = useState('grid2x2'); // grid2x2, grid1x1, carousel
   const [confirmationModal, setConfirmationModal] = useState(null); // { names: [], mode: '' }
+  const [selectedStrains, setSelectedStrains] = useState([]);
   const queryClient = useQueryClient();
 
   const { data: strains = [], isLoading } = useQuery({
@@ -144,6 +146,27 @@ export default function StrainLibrary() {
       setConfirmationModal(null);
       setIsDiscovering(false);
     }
+  };
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({ ids, data }) => {
+      for (const id of ids) {
+        await base44.entities.Strain.update(id, data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['strains'] });
+      setSelectedStrains([]);
+      toast.success('Strains updated');
+    }
+  });
+
+  const toggleStrainSelection = (strainId) => {
+    setSelectedStrains(prev => 
+      prev.includes(strainId) 
+        ? prev.filter(id => id !== strainId)
+        : [...prev, strainId]
+    );
   };
 
   return (
@@ -312,6 +335,30 @@ export default function StrainLibrary() {
           </div>
         </motion.div>
 
+        {/* Bulk Actions */}
+        {selectedStrains.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex gap-2"
+          >
+            <Button
+              size="sm"
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedStrains, data: { popular: true } })}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Mark Popular ({selectedStrains.length})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedStrains, data: { popular: false } })}
+            >
+              Unmark Popular ({selectedStrains.length})
+            </Button>
+          </motion.div>
+        )}
+
         {/* Search & Filter */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -437,6 +484,13 @@ export default function StrainLibrary() {
                 transition={{ delay: i * 0.03 }}
                 className="relative"
               >
+                <input
+                  type="checkbox"
+                  checked={selectedStrains.includes(strain.id)}
+                  onChange={() => toggleStrainSelection(strain.id)}
+                  className="absolute top-3 left-3 w-5 h-5 z-10 cursor-pointer text-green-600 rounded"
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <Card className="overflow-hidden hover:shadow-lg transition-all bg-white/60 backdrop-blur border border-emerald-200 hover:border-emerald-400 cursor-pointer" onClick={() => setSelectedStrain(strain)}>
                   <div className={viewMode === 'grid2x2' ? 'h-32' : 'h-48'} className="relative">
                     <img 
