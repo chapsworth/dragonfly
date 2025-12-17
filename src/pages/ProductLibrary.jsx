@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -41,6 +41,7 @@ export default function ProductLibrary() {
   const [batchCount, setBatchCount] = useState(10);
   const [viewMode, setViewMode] = useState('grid2x2'); // grid2x2, grid1x1, carousel
   const [confirmationModal, setConfirmationModal] = useState(null); // { names: [], mode: '' }
+  const [isDuplicating, setIsDuplicating] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
@@ -146,6 +147,25 @@ export default function ProductLibrary() {
     } finally {
       setConfirmationModal(null);
       setIsDiscovering(false);
+    }
+  };
+
+  const handleDuplicate = async (product, e) => {
+    e.stopPropagation();
+    setIsDuplicating(true);
+    try {
+      const { id, created_date, updated_date, created_by, ...productData } = product;
+      const duplicatedProduct = await base44.entities.Product.create({
+        ...productData,
+        name: `${productData.name} (Copy)`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Product duplicated successfully!');
+    } catch (error) {
+      console.error('Duplicate error:', error);
+      toast.error('Failed to duplicate product');
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
@@ -439,15 +459,24 @@ export default function ProductLibrary() {
                               {product.category?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                             </div>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingProduct(product);
-                            }}
-                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                          >
-                            <Edit2 className="w-4 h-4 text-emerald-600" />
-                          </button>
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <button
+                              onClick={(e) => handleDuplicate(product, e)}
+                              disabled={isDuplicating}
+                              className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110 disabled:opacity-50"
+                            >
+                              <Copy className="w-4 h-4 text-blue-600" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingProduct(product);
+                              }}
+                              className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                            >
+                              <Edit2 className="w-4 h-4 text-emerald-600" />
+                            </button>
+                          </div>
                         </div>
                         <CardContent className="p-3">
                           <h3 className="font-bold text-emerald-900 mb-1 text-sm">{product.name}</h3>
@@ -487,15 +516,24 @@ export default function ProductLibrary() {
                         </div>
                       )}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingProduct(product);
-                      }}
-                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                    >
-                      <Edit2 className="w-4 h-4 text-emerald-600" />
-                    </button>
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <button
+                        onClick={(e) => handleDuplicate(product, e)}
+                        disabled={isDuplicating}
+                        className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110 disabled:opacity-50"
+                      >
+                        <Copy className="w-4 h-4 text-blue-600" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProduct(product);
+                        }}
+                        className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                      >
+                        <Edit2 className="w-4 h-4 text-emerald-600" />
+                      </button>
+                    </div>
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-emerald-900 mb-2">{product.name}</h3>
