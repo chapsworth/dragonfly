@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -30,7 +30,15 @@ export default function AdminProducts() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -302,14 +310,25 @@ export default function AdminProducts() {
                   <Grid3x3 className="w-4 h-4 mr-2" />
                   Grid
                 </Button>
+                {isMobile && (
+                  <Button
+                    variant={viewMode === 'single' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('single')}
+                    className={viewMode === 'single' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                  >
+                    <Rows className="w-4 h-4 mr-2" />
+                    1x1
+                  </Button>
+                )}
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  variant={viewMode === 'carousel' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setViewMode('list')}
-                  className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                  onClick={() => setViewMode('carousel')}
+                  className={viewMode === 'carousel' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
                 >
-                  <List className="w-4 h-4 mr-2" />
-                  List
+                  <LayoutGrid className="w-4 h-4 mr-2" />
+                  Carousel
                 </Button>
                 <Button
                   variant={viewMode === 'category' ? 'default' : 'ghost'}
@@ -317,8 +336,8 @@ export default function AdminProducts() {
                   onClick={() => setViewMode('category')}
                   className={viewMode === 'category' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
                 >
-                  <Package className="w-4 h-4 mr-2" />
-                  By Category
+                  <List className="w-4 h-4 mr-2" />
+                  Category
                 </Button>
               </div>
             </div>
@@ -402,7 +421,7 @@ export default function AdminProducts() {
               })}
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
                   <Checkbox
@@ -470,6 +489,140 @@ export default function AdminProducts() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : viewMode === 'single' ? (
+            <div className="space-y-3">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
+                  <Checkbox
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={() => toggleProductSelection(product.id)}
+                    className="absolute top-2 left-2 z-10 bg-white"
+                  />
+                  <div className="h-48 bg-emerald-100 relative">
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-12 h-12 text-emerald-300" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(product);
+                        }}
+                        className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateMutation.mutate({ id: product.id, data: { published: !product.published } });
+                        }}
+                        className={`h-8 w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
+                      >
+                        {product.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-emerald-900 mb-2">{product.name}</h3>
+                    <p className="text-xs text-emerald-600 mb-3 line-clamp-2">{product.description}</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex gap-1">
+                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                        {!product.published && <Badge variant="outline" className="text-xs">Hidden</Badge>}
+                      </div>
+                      <span className="font-bold text-emerald-600">${product.price?.toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-emerald-600 mb-3">
+                      THC: {product.thc_level}% | CBD: {product.cbd_level}%
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyShareLink(product)} className="h-8 text-blue-600">
+                        <Share2 className="w-3 h-3" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="flex-1 h-8 text-xs">
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(product.id)} className="h-8 text-red-600">
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : viewMode === 'carousel' ? (
+            <div className="space-y-8">
+              {categories.map((category) => {
+                const categoryProducts = products.filter(p => p.category === category && (selectedCategory === 'all' || selectedCategory === category));
+                if (categoryProducts.length === 0) return null;
+                return (
+                  <div key={category}>
+                    <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </h2>
+                    <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                      {categoryProducts.map(product => (
+                        <div key={product.id} className="min-w-[280px] rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
+                          <Checkbox
+                            checked={selectedProducts.includes(product.id)}
+                            onCheckedChange={() => toggleProductSelection(product.id)}
+                            className="absolute top-2 left-2 z-10 bg-white"
+                          />
+                          <div className="h-32 bg-emerald-100 relative">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="w-8 h-8 text-emerald-300" />
+                              </div>
+                            )}
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(product);
+                                }}
+                                className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateMutation.mutate({ id: product.id, data: { published: !product.published } });
+                                }}
+                                className={`h-8 w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
+                              >
+                                {product.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-bold text-emerald-900 text-sm mb-1 line-clamp-1">{product.name}</h3>
+                            <p className="font-bold text-emerald-900">${product.price?.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="space-y-3">
