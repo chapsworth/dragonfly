@@ -100,7 +100,7 @@ export default function Profile() {
 
   const handleEditProfile = () => {
     setProfileForm({
-      full_name: user.full_name || '',
+      display_name: user.display_name || user.full_name || '',
       phone: user.phone || '',
       birthday: user.birthday || '',
       hide_email: user.hide_email || false
@@ -209,8 +209,8 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Full Name</Label>
-                    <p className="text-lg font-semibold text-emerald-900">{user.full_name || 'Not set'}</p>
+                    <Label className="text-gray-600">Display Name</Label>
+                    <p className="text-lg font-semibold text-emerald-900">{user.display_name || user.full_name || 'Not set'}</p>
                   </div>
                   <div>
                     <Label className="text-gray-600">Email</Label>
@@ -239,10 +239,10 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Full Name</Label>
+                    <Label>Display Name</Label>
                     <Input
-                      value={profileForm.full_name}
-                      onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                      value={profileForm.display_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, display_name: e.target.value })}
                       placeholder="John Doe"
                     />
                   </div>
