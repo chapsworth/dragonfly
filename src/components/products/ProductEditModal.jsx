@@ -38,6 +38,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedStrainId, setSelectedStrainId] = useState(null);
   const [inventoryEnabled, setInventoryEnabled] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: strains = [] } = useQuery({
@@ -45,10 +46,21 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     queryFn: () => base44.entities.Strain.list()
   });
 
+  const { data: carouselSettings = [] } = useQuery({
+    queryKey: ['carouselSettings'],
+    queryFn: () => base44.entities.CarouselSettings.list()
+  });
+
   useEffect(() => {
     if (product) {
       const hasInventory = product.sku || product.stock_quantity > 0;
       setInventoryEnabled(hasInventory);
+      
+      // Check if product is featured in carousel
+      const categoryCarousel = carouselSettings.find(c => c.category === product.category);
+      const isProductFeatured = categoryCarousel?.featured_product_ids?.includes(product.id) || false;
+      setIsFeatured(isProductFeatured);
+      
       setFormData({
         name: product.name || '',
         category: product.category || 'flower',
@@ -67,6 +79,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         sku: product.sku || ''
       });
     } else {
+      setIsFeatured(false);
       setFormData({
         name: '',
         category: 'flower',
@@ -85,7 +98,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
         sku: ''
       });
     }
-  }, [product]);
+  }, [product, carouselSettings]);
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -270,7 +283,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     toast.success(`Pre-filled with ${strain.name} strain data`);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate required fields
     const errors = [];
     if (!formData.price || parseFloat(formData.price) <= 0) {
@@ -311,7 +324,45 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
       saveData.sku = formData.sku || '';
     }
 
-    saveMutation.mutate(saveData);
+    // Save the product first
+    const savedProduct = await saveMutation.mutateAsync(saveData);
+    const productId = product?.id || savedProduct?.id;
+
+    // Update carousel settings for featured status
+    if (productId) {
+      const categoryCarousel = carouselSettings.find(c => c.category === formData.category);
+      
+      if (isFeatured) {
+        // Add to featured products
+        if (categoryCarousel) {
+          const currentFeatured = categoryCarousel.featured_product_ids || [];
+          if (!currentFeatured.includes(productId)) {
+            await base44.entities.CarouselSettings.update(categoryCarousel.id, {
+              featured_product_ids: [...currentFeatured, productId]
+            });
+          }
+        } else {
+          // Create carousel setting for this category
+          await base44.entities.CarouselSettings.create({
+            category: formData.category,
+            display_order: 0,
+            is_active: true,
+            featured_product_ids: [productId]
+          });
+        }
+      } else {
+        // Remove from featured products
+        if (categoryCarousel) {
+          const currentFeatured = categoryCarousel.featured_product_ids || [];
+          const updatedFeatured = currentFeatured.filter(id => id !== productId);
+          await base44.entities.CarouselSettings.update(categoryCarousel.id, {
+            featured_product_ids: updatedFeatured
+          });
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['carouselSettings'] });
+    }
   };
 
   return (
@@ -697,7 +748,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
           </div>
 
           {/* Publishing Status */}
-          <div className="border-t border-emerald-100 pt-4">
+          <div className="border-t border-emerald-100 pt-4 space-y-3">
             <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
               <div>
                 <Label className="text-emerald-900 font-semibold">Product Visibility</Label>
@@ -713,6 +764,24 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
                   className="w-4 h-4 accent-emerald-600"
                 />
                 <span className="text-sm text-emerald-900">Published</span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+              <div>
+                <Label className="text-purple-900 font-semibold">Feature on Homepage</Label>
+                <p className="text-xs text-purple-600 mt-1">
+                  {isFeatured ? 'Featured in homepage carousel' : 'Not featured on homepage'}
+                </p>
+              </div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="w-4 h-4 accent-purple-600"
+                />
+                <span className="text-sm text-purple-900">Featured</span>
               </label>
             </div>
           </div>
