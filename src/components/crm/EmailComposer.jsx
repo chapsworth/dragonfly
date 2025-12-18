@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Mail, X, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, X, Loader2, FileText, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function EmailComposer({ isOpen, onClose, contacts, preSelectedContacts = [] }) {
@@ -15,6 +17,12 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['email-templates'],
+    queryFn: () => base44.entities.EmailTemplate.filter({ is_active: true })
+  });
 
   const filteredContacts = contacts.filter(c => 
     c.email && 
@@ -31,6 +39,16 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   const handleRemoveContact = (contactId) => {
     setSelectedContacts(selectedContacts.filter(c => c.id !== contactId));
   };
+
+  const handleUseTemplate = (template) => {
+    setSubject(template.subject);
+    setMessage(template.body);
+    toast.success('Template applied');
+  };
+
+  const filteredTemplates = selectedCategory === 'all' 
+    ? templates 
+    : templates.filter(t => t.category === selectedCategory);
 
   const handleSend = async () => {
     if (selectedContacts.length === 0) {
@@ -82,6 +100,53 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
+          {/* Templates Section */}
+          {templates.length > 0 && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-4 h-4 text-purple-600" />
+                <Label className="text-purple-900 font-semibold">Use Template</Label>
+              </div>
+              
+              <div className="flex gap-2 mb-3">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="bg-white border-purple-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Templates</SelectItem>
+                    <SelectItem value="outreach">Outreach</SelectItem>
+                    <SelectItem value="orders">Orders</SelectItem>
+                    <SelectItem value="deals">Deals</SelectItem>
+                    <SelectItem value="holidays">Holidays</SelectItem>
+                    <SelectItem value="follow_up">Follow Up</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                {filteredTemplates.map(template => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleUseTemplate(template)}
+                    className="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-purple-900 truncate">{template.name}</div>
+                        <div className="text-xs text-gray-600 truncate">{template.subject}</div>
+                      </div>
+                      <Badge className="bg-purple-500 text-[10px] shrink-0">
+                        {template.category}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Recipients */}
           <div>
             <Label>To</Label>
