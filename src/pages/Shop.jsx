@@ -110,8 +110,25 @@ export default function Shop() {
       grouped[cat].push(product);
     });
     
-    return grouped;
-  }, [filteredProducts, category]);
+    // Sort categories by display_order
+    const sortedCategories = {};
+    const sortedCats = dbCategories
+      .filter(c => c.is_active && grouped[c.slug])
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    
+    sortedCats.forEach(cat => {
+      sortedCategories[cat.slug] = grouped[cat.slug];
+    });
+    
+    // Add any remaining categories not in dbCategories
+    Object.keys(grouped).forEach(cat => {
+      if (!sortedCategories[cat]) {
+        sortedCategories[cat] = grouped[cat];
+      }
+    });
+    
+    return sortedCategories;
+  }, [filteredProducts, category, dbCategories]);
 
   const activeFilters = [
   category !== 'all' && { type: 'category', value: category, label: categories.find((c) => c.value === category)?.label },
