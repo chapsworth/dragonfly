@@ -318,7 +318,7 @@ function CRMDealsContent() {
               </Droppable>
             ))}
           </div>
-        </DndContext>
+        </DragDropContext>
       </div>
 
       {/* Deal Form Dialog */}
