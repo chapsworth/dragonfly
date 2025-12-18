@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload, Target } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload, Target, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
+import EmailComposer from '@/components/crm/EmailComposer';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -46,6 +47,8 @@ function CRMContactsContent() {
   const [selectedDuplicates, setSelectedDuplicates] = useState({});
   const [isScanning, setIsScanning] = useState(false);
   const [activeCallContact, setActiveCallContact] = useState(null);
+  const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
+  const [selectedForEmail, setSelectedForEmail] = useState([]);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -160,6 +163,11 @@ function CRMContactsContent() {
 
   const handleEmail = (email) => {
     if (email) window.location.href = `mailto:${email}`;
+  };
+
+  const handleBulkEmail = (contacts) => {
+    setSelectedForEmail(contacts);
+    setIsEmailComposerOpen(true);
   };
 
   const saveNotes = (id) => {
@@ -636,6 +644,16 @@ function CRMContactsContent() {
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button 
+              onClick={() => handleBulkEmail(filteredContacts.filter(c => c.email))} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200"
+              disabled={filteredContacts.filter(c => c.email).length === 0}
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Email All</span>
+              <span className="sm:hidden">Email</span>
+            </Button>
+            <Button 
               onClick={scanForDuplicates} 
               variant="outline" 
               className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
@@ -798,7 +816,7 @@ function CRMContactsContent() {
                                 {contact.email && (
                                   <Button
                                     size="sm"
-                                    onClick={() => handleEmail(contact.email)}
+                                    onClick={() => handleBulkEmail([contact])}
                                     className="bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
                                   >
                                     <Mail className="w-4 h-4" />
@@ -1198,6 +1216,17 @@ function CRMContactsContent() {
           onSave={handleCallLogSave}
         />
       )}
+
+      {/* Email Composer */}
+      <EmailComposer
+        isOpen={isEmailComposerOpen}
+        onClose={() => {
+          setIsEmailComposerOpen(false);
+          setSelectedForEmail([]);
+        }}
+        contacts={contacts}
+        preSelectedContacts={selectedForEmail}
+      />
 
       {/* Duplicates Dialog */}
       <Dialog open={showDuplicates} onOpenChange={setShowDuplicates}>
