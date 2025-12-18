@@ -34,8 +34,12 @@ export default function Profile() {
   });
 
   const { data: addresses = [], isLoading: addressesLoading } = useQuery({
-    queryKey: ['addresses'],
-    queryFn: () => base44.entities.Address.list('-is_default')
+    queryKey: ['addresses', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return await base44.entities.Address.filter({ user_email: user.email }, '-is_default');
+    },
+    enabled: !!user
   });
 
   const updateProfileMutation = useMutation({
