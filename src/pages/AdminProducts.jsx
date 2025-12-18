@@ -385,78 +385,79 @@ export default function AdminProducts() {
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : viewMode === 'category' ? (
-            <div className="space-y-6">
-              {categories.map((category) => {
-                const categoryProducts = productsByCategory[category] || [];
-                if (categoryProducts.length === 0) return null;
-                
-                return (
-                  <div key={category} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold text-emerald-900 capitalize flex items-center gap-2">
-                        <Package className="w-5 h-5" />
-                        {category}
-                      </h2>
-                      <Badge variant="secondary">{categoryProducts.length} products</Badge>
-                    </div>
-                    <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                      <Droppable droppableId={category}>
-                        {(provided) => (
-                          <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                            {categoryProducts.map((product, index) => (
-                              <Draggable key={product.id} draggableId={product.id} index={index}>
-                                {(provided) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-3"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
-                                        <GripVertical className="w-5 h-5 text-emerald-400" />
-                                      </div>
-                                      <Checkbox
-                                        checked={selectedProducts.includes(product.id)}
-                                        onCheckedChange={() => toggleProductSelection(product.id)}
-                                      />
-                                      <div className="w-12 h-12 rounded-lg bg-emerald-100 flex-shrink-0 overflow-hidden">
-                                        {product.image_url ? (
-                                          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center">
-                                            <Package className="w-5 h-5 text-emerald-300" />
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-emerald-900 text-sm line-clamp-1">{product.name}</h3>
-                                        <p className="text-xs text-emerald-600">${product.price?.toFixed(2)} • THC: {product.thc_level}%</p>
-                                      </div>
-                                      <div className="flex gap-1">
-                                       <Button size="sm" variant="ghost" onClick={() => copyShareLink(product)} className="h-8 w-8 p-0 text-blue-600">
-                                         <Share2 className="w-4 h-4" />
-                                       </Button>
-                                       <Button size="sm" variant="ghost" onClick={() => handleEdit(product)} className="h-8 w-8 p-0">
-                                         <Edit2 className="w-4 h-4" />
-                                       </Button>
-                                       <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(product.id)} className="h-8 w-8 p-0 text-red-600">
-                                         <Trash2 className="w-4 h-4" />
-                                       </Button>
+              <div className="space-y-6">
+                {categories.map((category) => {
+                  const categoryProducts = productsByCategory[category] || [];
+                  if (categoryProducts.length === 0) return null;
+
+                  return (
+                    <div key={category} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg p-3 sm:p-4">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h2 className="text-base sm:text-lg font-bold text-emerald-900 capitalize flex items-center gap-2">
+                          <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="text-sm sm:text-base">{category}</span>
+                        </h2>
+                        <Badge variant="secondary" className="text-xs">{categoryProducts.length}</Badge>
+                      </div>
+                      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                        <Droppable droppableId={category}>
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                              {categoryProducts.map((product, index) => (
+                                <Draggable key={product.id} draggableId={product.id} index={index}>
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-2 sm:p-3"
+                                    >
+                                      <div className="flex items-center gap-2 sm:gap-3">
+                                        <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex-shrink-0">
+                                          <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                                        </div>
+                                        <Checkbox
+                                          checked={selectedProducts.includes(product.id)}
+                                          onCheckedChange={() => toggleProductSelection(product.id)}
+                                          className="flex-shrink-0"
+                                        />
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-emerald-100 flex-shrink-0 overflow-hidden">
+                                          {product.image_url ? (
+                                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                              <Package className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" />
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h3 className="font-bold text-emerald-900 text-xs sm:text-sm line-clamp-1">{product.name}</h3>
+                                          <p className="text-xs text-emerald-600">${product.price?.toFixed(2)}<span className="hidden sm:inline"> • THC: {product.thc_level}%</span></p>
+                                        </div>
+                                        <div className="flex gap-1 flex-shrink-0">
+                                         <Button size="sm" variant="ghost" onClick={() => copyShareLink(product)} className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-blue-600">
+                                           <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                         </Button>
+                                         <Button size="sm" variant="ghost" onClick={() => handleEdit(product)} className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                                           <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                         </Button>
+                                         <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(product.id)} className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600">
+                                           <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                         </Button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    </DragDropContext>
-                  </div>
-                );
-              })}
-            </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    </div>
+                  );
+                })}
+              </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               {filteredProducts.map((product) => (
@@ -603,13 +604,13 @@ export default function AdminProducts() {
                 if (categoryProducts.length === 0) return null;
                 return (
                   <div key={category}>
-                    <h2 className="text-lg sm:text-xl font-bold text-emerald-900 mb-3 sm:mb-4 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-emerald-900 mb-3 sm:mb-4 flex items-center gap-2 px-4 sm:px-0">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-base sm:text-xl">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-4 sm:px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-4">
                       {categoryProducts.map(product => (
-                        <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
+                        <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative min-w-[160px] md:min-w-0">
                           <Checkbox
                             checked={selectedProducts.includes(product.id)}
                             onCheckedChange={() => toggleProductSelection(product.id)}
