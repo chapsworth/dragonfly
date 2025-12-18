@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -35,6 +36,8 @@ export default function ProductLibrary() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStrain, setSelectedStrain] = useState('all');
+  const [stockFilter, setStockFilter] = useState('all');
+  const [publishedFilter, setPublishedFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [aiSearch, setAiSearch] = useState('');
@@ -56,9 +59,15 @@ export default function ProductLibrary() {
                          product.description?.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesStrain = selectedStrain === 'all' || product.strain_type === selectedStrain;
+    const matchesStock = stockFilter === 'all' || 
+                        (stockFilter === 'in_stock' && product.in_stock) ||
+                        (stockFilter === 'out_of_stock' && !product.in_stock);
+    const matchesPublished = publishedFilter === 'all' ||
+                            (publishedFilter === 'published' && product.published !== false) ||
+                            (publishedFilter === 'unpublished' && product.published === false);
     // Exclude flower products
     const isNotFlower = product.category !== 'flower' && product.category !== 'pre-rolls';
-    return matchesSearch && matchesCategory && matchesStrain && isNotFlower;
+    return matchesSearch && matchesCategory && matchesStrain && matchesStock && matchesPublished && isNotFlower;
   });
 
   const featuredProducts = filteredProducts.filter(p => p.category === 'concentrates').slice(0, 3);
@@ -407,67 +416,100 @@ export default function ProductLibrary() {
             />
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-emerald-700 uppercase">Concentrate Type</p>
-                <div className="flex gap-1 border border-emerald-200 rounded-lg p-1 bg-white/60">
-                  <Button
-                    size="icon"
-                    variant={viewMode === 'grid2x2' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('grid2x2')}
-                    className="h-8 w-8"
-                  >
-                    <Grid2X2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant={viewMode === 'grid1x1' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('grid1x1')}
-                    className="h-8 w-8"
-                  >
-                    <Rows className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant={viewMode === 'carousel' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('carousel')}
-                    className="h-8 w-8"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                {['all', 'concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => (
-                  <Button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    variant={selectedCategory === category ? 'default' : 'outline'}
-                    className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category] || 'from-emerald-500 to-green-500'}` : ''}
-                    size="sm"
-                  >
-                    {category === 'all' ? 'All Types' : category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                  </Button>
-                ))}
-              </div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-emerald-700 uppercase">Filters</p>
+            <div className="flex gap-1 border border-emerald-200 rounded-lg p-1 bg-white/60">
+              <Button
+                size="icon"
+                variant={viewMode === 'grid2x2' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('grid2x2')}
+                className="h-8 w-8"
+              >
+                <Grid2X2 className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant={viewMode === 'grid1x1' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('grid1x1')}
+                className="h-8 w-8"
+              >
+                <Rows className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant={viewMode === 'carousel' ? 'default' : 'ghost'}
+                onClick={() => setViewMode('carousel')}
+                className="h-8 w-8"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
             </div>
-            
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <p className="text-xs font-semibold text-emerald-700 mb-2 uppercase">Strain Type</p>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                {['all', 'indica', 'sativa', 'hybrid', 'cbd'].map(strain => (
-                  <Button
-                    key={strain}
-                    onClick={() => setSelectedStrain(strain)}
-                    variant={selectedStrain === strain ? 'default' : 'outline'}
-                    className={selectedStrain === strain ? `bg-gradient-to-r ${strainColors[strain] || 'from-emerald-500 to-green-500'}` : ''}
-                    size="sm"
-                  >
-                    {strain === 'all' ? 'All Strains' : strain.charAt(0).toUpperCase() + strain.slice(1)}
-                  </Button>
-                ))}
-              </div>
+              <p className="text-xs text-emerald-600 mb-1.5">Category</p>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-white/80 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="concentrated-oils">Concentrated Oils</SelectItem>
+                  <SelectItem value="diamonds">Diamonds</SelectItem>
+                  <SelectItem value="sugar">Sugar</SelectItem>
+                  <SelectItem value="crumble">Crumble</SelectItem>
+                  <SelectItem value="shatter">Shatter</SelectItem>
+                  <SelectItem value="sauce">Sauce</SelectItem>
+                  <SelectItem value="extracts">Extracts</SelectItem>
+                  <SelectItem value="tinctures">Tinctures</SelectItem>
+                  <SelectItem value="topicals">Topicals</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-xs text-emerald-600 mb-1.5">Strain</p>
+              <Select value={selectedStrain} onValueChange={setSelectedStrain}>
+                <SelectTrigger className="bg-white/80 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Strains</SelectItem>
+                  <SelectItem value="indica">Indica</SelectItem>
+                  <SelectItem value="sativa">Sativa</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="cbd">CBD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-xs text-emerald-600 mb-1.5">Stock Status</p>
+              <Select value={stockFilter} onValueChange={setStockFilter}>
+                <SelectTrigger className="bg-white/80 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-xs text-emerald-600 mb-1.5">Published</p>
+              <Select value={publishedFilter} onValueChange={setPublishedFilter}>
+                <SelectTrigger className="bg-white/80 border-emerald-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="unpublished">Unpublished</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </motion.div>
