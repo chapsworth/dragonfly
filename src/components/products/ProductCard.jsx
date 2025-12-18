@@ -40,6 +40,15 @@ export default function ProductCard({ product }) {
     base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
+  // Update selected variant when product changes
+  React.useEffect(() => {
+    if (product.variants && product.variants.length > 0) {
+      setSelectedVariant(product.variants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product, product.variants]);
+
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
