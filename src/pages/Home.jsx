@@ -90,7 +90,7 @@ export default function Home() {
   const heroBackgroundUrl = homeSettings?.hero_background_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80';
   const sectionOrder = Array.isArray(homeSettings?.section_order) && homeSettings.section_order.length > 0 
     ? homeSettings.section_order 
-    : ['hero', 'features', 'category_grid', 'carousels'];
+    : ['hero', 'features', 'featured_flower', 'category_grid', 'carousels'];
 
   const sections = {
     hero: (
@@ -153,7 +153,7 @@ export default function Home() {
       </section>
     ),
     features: (
-      <section key="features" className="py-16 px-4">
+      <section key="features" className="py-16 px-4 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
@@ -180,8 +180,59 @@ export default function Home() {
         </div>
       </section>
     ),
+    featured_flower: (
+      <section key="featured_flower" className="py-8 px-4 relative z-20">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-6"
+          >
+            <h2 className="text-3xl font-bold text-emerald-900 mb-2 flex items-center gap-2">
+              <Leaf className="w-8 h-8" />
+              Premium Flower Collection
+            </h2>
+            <p className="text-emerald-600">Explore our finest cannabis flower strains</p>
+          </motion.div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            {products.filter(p => p.category === 'flower').map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="relative z-20"
+              >
+                <Link to={createPageUrl('ProductDetail') + '?id=' + product.id}>
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden hover:shadow-2xl transition-all hover:scale-105">
+                    <div className="aspect-square bg-emerald-100 relative overflow-hidden">
+                      {product.image_url ? (
+                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Leaf className="w-12 h-12 text-emerald-300" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-bold text-emerald-900 mb-1 line-clamp-1">{product.name}</h3>
+                      <p className="text-emerald-600 font-bold">${product.price?.toFixed(2)}</p>
+                      {product.thc_level && (
+                        <p className="text-xs text-emerald-500 mt-1">THC: {product.thc_level}%</p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    ),
     category_grid: (
-      <div key="category_grid" className="sticky top-0 lg:top-0 z-30 bg-white backdrop-blur-sm">
+      <div key="category_grid" className="sticky top-0 lg:top-0 bg-white backdrop-blur-sm relative" style={{ zIndex: 30 }}>
         {/* Title & Filter Button */}
         <div className="pt-3 px-4 pb-2">
           <div className="max-w-7xl mx-auto">
@@ -363,7 +414,7 @@ export default function Home() {
       </div>
     ),
     carousels: (
-      <section key="carousels" className="py-8 pb-24">
+      <section key="carousels" className="py-8 pb-24 relative z-20">
         <div className="max-w-full">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -408,19 +459,20 @@ export default function Home() {
         <meta name="twitter:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
         <meta name="twitter:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
       </Helmet>
-      {/* Snow Animation */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {[...Array(50)].map((_, i) => (
+      {/* Snow Animation - Behind Everything */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
+        {[...Array(100)].map((_, i) => (
           <div
             key={i}
-            className="absolute animate-fall opacity-70"
+            className="absolute animate-fall opacity-60"
             style={{
               left: `${Math.random() * 100}%`,
               top: `-${Math.random() * 20}%`,
-              width: `${Math.random() * 3 + 2}px`,
-              height: `${Math.random() * 3 + 2}px`,
+              width: `${Math.random() * 4 + 2}px`,
+              height: `${Math.random() * 4 + 2}px`,
               borderRadius: '50%',
               background: 'white',
+              boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
               animationDelay: `${Math.random() * 5}s`,
               animationDuration: `${Math.random() * 3 + 5}s`
             }}
@@ -436,7 +488,7 @@ export default function Home() {
         .animate-fall { animation: fall linear infinite; }
       `}</style>
 
-      <div className="min-h-screen bg-white relative z-10">
+      <div className="min-h-screen bg-white relative" style={{ zIndex: 10 }}>
         {/* Holiday Message */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
