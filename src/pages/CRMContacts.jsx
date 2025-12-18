@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function CRMContacts() {
   return (
@@ -827,30 +829,34 @@ function CRMContactsContent() {
                                 </Button>
                               </div>
 
-                              {/* Quick Stage Update */}
-                              <div className="pt-4 border-t border-emerald-100">
-                                <Label className="text-xs font-semibold text-gray-600 mb-2 block">UPDATE DEAL STAGE</Label>
-                                <Select 
-                                  value={contact.stage} 
-                                  onValueChange={(val) => updateMutation.mutate({ id: contact.id, data: { stage: val } })}
-                                >
-                                  <SelectTrigger className="border-emerald-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="new">New</SelectItem>
-                                    <SelectItem value="contacted">Contacted</SelectItem>
-                                    <SelectItem value="no_answer">No Answer</SelectItem>
-                                    <SelectItem value="sent_message">Sent Message</SelectItem>
-                                    <SelectItem value="qualified">Qualified</SelectItem>
-                                    <SelectItem value="negotiation">Negotiation</SelectItem>
-                                    <SelectItem value="no_response">Haven't Heard Back</SelectItem>
-                                    <SelectItem value="not_interested">Not Interested</SelectItem>
-                                    <SelectItem value="dead">Dead Contact</SelectItem>
-                                    <SelectItem value="won">Won</SelectItem>
-                                    <SelectItem value="lost">Lost</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                              {/* Quick Stage Update & Deals */}
+                              <div className="pt-4 border-t border-emerald-100 space-y-4">
+                                <div>
+                                  <Label className="text-xs font-semibold text-gray-600 mb-2 block">UPDATE DEAL STAGE</Label>
+                                  <Select 
+                                    value={contact.stage} 
+                                    onValueChange={(val) => updateMutation.mutate({ id: contact.id, data: { stage: val } })}
+                                  >
+                                    <SelectTrigger className="border-emerald-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="new">New</SelectItem>
+                                      <SelectItem value="contacted">Contacted</SelectItem>
+                                      <SelectItem value="no_answer">No Answer</SelectItem>
+                                      <SelectItem value="sent_message">Sent Message</SelectItem>
+                                      <SelectItem value="qualified">Qualified</SelectItem>
+                                      <SelectItem value="negotiation">Negotiation</SelectItem>
+                                      <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                                      <SelectItem value="not_interested">Not Interested</SelectItem>
+                                      <SelectItem value="dead">Dead Contact</SelectItem>
+                                      <SelectItem value="won">Won</SelectItem>
+                                      <SelectItem value="lost">Lost</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <ContactDeals contactId={contact.id} contactName={contact.full_name} />
                               </div>
 
                               {/* Contact Details */}
@@ -1634,5 +1640,108 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ContactDeals({ contactId, contactName }) {
+  const [showCreateDeal, setShowCreateDeal] = useState(false);
+  const [dealTitle, setDealTitle] = useState('');
+  const [dealValue, setDealValue] = useState('');
+  const queryClient = useQueryClient();
+
+  const { data: deals = [] } = useQuery({
+    queryKey: ['contact-deals', contactId],
+    queryFn: () => base44.entities.Deal.filter({ contact_id: contactId })
+  });
+
+  const createDealMutation = useMutation({
+    mutationFn: (data) => base44.entities.Deal.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact-deals'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success('Deal created');
+      setShowCreateDeal(false);
+      setDealTitle('');
+      setDealValue('');
+    }
+  });
+
+  const handleQuickCreateDeal = () => {
+    if (!dealTitle || !dealValue) {
+      toast.error('Please enter deal title and value');
+      return;
+    }
+    createDealMutation.mutate({
+      title: dealTitle,
+      contact_id: contactId,
+      contact_name: contactName,
+      value: parseFloat(dealValue),
+      stage: 'lead',
+      probability: 50,
+      last_activity: new Date().toISOString()
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <Label className="text-xs font-semibold text-gray-600">DEALS</Label>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 text-xs"
+          onClick={() => setShowCreateDeal(!showCreateDeal)}
+        >
+          <Plus className="w-3 h-3 mr-1" />
+          Add Deal
+        </Button>
+      </div>
+
+      {showCreateDeal && (
+        <div className="space-y-2 mb-3 p-3 bg-indigo-50 rounded-lg">
+          <Input
+            placeholder="Deal title"
+            value={dealTitle}
+            onChange={(e) => setDealTitle(e.target.value)}
+            className="h-8 text-sm"
+          />
+          <Input
+            type="number"
+            placeholder="Deal value ($)"
+            value={dealValue}
+            onChange={(e) => setDealValue(e.target.value)}
+            className="h-8 text-sm"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleQuickCreateDeal} className="flex-1 bg-indigo-600 h-7">
+              Create
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowCreateDeal(false)} className="h-7">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {deals.length > 0 ? (
+        <div className="space-y-2">
+          {deals.map(deal => (
+            <Link key={deal.id} to={createPageUrl('CRMDeals')}>
+              <div className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-indigo-900">{deal.title}</p>
+                    <p className="text-xs text-indigo-600">{deal.stage}</p>
+                  </div>
+                  <p className="text-sm font-bold text-green-700">${(deal.value || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500 text-center py-2">No deals yet</p>
+      )}
+    </div>
   );
 }

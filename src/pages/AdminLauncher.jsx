@@ -69,6 +69,7 @@ export default function AdminLauncher() {
   const crmApps = [
     { icon: Briefcase, label: 'CRM Home', page: 'CRM', color: 'bg-gradient-to-br from-emerald-500 to-green-600' },
     { icon: Users, label: 'Contacts', page: 'CRMContacts', color: 'bg-gradient-to-br from-blue-500 to-cyan-500' },
+    { icon: TrendingUp, label: 'Deals', page: 'CRMDeals', color: 'bg-gradient-to-br from-indigo-500 to-purple-600' },
     { icon: Building2, label: 'Vendors', page: 'CRMVendors', color: 'bg-gradient-to-br from-indigo-500 to-purple-500' },
     { icon: Calendar, label: 'Calendar', page: 'CRMCalendar', color: 'bg-gradient-to-br from-pink-500 to-rose-500' },
     { icon: CheckSquare, label: 'Tasks', page: 'CRMTasks', color: 'bg-gradient-to-br from-amber-500 to-orange-500', badge: tasks.length || null },

@@ -43,13 +43,18 @@ function CRMContent() {
   const pendingTasks = tasks.filter(t => t.status === 'todo' || t.status === 'in_progress');
   const upcomingEvents = events.filter(e => new Date(e.start_date) > new Date()).slice(0, 5);
 
+  const { data: deals = [] } = useQuery({
+    queryKey: ['deals'],
+    queryFn: () => base44.entities.Deal.list()
+  });
+
   const quickLinks = [
     { name: 'Contacts', icon: Users, page: 'CRMContacts', count: contacts.length, color: 'emerald' },
+    { name: 'Deals', icon: TrendingUp, page: 'CRMDeals', count: deals.length, color: 'indigo' },
     { name: 'Vendors', icon: Building2, page: 'CRMVendors', count: vendors.length, color: 'blue' },
     { name: 'Calendar', icon: Calendar, page: 'CRMCalendar', count: upcomingEvents.length, color: 'purple' },
     { name: 'Tasks', icon: CheckSquare, page: 'CRMTasks', count: pendingTasks.length, color: 'orange' },
     { name: 'Bookmarks', icon: Bookmark, page: 'CRMBookmarks', count: 0, color: 'pink' },
-    { name: 'Documents', icon: FileText, page: 'CRMDocuments', count: 0, color: 'indigo' },
   ];
 
   const pipelineStages = [
