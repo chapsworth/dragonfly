@@ -44,6 +44,10 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setEditingProfile(false);
       toast.success('Profile updated successfully');
+    },
+    onError: (error) => {
+      console.error('Profile update error:', error);
+      toast.error('Failed to update profile: ' + (error.message || 'Unknown error'));
     }
   });
 
