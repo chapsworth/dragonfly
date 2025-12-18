@@ -81,6 +81,13 @@ export default function CartDrawer() {
 
   const handleCheckout = async () => {
     if (step === 'cart') {
+      // Check if user is authenticated
+      const currentUser = await base44.auth.me().catch(() => null);
+      if (!currentUser) {
+        setIsCartOpen(false);
+        base44.auth.redirectToLogin(window.location.pathname);
+        return;
+      }
       setStep('details');
       return;
     }
@@ -463,6 +470,7 @@ export default function CartDrawer() {
                   <Label className="text-emerald-800">Payment Method *</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
+                      type="button"
                       onClick={() => setFormData(p => ({ ...p, payment_method: 'pay_in_person' }))}
                       className={`p-4 rounded-xl border-2 transition-all ${
                         formData.payment_method === 'pay_in_person'
@@ -474,6 +482,7 @@ export default function CartDrawer() {
                       <div className="text-xs text-emerald-600 mt-1">Cash or card on delivery</div>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setFormData(p => ({ ...p, payment_method: 'online' }))}
                       className={`p-4 rounded-xl border-2 transition-all ${
                         formData.payment_method === 'online'
