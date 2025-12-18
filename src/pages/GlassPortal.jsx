@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createPageUrl } from '@/utils';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,10 +38,28 @@ export default function GlassPortal() {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const queryClient = useQueryClient();
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
   });
+
+  // Redirect non-admins
+  React.useEffect(() => {
+    if (user && user.role !== 'admin') {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user]);
 
   const glassProducts = products.filter(p => p.category === 'accessories');
 

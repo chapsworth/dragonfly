@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createPageUrl } from '@/utils';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,10 +44,28 @@ export default function StrainLibrary() {
   const [selectedStrains, setSelectedStrains] = useState([]);
   const queryClient = useQueryClient();
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
+
   const { data: strains = [], isLoading } = useQuery({
     queryKey: ['strains'],
     queryFn: () => base44.entities.Strain.list()
   });
+
+  // Redirect non-admins
+  React.useEffect(() => {
+    if (user && user.role !== 'admin') {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user]);
 
   const filteredStrains = strains.filter(strain => {
     const matchesSearch = strain.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -168,6 +187,17 @@ export default function StrainLibrary() {
         : [...prev, strainId]
     );
   };
+
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-green-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-emerald-900 mb-2">Access Denied</h1>
+          <p className="text-emerald-600">This page is only accessible to administrators.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-24 pb-32 px-4 overflow-x-hidden">
