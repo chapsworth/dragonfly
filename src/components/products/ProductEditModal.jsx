@@ -367,7 +367,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-emerald-900">
             {product ? 'Edit Product' : 'Create New Product'}
