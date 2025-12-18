@@ -11,7 +11,8 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, Briefcase, Image, Settings, 
   Leaf, Sparkles, Phone, ClipboardList, Building2, Calendar, CheckSquare, 
   Bookmark, FileText, FolderTree, ShoppingBag, Heart, Radio, TrendingUp,
-  DollarSign, MapPin, Camera, Upload, Palette, Home
+  DollarSign, MapPin, Camera, Upload, Palette, Home, Layers, Wine, Navigation,
+  Code, Receipt
 } from 'lucide-react';
 
 export default function AdminLauncher() {
@@ -90,6 +91,10 @@ export default function AdminLauncher() {
     { icon: FolderTree, label: 'Categories', page: 'AdminCategories', color: 'bg-gradient-to-br from-violet-500 to-purple-500' },
     { icon: TrendingUp, label: 'Inventory', page: 'AdminInventory', color: 'bg-gradient-to-br from-orange-500 to-red-500' },
     { icon: Settings, label: 'Settings', page: 'AdminSettings', color: 'bg-gradient-to-br from-slate-600 to-gray-700' },
+    { icon: Layers, label: 'Components', page: 'ComponentLibrary', color: 'bg-gradient-to-br from-indigo-500 to-blue-500' },
+    { icon: Wine, label: 'Glass Portal', page: 'GlassPortal', color: 'bg-gradient-to-br from-rose-500 to-pink-500' },
+    { icon: Package, label: 'Products DB', page: 'ProductLibrary', color: 'bg-gradient-to-br from-amber-500 to-yellow-500' },
+    { icon: Navigation, label: 'Delivery Nav', page: 'DeliveryNavigation', color: 'bg-gradient-to-br from-teal-500 to-cyan-500' },
   ];
 
   return (
