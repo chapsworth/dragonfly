@@ -106,7 +106,8 @@ export default function Profile() {
     setProfileForm({
       display_name: user.display_name || '',
       phone: user.phone || '',
-      birthday: user.birthday || ''
+      birthday: user.birthday || '',
+      hide_email: user.hide_email || false
     });
     setEditingProfile(true);
   };
@@ -219,7 +220,7 @@ export default function Profile() {
                     <Label className="text-gray-600">Email</Label>
                     <p className="text-lg font-semibold text-emerald-900 flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      {user.email}
+                      {user.hide_email ? '••••••@•••.com' : user.email}
                     </p>
                   </div>
                   <div>
@@ -265,6 +266,16 @@ export default function Profile() {
                       onChange={(e) => setProfileForm({ ...profileForm, birthday: e.target.value })}
                     />
                   </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="hide_email"
+                    checked={profileForm.hide_email}
+                    onChange={(e) => setProfileForm({ ...profileForm, hide_email: e.target.checked })}
+                    className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                  />
+                  <Label htmlFor="hide_email" className="cursor-pointer">Hide email from profile display</Label>
                 </div>
               </div>
             )}
