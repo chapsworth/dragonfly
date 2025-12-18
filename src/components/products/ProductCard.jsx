@@ -70,7 +70,7 @@ export default function ProductCard({ product }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         
-        {product.strain_type && product.strain_type !== 'n/a' && (
+        {product.category !== 'accessories' && product.strain_type && product.strain_type !== 'n/a' && (
           <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${strainColors[product.strain_type]} shadow-lg`}>
             {product.strain_type.charAt(0).toUpperCase() + product.strain_type.slice(1)}
           </span>
@@ -93,7 +93,7 @@ export default function ProductCard({ product }) {
       <div className="p-4">
         <h3 className="font-semibold text-emerald-900 truncate mb-1">{product.name}</h3>
         
-        {(product.thc_level || product.cbd_level) && (
+        {product.category !== 'accessories' && (product.thc_level || product.cbd_level) && (
           <div className="flex gap-2 mb-2">
             {product.thc_level > 0 && (
               <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
