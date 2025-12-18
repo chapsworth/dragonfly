@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { 
   LayoutDashboard, Package, ShoppingCart, Users, Briefcase, Image, Settings, 
   Leaf, Sparkles, Phone, ClipboardList, Building2, Calendar, CheckSquare, 
-  Bookmark, FileText, FolderTree, ShoppingBag, Heart, Radio, TrendingUp,
+  Bookmark, FileText, FolderTree, ShoppingBag, Heart, TrendingUp,
   DollarSign, MapPin, Camera, Upload, Palette, Home, Layers, Wine, Navigation,
   Code, Receipt
 } from 'lucide-react';
@@ -160,12 +160,6 @@ export default function AdminLauncher() {
 
         {/* Row 3 */}
         <div className="grid grid-cols-4 gap-x-4 gap-y-6 mb-6">
-          <AppIcon 
-            icon={Radio} 
-            label="Radio" 
-            page="Radio" 
-            color="bg-gradient-to-br from-pink-500 to-rose-500"
-          />
           <AppIcon 
             icon={MapPin} 
             label="Tracking" 

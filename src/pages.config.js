@@ -11,7 +11,6 @@ import AdminUsers from './pages/AdminUsers';
 import AdminCarousel from './pages/AdminCarousel';
 import AdminCategories from './pages/AdminCategories';
 import ComponentLibrary from './pages/ComponentLibrary';
-import Radio from './pages/Radio';
 import AdminSettings from './pages/AdminSettings';
 import StrainLibrary from './pages/StrainLibrary';
 import AdminInventory from './pages/AdminInventory';
@@ -45,7 +44,6 @@ export const PAGES = {
     "AdminCarousel": AdminCarousel,
     "AdminCategories": AdminCategories,
     "ComponentLibrary": ComponentLibrary,
-    "Radio": Radio,
     "AdminSettings": AdminSettings,
     "StrainLibrary": StrainLibrary,
     "AdminInventory": AdminInventory,
