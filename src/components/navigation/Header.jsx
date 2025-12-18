@@ -39,8 +39,8 @@ export default function Header({ onMenuClick }) {
     <header className="fixed lg:static top-0 left-0 right-0 z-40 lg:z-auto">
       <div className="mx-4 mt-4 lg:mx-0 lg:mt-0">
         <div className="bg-white/60 lg:bg-white/0 backdrop-blur-md rounded-2xl lg:rounded-none border border-white/20 lg:border-none shadow-lg lg:shadow-none shadow-emerald-900/5 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between relative">
+            <div className="flex items-center gap-2 z-10">
               <button
                 onClick={onMenuClick}
                 className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
@@ -56,7 +56,7 @@ export default function Header({ onMenuClick }) {
               )}
             </div>
 
-            <Link to={createPageUrl('Home')} className="flex items-center gap-2">
+            <Link to={createPageUrl('Home')} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
                 {appSettings?.header_icon_url ? (
                   <img 
@@ -73,7 +73,7 @@ export default function Header({ onMenuClick }) {
               </span>
             </Link>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 z-10">
               <QuickCreateMenu />
               <button
                 onClick={() => setIsCartOpen(true)}
