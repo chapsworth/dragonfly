@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -63,8 +63,8 @@ export default function GlassPortal() {
     try {
       let payload;
       
-      if (mode === 'surprise' || mode === 'teachme') {
-        toast.info(`Finding ${batchCount} ${mode === 'teachme' ? 'educational' : 'interesting'} glass products...`);
+      if (mode === 'surprise') {
+        toast.info(`Finding ${batchCount} interesting glass products...`);
         const suggestResponse = await base44.functions.invoke('discoverGlass', {
           mode,
           count: batchCount
@@ -269,19 +269,9 @@ export default function GlassPortal() {
               
               <div className="flex items-center gap-2">
                 <Button
-                  onClick={() => handleAiDiscover('teachme')}
-                  disabled={isDiscovering}
-                  variant="outline"
-                  className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  Teach Me ({batchCount})
-                </Button>
-                <Button
                   onClick={() => handleAiDiscover('surprise')}
                   disabled={isDiscovering}
-                  variant="outline"
-                  className="flex-1 border-pink-300 text-pink-700 hover:bg-pink-50"
+                  className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Surprise Me ({batchCount})
