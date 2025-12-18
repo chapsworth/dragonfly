@@ -132,9 +132,16 @@ export default function ProductCard({ product }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-emerald-700">
-            ${(selectedVariant?.price || product.price)?.toFixed(2)}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-emerald-700">
+              ${(selectedVariant?.price || product.price)?.toFixed(2)}
+            </span>
+            {product.variants?.length > 1 && !selectedVariant && (
+              <span className="text-[10px] text-emerald-500">
+                ${Math.min(...product.variants.map(v => v.price)).toFixed(2)} - ${Math.max(...product.variants.map(v => v.price)).toFixed(2)}
+              </span>
+            )}
+          </div>
           <button
             onClick={(e) => {
               handleAddToCart(e);
