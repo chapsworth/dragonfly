@@ -403,6 +403,9 @@ export default function Home() {
         <meta property="og:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
         <meta property="og:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Dragonfly - Premium Cannabis Delivery" />
         <meta name="twitter:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
