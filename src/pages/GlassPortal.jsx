@@ -201,6 +201,17 @@ export default function GlassPortal() {
     );
   };
 
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-purple-900 mb-2">Access Denied</h1>
+          <p className="text-purple-600">This page is only accessible to administrators.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 pt-24 pb-32 px-4 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
