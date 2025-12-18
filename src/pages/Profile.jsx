@@ -208,7 +208,7 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Full Name</Label>
+                    <Label className="text-gray-600">Display Name</Label>
                     <p className="text-lg font-semibold text-emerald-900">{user.full_name || 'Not set'}</p>
                   </div>
                   <div>
@@ -238,7 +238,7 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Full Name</Label>
+                    <Label>Display Name</Label>
                     <Input
                       value={profileForm.full_name}
                       onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
