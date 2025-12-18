@@ -338,44 +338,43 @@ export default function AdminProducts() {
                 </div>
               )}
 
-              <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
+              <div className="flex gap-1 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                  className={`${viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''} px-2 sm:px-3`}
                 >
-                  <Grid3x3 className="w-4 h-4 mr-2" />
-                  Grid
+                  <Grid3x3 className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Grid</span>
                 </Button>
                 {isMobile && (
                   <Button
                     variant={viewMode === 'single' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('single')}
-                    className={viewMode === 'single' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                    className={`${viewMode === 'single' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''} px-2`}
                   >
-                    <Rows className="w-4 h-4 mr-2" />
-                    1x1
+                    <Rows className="w-4 h-4" />
                   </Button>
                 )}
                 <Button
                   variant={viewMode === 'carousel' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('carousel')}
-                  className={viewMode === 'carousel' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                  className={`${viewMode === 'carousel' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''} px-2 sm:px-3`}
                 >
-                  <LayoutGrid className="w-4 h-4 mr-2" />
-                  Carousel
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Carousel</span>
                 </Button>
                 <Button
                   variant={viewMode === 'category' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('category')}
-                  className={viewMode === 'category' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                  className={`${viewMode === 'category' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''} px-2 sm:px-3`}
                 >
-                  <List className="w-4 h-4 mr-2" />
-                  Category
+                  <List className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Category</span>
                 </Button>
               </div>
             </div>
@@ -472,7 +471,7 @@ export default function AdminProducts() {
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-12 h-12 text-emerald-300" />
+                        <Package className="w-8 h-8 sm:w-12 sm:h-12 text-emerald-300" />
                       </div>
                     )}
                     <div className="absolute top-2 right-2 flex gap-1">
@@ -483,9 +482,9 @@ export default function AdminProducts() {
                           e.stopPropagation();
                           handleEdit(product);
                         }}
-                        className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg"
+                        className="h-7 w-7 sm:h-8 sm:w-8 bg-white/90 hover:bg-white shadow-lg"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                       <Button
                         size="icon"
@@ -494,33 +493,31 @@ export default function AdminProducts() {
                           e.stopPropagation();
                           updateMutation.mutate({ id: product.id, data: { published: !product.published } });
                         }}
-                        className={`h-8 w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
+                        className={`h-7 w-7 sm:h-8 sm:w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
                       >
-                        {product.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        {product.published ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
                       </Button>
                     </div>
                   </div>
-                  <div className="p-3">
-                    <h3 className="font-bold text-emerald-900 text-sm mb-1 line-clamp-1">{product.name}</h3>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex gap-1">
-                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                        {!product.published && <Badge variant="outline" className="text-xs">Hidden</Badge>}
-                      </div>
-                      <span className="font-bold text-emerald-600 text-sm">${product.price?.toFixed(2)}</span>
+                  <div className="p-2 sm:p-3">
+                    <h3 className="font-bold text-emerald-900 text-xs sm:text-sm mb-1 line-clamp-1">{product.name}</h3>
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      <span className="font-bold text-emerald-600 text-xs sm:text-sm">${product.price?.toFixed(2)}</span>
                     </div>
-                    <div className="text-xs text-emerald-600 mb-2">
+                    {!product.published && <Badge variant="outline" className="text-xs mb-1">Hidden</Badge>}
+                    <div className="hidden sm:block text-xs text-emerald-600 mb-2">
                       THC: {product.thc_level}% | CBD: {product.cbd_level}%
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => copyShareLink(product)} className="h-8 text-blue-600">
+                    <div className="flex gap-1 sm:gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyShareLink(product)} className="h-7 sm:h-8 px-2 text-blue-600">
                         <Share2 className="w-3 h-3" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="flex-1 h-8 text-xs">
-                        <Edit2 className="w-3 h-3 mr-1" />
-                        Edit
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(product)} className="flex-1 h-7 sm:h-8 text-xs px-1 sm:px-2">
+                        <Edit2 className="w-3 h-3 sm:mr-1" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(product.id)} className="h-8 text-red-600">
+                      <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(product.id)} className="h-7 sm:h-8 px-2 text-red-600">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
@@ -600,17 +597,17 @@ export default function AdminProducts() {
               ))}
             </div>
           ) : viewMode === 'carousel' ? (
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {categories.map((category) => {
                 const categoryProducts = products.filter(p => p.category === category && (selectedCategory === 'all' || selectedCategory === category));
                 if (categoryProducts.length === 0) return null;
                 return (
                   <div key={category}>
-                    <h2 className="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
-                      <Package className="w-5 h-5" />
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    <h2 className="text-lg sm:text-xl font-bold text-emerald-900 mb-3 sm:mb-4 flex items-center gap-2">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="text-base sm:text-xl">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                       {categoryProducts.map(product => (
                         <div key={product.id} className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg overflow-hidden relative">
                           <Checkbox
@@ -623,7 +620,7 @@ export default function AdminProducts() {
                               <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <Package className="w-8 h-8 text-emerald-300" />
+                                <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-300" />
                               </div>
                             )}
                             <div className="absolute top-2 right-2 flex gap-1">
@@ -634,9 +631,9 @@ export default function AdminProducts() {
                                   e.stopPropagation();
                                   handleEdit(product);
                                 }}
-                                className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg"
+                                className="h-7 w-7 sm:h-8 sm:w-8 bg-white/90 hover:bg-white shadow-lg"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
                               </Button>
                               <Button
                                 size="icon"
@@ -645,15 +642,15 @@ export default function AdminProducts() {
                                   e.stopPropagation();
                                   updateMutation.mutate({ id: product.id, data: { published: !product.published } });
                                 }}
-                                className={`h-8 w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
+                                className={`h-7 w-7 sm:h-8 sm:w-8 shadow-lg ${product.published ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-white/90 hover:bg-white'}`}
                               >
-                                {product.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                {product.published ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
                               </Button>
                             </div>
                           </div>
-                          <div className="p-3">
-                            <h3 className="font-bold text-emerald-900 text-sm mb-1 line-clamp-1">{product.name}</h3>
-                            <p className="font-bold text-emerald-900">${product.price?.toFixed(2)}</p>
+                          <div className="p-2 sm:p-3">
+                            <h3 className="font-bold text-emerald-900 text-xs sm:text-sm mb-1 line-clamp-1">{product.name}</h3>
+                            <p className="font-bold text-emerald-900 text-sm sm:text-base">${product.price?.toFixed(2)}</p>
                           </div>
                         </div>
                       ))}
