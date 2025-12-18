@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Plus, TrendingUp, Clock, Target, Edit2, Trash2, Search, User } from 'lucide-react';
-import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors } from '@hello-pangea/dnd';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 
@@ -206,7 +205,7 @@ function CRMDealsContent() {
         </div>
 
         {/* Kanban Board */}
-        <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+        <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {stages.map(stage => (
               <Droppable key={stage.id} droppableId={stage.id}>
