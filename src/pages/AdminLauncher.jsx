@@ -89,7 +89,6 @@ export default function AdminLauncher() {
     { icon: Image, label: 'Carousel', page: 'AdminCarousel', color: 'bg-gradient-to-br from-cyan-500 to-blue-500' },
     { icon: FolderTree, label: 'Categories', page: 'AdminCategories', color: 'bg-gradient-to-br from-violet-500 to-purple-500' },
     { icon: TrendingUp, label: 'Inventory', page: 'AdminInventory', color: 'bg-gradient-to-br from-orange-500 to-red-500' },
-    { icon: DollarSign, label: 'Income', page: 'AdminIncome', color: 'bg-gradient-to-br from-green-500 to-emerald-600' },
     { icon: Settings, label: 'Settings', page: 'AdminSettings', color: 'bg-gradient-to-br from-slate-600 to-gray-700' },
   ];
 
