@@ -73,8 +73,15 @@ function CRMVendorsContent() {
 
   const statusColors = {
     active: 'bg-green-500',
-    inactive: 'bg-gray-500',
-    pending: 'bg-yellow-500'
+    contacted: 'bg-blue-500',
+    no_answer: 'bg-slate-500',
+    sent_message: 'bg-cyan-500',
+    no_response: 'bg-amber-600',
+    not_interested: 'bg-red-400',
+    negotiating: 'bg-orange-500',
+    dead: 'bg-gray-700',
+    pending: 'bg-yellow-500',
+    inactive: 'bg-gray-500'
   };
 
   const handleCallLogSave = async (callLog) => {
@@ -146,8 +153,15 @@ function CRMVendorsContent() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="no_answer">No Answer</SelectItem>
+                  <SelectItem value="sent_message">Sent Message</SelectItem>
+                  <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                  <SelectItem value="not_interested">Not Interested</SelectItem>
+                  <SelectItem value="negotiating">Negotiating</SelectItem>
+                  <SelectItem value="dead">Dead Contact</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               <div className="text-sm text-blue-600 flex items-center justify-end">
@@ -218,6 +232,30 @@ function CRMVendorsContent() {
                       {vendor.city}, {vendor.state}
                     </div>
                   )}
+                </div>
+
+                <div className="mb-4">
+                  <Label className="text-xs font-semibold text-gray-600 mb-2 block">UPDATE STATUS</Label>
+                  <Select 
+                    value={vendor.status} 
+                    onValueChange={(val) => updateMutation.mutate({ id: vendor.id, data: { status: val } })}
+                  >
+                    <SelectTrigger className="border-blue-200 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="no_answer">No Answer</SelectItem>
+                      <SelectItem value="sent_message">Sent Message</SelectItem>
+                      <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                      <SelectItem value="not_interested">Not Interested</SelectItem>
+                      <SelectItem value="negotiating">Negotiating</SelectItem>
+                      <SelectItem value="dead">Dead Contact</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
@@ -461,8 +499,15 @@ function VendorDialog({ vendor, isOpen, onClose, onSave }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="no_answer">No Answer</SelectItem>
+                  <SelectItem value="sent_message">Sent Message</SelectItem>
+                  <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                  <SelectItem value="not_interested">Not Interested</SelectItem>
+                  <SelectItem value="negotiating">Negotiating</SelectItem>
+                  <SelectItem value="dead">Dead Contact</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>

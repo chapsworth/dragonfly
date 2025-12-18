@@ -281,8 +281,13 @@ function CRMContactsContent() {
   const stageColors = {
     new: 'bg-gray-500',
     contacted: 'bg-blue-500',
+    no_answer: 'bg-slate-500',
+    sent_message: 'bg-cyan-500',
     qualified: 'bg-yellow-500',
     negotiation: 'bg-orange-500',
+    no_response: 'bg-amber-600',
+    not_interested: 'bg-red-400',
+    dead: 'bg-gray-700',
     won: 'bg-green-500',
     lost: 'bg-red-500'
   };
@@ -698,8 +703,13 @@ function CRMContactsContent() {
                   <SelectItem value="all">All Stages</SelectItem>
                   <SelectItem value="new">New</SelectItem>
                   <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="no_answer">No Answer</SelectItem>
+                  <SelectItem value="sent_message">Sent Message</SelectItem>
                   <SelectItem value="qualified">Qualified</SelectItem>
                   <SelectItem value="negotiation">Negotiation</SelectItem>
+                  <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                  <SelectItem value="not_interested">Not Interested</SelectItem>
+                  <SelectItem value="dead">Dead Contact</SelectItem>
                   <SelectItem value="won">Won</SelectItem>
                   <SelectItem value="lost">Lost</SelectItem>
                 </SelectContent>
@@ -762,7 +772,7 @@ function CRMContactsContent() {
                           {isExpanded && (
                             <div className="px-4 pb-4 space-y-4 border-t border-emerald-100">
                               {/* Action Buttons */}
-                              <div className="flex gap-2 pt-4">
+                              <div className="flex gap-2 pt-4 flex-wrap">
                                 {contact.phone && (
                                   <>
                                     <Button
@@ -815,6 +825,32 @@ function CRMContactsContent() {
                                   <Trash2 className="w-4 h-4" />
                                   Delete
                                 </Button>
+                              </div>
+
+                              {/* Quick Stage Update */}
+                              <div className="pt-4 border-t border-emerald-100">
+                                <Label className="text-xs font-semibold text-gray-600 mb-2 block">UPDATE DEAL STAGE</Label>
+                                <Select 
+                                  value={contact.stage} 
+                                  onValueChange={(val) => updateMutation.mutate({ id: contact.id, data: { stage: val } })}
+                                >
+                                  <SelectTrigger className="border-emerald-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="new">New</SelectItem>
+                                    <SelectItem value="contacted">Contacted</SelectItem>
+                                    <SelectItem value="no_answer">No Answer</SelectItem>
+                                    <SelectItem value="sent_message">Sent Message</SelectItem>
+                                    <SelectItem value="qualified">Qualified</SelectItem>
+                                    <SelectItem value="negotiation">Negotiation</SelectItem>
+                                    <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                                    <SelectItem value="not_interested">Not Interested</SelectItem>
+                                    <SelectItem value="dead">Dead Contact</SelectItem>
+                                    <SelectItem value="won">Won</SelectItem>
+                                    <SelectItem value="lost">Lost</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
 
                               {/* Contact Details */}
@@ -1445,8 +1481,13 @@ function ContactDialog({ contact, isOpen, onClose, onSave }) {
                 <SelectContent>
                   <SelectItem value="new">New</SelectItem>
                   <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="no_answer">No Answer</SelectItem>
+                  <SelectItem value="sent_message">Sent Message</SelectItem>
                   <SelectItem value="qualified">Qualified</SelectItem>
                   <SelectItem value="negotiation">Negotiation</SelectItem>
+                  <SelectItem value="no_response">Haven't Heard Back</SelectItem>
+                  <SelectItem value="not_interested">Not Interested</SelectItem>
+                  <SelectItem value="dead">Dead Contact</SelectItem>
                   <SelectItem value="won">Won</SelectItem>
                   <SelectItem value="lost">Lost</SelectItem>
                 </SelectContent>
