@@ -134,7 +134,7 @@ export default function ProductDetail() {
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            {product.strain_type && product.strain_type !== 'n/a' && (
+            {product.category !== 'accessories' && product.strain_type && product.strain_type !== 'n/a' && (
               <Badge className={cn(
                 "absolute top-6 left-6 px-4 py-2 text-base bg-gradient-to-r",
                 strainColors[product.strain_type],
@@ -165,7 +165,7 @@ export default function ProductDetail() {
             </div>
 
             {/* THC/CBD */}
-            {(product.thc_level > 0 || product.cbd_level > 0) && (
+            {product.category !== 'accessories' && (product.thc_level > 0 || product.cbd_level > 0) && (
               <div className="flex gap-3 mb-6">
                 {product.thc_level > 0 && (
                   <div className="flex-1 p-4 rounded-2xl bg-amber-100 border border-amber-200">
