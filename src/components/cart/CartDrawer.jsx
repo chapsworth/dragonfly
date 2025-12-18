@@ -46,10 +46,11 @@ export default function CartDrawer() {
   });
 
   const { data: savedAddresses = [] } = useQuery({
-    queryKey: ['addresses'],
+    queryKey: ['addresses', user?.email],
     queryFn: async () => {
       try {
-        return await base44.entities.Address.list('-is_default');
+        if (!user?.email) return [];
+        return await base44.entities.Address.filter({ user_email: user.email }, '-is_default');
       } catch {
         return [];
       }
