@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy, Droplets, Gem, Cookie, Flame, Zap, Hexagon, Beaker, Heart, Pipette } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -29,18 +29,6 @@ const strainColors = {
   sativa: 'from-orange-500 to-amber-600',
   hybrid: 'from-emerald-500 to-green-600',
   cbd: 'from-blue-500 to-cyan-600'
-};
-
-const categoryIcons = {
-  'concentrated-oils': Droplets,
-  'diamonds': Gem,
-  'sugar': Cookie,
-  'crumble': Cookie,
-  'shatter': Zap,
-  'sauce': Flame,
-  'extracts': Pipette,
-  'tinctures': Beaker,
-  'topicals': Heart
 };
 
 export default function ProductLibrary() {
@@ -379,7 +367,7 @@ export default function ProductLibrary() {
         )}
 
         {/* Bulk Actions */}
-        {filteredProducts.length > 0 && (
+        {selectedProducts.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -387,36 +375,18 @@ export default function ProductLibrary() {
           >
             <Button
               size="sm"
-              variant="outline"
-              onClick={() => {
-                if (selectedProducts.length === filteredProducts.length) {
-                  setSelectedProducts([]);
-                } else {
-                  setSelectedProducts(filteredProducts.map(p => p.id));
-                }
-              }}
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: true } })}
+              className="bg-green-600 hover:bg-green-700"
             >
-              <Package className="w-4 h-4 mr-2" />
-              {selectedProducts.length === filteredProducts.length ? 'Deselect All' : 'Select All'}
+              Publish Selected ({selectedProducts.length})
             </Button>
-            {selectedProducts.length > 0 && (
-              <>
-                <Button
-                  size="sm"
-                  onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: true } })}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  Publish ({selectedProducts.length})
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: false } })}
-                >
-                  Unpublish ({selectedProducts.length})
-                </Button>
-              </>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => bulkUpdateMutation.mutate({ ids: selectedProducts, data: { published: false } })}
+            >
+              Unpublish Selected ({selectedProducts.length})
+            </Button>
           </motion.div>
         )}
 
@@ -469,21 +439,17 @@ export default function ProductLibrary() {
                 </div>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                {['all', 'concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => {
-                  const Icon = categoryIcons[category];
-                  return (
-                    <Button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      variant={selectedCategory === category ? 'default' : 'outline'}
-                      className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category] || 'from-emerald-500 to-green-500'}` : ''}
-                      size="sm"
-                    >
-                      {Icon && <Icon className="w-4 h-4 mr-2" />}
-                      {category === 'all' ? 'All Types' : category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                    </Button>
-                  );
-                })}
+                {['all', 'concentrated-oils', 'diamonds', 'sugar', 'crumble', 'shatter', 'sauce', 'extracts', 'tinctures', 'topicals'].map(category => (
+                  <Button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    className={selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category] || 'from-emerald-500 to-green-500'}` : ''}
+                    size="sm"
+                  >
+                    {category === 'all' ? 'All Types' : category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                  </Button>
+                ))}
               </div>
             </div>
             

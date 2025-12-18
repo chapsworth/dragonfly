@@ -100,10 +100,9 @@ export default function Profile() {
 
   const handleEditProfile = () => {
     setProfileForm({
-      display_name: user.display_name || user.full_name || '',
+      full_name: user.full_name || '',
       phone: user.phone || '',
-      birthday: user.birthday || '',
-      hide_email: user.hide_email || false
+      birthday: user.birthday || ''
     });
     setEditingProfile(true);
   };
@@ -209,14 +208,14 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Display Name</Label>
-                    <p className="text-lg font-semibold text-emerald-900">{user.display_name || user.full_name || 'Not set'}</p>
+                    <Label className="text-gray-600">Full Name</Label>
+                    <p className="text-lg font-semibold text-emerald-900">{user.full_name || 'Not set'}</p>
                   </div>
                   <div>
                     <Label className="text-gray-600">Email</Label>
                     <p className="text-lg font-semibold text-emerald-900 flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      {user.hide_email ? '••••••@••••.com' : user.email}
+                      {user.email}
                     </p>
                   </div>
                   <div>
@@ -239,10 +238,10 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Display Name</Label>
+                    <Label>Full Name</Label>
                     <Input
-                      value={profileForm.display_name}
-                      onChange={(e) => setProfileForm({ ...profileForm, display_name: e.target.value })}
+                      value={profileForm.full_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
                       placeholder="John Doe"
                     />
                   </div>
@@ -262,17 +261,6 @@ export default function Profile() {
                       onChange={(e) => setProfileForm({ ...profileForm, birthday: e.target.value })}
                     />
                   </div>
-                </div>
-                <div className="pt-4 border-t">
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={profileForm.hide_email}
-                      onChange={(e) => setProfileForm({ ...profileForm, hide_email: e.target.checked })}
-                      className="w-4 h-4 accent-emerald-600"
-                    />
-                    <span className="text-sm text-emerald-900">Hide my email from public display</span>
-                  </label>
                 </div>
               </div>
             )}

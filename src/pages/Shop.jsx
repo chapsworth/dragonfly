@@ -310,36 +310,29 @@ export default function Shop() {
         
         category === 'all' && productsByCategory ?
         <div className="space-y-12">
-            {categories.filter(c => c.value !== 'all').map(cat => {
-              const products = productsByCategory[cat.value] || [];
+            {Object.entries(productsByCategory).map(([cat, products]) => {
+              const categoryData = categories.find(c => c.value === cat);
               return (
-                <div key={cat.value}>
+                <div key={cat}>
                   <h2 className="text-2xl font-bold text-emerald-900 mb-4 capitalize">
-                    {cat.label}
+                    {categoryData?.label || cat.replace('-', ' ')}
                   </h2>
-                  {products.length === 0 ? (
-                    <div className="text-center py-12 bg-white/60 rounded-2xl border border-emerald-200">
-                      <p className="text-xl font-semibold text-emerald-600 mb-2">Coming Soon</p>
-                      <p className="text-emerald-500">We're working on bringing you amazing products in this category</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
-                      <AnimatePresence>
-                        {products.map((product, index) =>
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="min-w-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
+                    <AnimatePresence>
+                      {products.map((product, index) =>
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="min-w-0">
 
-                            <ProductCard product={product} />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
+                          <ProductCard product={product} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               );
             })}
