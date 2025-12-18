@@ -13,6 +13,7 @@ import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calend
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import CallLogger from '@/components/crm/CallLogger';
 
 export default function CRMContacts() {
   return (
@@ -42,6 +43,7 @@ function CRMContactsContent() {
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [selectedDuplicates, setSelectedDuplicates] = useState({});
   const [isScanning, setIsScanning] = useState(false);
+  const [activeCallContact, setActiveCallContact] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -114,8 +116,37 @@ function CRMContactsContent() {
     setExpandedContacts(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleCall = (phone) => {
-    if (phone) window.location.href = `tel:${phone}`;
+  const handleCall = (phone, contact) => {
+    if (phone) {
+      setActiveCallContact(contact);
+      window.location.href = `tel:${phone}`;
+    }
+  };
+
+  const handleCallLogSave = async (callLog) => {
+    try {
+      // Create call note
+      await base44.entities.CRMNote.create({
+        title: `Call with ${callLog.contactName} - ${callLog.outcome}`,
+        content: callLog.notes,
+        note_type: 'call',
+        related_contact_id: callLog.contactId
+      });
+
+      // Update contact stage if changed
+      if (callLog.stage) {
+        await base44.entities.Contact.update(callLog.contactId, {
+          stage: callLog.stage
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success('Call logged successfully');
+      setActiveCallContact(null);
+    } catch (error) {
+      console.error('Failed to log call:', error);
+      toast.error('Failed to log call');
+    }
   };
 
   const handleText = (phone, name) => {
@@ -736,7 +767,7 @@ function CRMContactsContent() {
                                   <>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleCall(contact.phone)}
+                                      onClick={() => handleCall(contact.phone, contact)}
                                       className="bg-gradient-to-r from-blue-500 to-cyan-500 gap-2"
                                     >
                                       <Phone className="w-4 h-4" />
@@ -1115,6 +1146,16 @@ function CRMContactsContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Call Logger */}
+      {activeCallContact && (
+        <CallLogger
+          contactId={activeCallContact.id}
+          contactName={activeCallContact.full_name}
+          contactType="contact"
+          onSave={handleCallLogSave}
+        />
+      )}
 
       {/* Duplicates Dialog */}
       <Dialog open={showDuplicates} onOpenChange={setShowDuplicates}>

@@ -13,6 +13,7 @@ import { Building2, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, St
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import CallLogger from '@/components/crm/CallLogger';
 
 export default function CRMVendors() {
   return (
@@ -28,6 +29,7 @@ function CRMVendorsContent() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingVendor, setEditingVendor] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [activeCallVendor, setActiveCallVendor] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: vendors = [] } = useQuery({
@@ -73,6 +75,25 @@ function CRMVendorsContent() {
     active: 'bg-green-500',
     inactive: 'bg-gray-500',
     pending: 'bg-yellow-500'
+  };
+
+  const handleCallLogSave = async (callLog) => {
+    try {
+      // Create call note
+      await base44.entities.CRMNote.create({
+        title: `Call with ${callLog.contactName} - ${callLog.outcome}`,
+        content: callLog.notes,
+        note_type: 'call',
+        related_vendor_id: callLog.contactId
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      toast.success('Call logged successfully');
+      setActiveCallVendor(null);
+    } catch (error) {
+      console.error('Failed to log call:', error);
+      toast.error('Failed to log call');
+    }
   };
 
   return (
@@ -174,10 +195,16 @@ function CRMVendorsContent() {
                     </a>
                   )}
                   {vendor.phone && (
-                    <a href={`tel:${vendor.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600">
+                    <button 
+                      onClick={() => {
+                        setActiveCallVendor(vendor);
+                        window.location.href = `tel:${vendor.phone}`;
+                      }}
+                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600"
+                    >
                       <Phone className="w-4 h-4" />
                       {vendor.phone}
-                    </a>
+                    </button>
                   )}
                   {vendor.website && (
                     <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600">
@@ -228,6 +255,16 @@ function CRMVendorsContent() {
           </Card>
         )}
       </div>
+
+      {/* Call Logger */}
+      {activeCallVendor && (
+        <CallLogger
+          contactId={activeCallVendor.id}
+          contactName={activeCallVendor.company_name}
+          contactType="vendor"
+          onSave={handleCallLogSave}
+        />
+      )}
 
       <VendorDialog
         vendor={editingVendor}

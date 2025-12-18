@@ -1,65 +1,65 @@
-import Home from './pages/Home';
-import Shop from './pages/Shop';
-import Contact from './pages/Contact';
-import Orders from './pages/Orders';
-import Rewards from './pages/Rewards';
-import ProductDetail from './pages/ProductDetail';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProducts from './pages/AdminProducts';
-import AdminOrders from './pages/AdminOrders';
-import AdminUsers from './pages/AdminUsers';
 import AdminCarousel from './pages/AdminCarousel';
 import AdminCategories from './pages/AdminCategories';
-import ComponentLibrary from './pages/ComponentLibrary';
-import AdminSettings from './pages/AdminSettings';
-import StrainLibrary from './pages/StrainLibrary';
+import AdminDashboard from './pages/AdminDashboard';
 import AdminInventory from './pages/AdminInventory';
+import AdminLauncher from './pages/AdminLauncher';
+import AdminOrders from './pages/AdminOrders';
+import AdminProducts from './pages/AdminProducts';
+import AdminSettings from './pages/AdminSettings';
+import AdminUsers from './pages/AdminUsers';
 import CRM from './pages/CRM';
+import CRMBookmarks from './pages/CRMBookmarks';
+import CRMCalendar from './pages/CRMCalendar';
 import CRMContacts from './pages/CRMContacts';
+import CRMDocuments from './pages/CRMDocuments';
 import CRMTasks from './pages/CRMTasks';
 import CRMVendors from './pages/CRMVendors';
-import CRMCalendar from './pages/CRMCalendar';
-import CRMBookmarks from './pages/CRMBookmarks';
-import CRMDocuments from './pages/CRMDocuments';
-import OrderTracking from './pages/OrderTracking';
-import AdminLauncher from './pages/AdminLauncher';
+import ComponentLibrary from './pages/ComponentLibrary';
+import Contact from './pages/Contact';
 import DeliveryNavigation from './pages/DeliveryNavigation';
-import Profile from './pages/Profile';
-import ProductLibrary from './pages/ProductLibrary';
 import GlassPortal from './pages/GlassPortal';
+import Home from './pages/Home';
+import OrderTracking from './pages/OrderTracking';
+import Orders from './pages/Orders';
+import ProductDetail from './pages/ProductDetail';
+import ProductLibrary from './pages/ProductLibrary';
+import Profile from './pages/Profile';
+import Rewards from './pages/Rewards';
+import Shop from './pages/Shop';
+import StrainLibrary from './pages/StrainLibrary';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Home": Home,
-    "Shop": Shop,
-    "Contact": Contact,
-    "Orders": Orders,
-    "Rewards": Rewards,
-    "ProductDetail": ProductDetail,
-    "AdminDashboard": AdminDashboard,
-    "AdminProducts": AdminProducts,
-    "AdminOrders": AdminOrders,
-    "AdminUsers": AdminUsers,
     "AdminCarousel": AdminCarousel,
     "AdminCategories": AdminCategories,
-    "ComponentLibrary": ComponentLibrary,
-    "AdminSettings": AdminSettings,
-    "StrainLibrary": StrainLibrary,
+    "AdminDashboard": AdminDashboard,
     "AdminInventory": AdminInventory,
+    "AdminLauncher": AdminLauncher,
+    "AdminOrders": AdminOrders,
+    "AdminProducts": AdminProducts,
+    "AdminSettings": AdminSettings,
+    "AdminUsers": AdminUsers,
     "CRM": CRM,
+    "CRMBookmarks": CRMBookmarks,
+    "CRMCalendar": CRMCalendar,
     "CRMContacts": CRMContacts,
+    "CRMDocuments": CRMDocuments,
     "CRMTasks": CRMTasks,
     "CRMVendors": CRMVendors,
-    "CRMCalendar": CRMCalendar,
-    "CRMBookmarks": CRMBookmarks,
-    "CRMDocuments": CRMDocuments,
-    "OrderTracking": OrderTracking,
-    "AdminLauncher": AdminLauncher,
+    "ComponentLibrary": ComponentLibrary,
+    "Contact": Contact,
     "DeliveryNavigation": DeliveryNavigation,
-    "Profile": Profile,
-    "ProductLibrary": ProductLibrary,
     "GlassPortal": GlassPortal,
+    "Home": Home,
+    "OrderTracking": OrderTracking,
+    "Orders": Orders,
+    "ProductDetail": ProductDetail,
+    "ProductLibrary": ProductLibrary,
+    "Profile": Profile,
+    "Rewards": Rewards,
+    "Shop": Shop,
+    "StrainLibrary": StrainLibrary,
 }
 
 export const pagesConfig = {
