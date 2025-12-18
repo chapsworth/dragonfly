@@ -49,10 +49,28 @@ export default function ProductLibrary() {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const queryClient = useQueryClient();
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list()
   });
+
+  // Redirect non-admins
+  React.useEffect(() => {
+    if (user && user.role !== 'admin') {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user]);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -200,6 +218,17 @@ export default function ProductLibrary() {
         : [...prev, productId]
     );
   };
+
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-green-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-emerald-900 mb-2">Access Denied</h1>
+          <p className="text-emerald-600">This page is only accessible to administrators.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 pt-24 pb-32 px-4 overflow-x-hidden">
