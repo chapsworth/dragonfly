@@ -408,7 +408,51 @@ export default function Home() {
         <meta name="twitter:description" content="Explore our curated selection of premium cannabis products. Fast delivery, exceptional quality, always discreet." />
         <meta name="twitter:image" content={appSettings?.header_icon_url || 'https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80'} />
       </Helmet>
-      <div className="min-h-screen bg-white">
+      {/* Snow Animation */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-fall opacity-70"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `-${Math.random() * 20}%`,
+              width: `${Math.random() * 3 + 2}px`,
+              height: `${Math.random() * 3 + 2}px`,
+              borderRadius: '50%',
+              background: 'white',
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 3 + 5}s`
+            }}
+          />
+        ))}
+      </div>
+      
+      <style>{`
+        @keyframes fall {
+          0% { transform: translateY(0) rotate(0deg); }
+          100% { transform: translateY(100vh) rotate(360deg); }
+        }
+        .animate-fall { animation: fall linear infinite; }
+      `}</style>
+
+      <div className="min-h-screen bg-white relative z-10">
+        {/* Holiday Message */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pt-24 px-4 pb-4"
+        >
+          <div className="max-w-7xl mx-auto text-center bg-gradient-to-r from-red-500/10 via-green-500/10 to-red-500/10 backdrop-blur-sm rounded-2xl p-6 border-2 border-white/40">
+            <h2 className="text-3xl font-bold text-emerald-900 mb-2">
+              🎄 Happy Holidays! 🎁
+            </h2>
+            <p className="text-emerald-700">
+              Wishing you a joyful season filled with peace and celebration
+            </p>
+          </div>
+        </motion.div>
+        
         <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
         {/* Admin Edit Button */}
         {user?.role === 'admin' && (
