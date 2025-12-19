@@ -15,6 +15,7 @@ import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
 import EmailComposer from '@/components/crm/EmailComposer';
+import TextMessageDialog from '@/components/crm/TextMessageDialog';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -49,6 +50,8 @@ function CRMContactsContent() {
   const [activeCallContact, setActiveCallContact] = useState(null);
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
   const [selectedForEmail, setSelectedForEmail] = useState([]);
+  const [isTextDialogOpen, setIsTextDialogOpen] = useState(false);
+  const [selectedContactForText, setSelectedContactForText] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -154,11 +157,9 @@ function CRMContactsContent() {
     }
   };
 
-  const handleText = (phone, name) => {
-    if (phone) {
-      const message = encodeURIComponent(`Hi ${name}, `);
-      window.location.href = `sms:${phone}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${message}`;
-    }
+  const handleText = (contact) => {
+    setSelectedContactForText(contact);
+    setIsTextDialogOpen(true);
   };
 
   const handleEmail = (email) => {
@@ -805,7 +806,7 @@ function CRMContactsContent() {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleText(contact.phone, contact.full_name)}
+                                      onClick={() => handleText(contact)}
                                       className="bg-gradient-to-r from-green-500 to-emerald-500 gap-2"
                                     >
                                       <MessageSquare className="w-4 h-4" />
@@ -1226,6 +1227,16 @@ function CRMContactsContent() {
         }}
         contacts={contacts}
         preSelectedContacts={selectedForEmail}
+      />
+
+      {/* Text Message Dialog */}
+      <TextMessageDialog
+        contact={selectedContactForText}
+        isOpen={isTextDialogOpen}
+        onClose={() => {
+          setIsTextDialogOpen(false);
+          setSelectedContactForText(null);
+        }}
       />
 
       {/* Duplicates Dialog */}
