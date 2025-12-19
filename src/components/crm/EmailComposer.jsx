@@ -68,6 +68,7 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
     try {
       const emailPromises = selectedContacts.map(contact =>
         base44.integrations.Core.SendEmail({
+          from_name: 'Dragonfly',
           to: contact.email,
           subject: subject,
           body: message
