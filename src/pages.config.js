@@ -7,6 +7,8 @@ import AdminOrders from './pages/AdminOrders';
 import AdminProducts from './pages/AdminProducts';
 import AdminSettings from './pages/AdminSettings';
 import AdminUsers from './pages/AdminUsers';
+import Analytics from './pages/Analytics';
+import Automations from './pages/Automations';
 import CRM from './pages/CRM';
 import CRMBookmarks from './pages/CRMBookmarks';
 import CRMCalendar from './pages/CRMCalendar';
@@ -19,6 +21,7 @@ import CRMVendors from './pages/CRMVendors';
 import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
 import DeliveryNavigation from './pages/DeliveryNavigation';
+import Favorites from './pages/Favorites';
 import GlassPortal from './pages/GlassPortal';
 import Home from './pages/Home';
 import OrderTracking from './pages/OrderTracking';
@@ -29,9 +32,7 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
-import Favorites from './pages/Favorites';
-import Analytics from './pages/Analytics';
-import Automations from './pages/Automations';
+import NotificationManager from './pages/NotificationManager';
 import __Layout from './Layout.jsx';
 
 
@@ -45,6 +46,8 @@ export const PAGES = {
     "AdminProducts": AdminProducts,
     "AdminSettings": AdminSettings,
     "AdminUsers": AdminUsers,
+    "Analytics": Analytics,
+    "Automations": Automations,
     "CRM": CRM,
     "CRMBookmarks": CRMBookmarks,
     "CRMCalendar": CRMCalendar,
@@ -57,6 +60,7 @@ export const PAGES = {
     "ComponentLibrary": ComponentLibrary,
     "Contact": Contact,
     "DeliveryNavigation": DeliveryNavigation,
+    "Favorites": Favorites,
     "GlassPortal": GlassPortal,
     "Home": Home,
     "OrderTracking": OrderTracking,
@@ -67,9 +71,7 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
-    "Favorites": Favorites,
-    "Analytics": Analytics,
-    "Automations": Automations,
+    "NotificationManager": NotificationManager,
 }
 
 export const pagesConfig = {
