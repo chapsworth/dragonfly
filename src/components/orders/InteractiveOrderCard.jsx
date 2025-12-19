@@ -111,8 +111,9 @@ export default function InteractiveOrderCard({ order }) {
   };
 
   const handleText = () => {
-    if (order.customer_phone) {
-      const message = encodeURIComponent(`Hi ${order.customer_name || 'there'}, this is about your order #${order.id.slice(-8)}. Your order is ${order.status.replace('_', ' ')}. We'll keep you updated!`);
+    if (order?.customer_phone) {
+      const orderId = order.id ? order.id.slice(-8) : 'XXXXX';
+      const message = encodeURIComponent(`Hi ${order.customer_name || 'there'}, this is about your order #${orderId}. Your order is ${order.status?.replace('_', ' ') || 'being processed'}. We'll keep you updated!`);
       window.location.href = `sms:${order.customer_phone}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${message}`;
     } else {
       toast.error('No phone number available');
