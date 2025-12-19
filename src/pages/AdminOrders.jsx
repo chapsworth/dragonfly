@@ -599,7 +599,21 @@ export default function AdminOrders() {
                   {formData.customer_selection === 'existing' && (
                     <div>
                       <Label>Select Customer *</Label>
-                      <Select value={formData.customer_id} onValueChange={(v) => setFormData({...formData, customer_id: v})}>
+                      <Select value={formData.customer_id} onValueChange={(v) => {
+                        const selectedContact = contacts.find(c => c.id === v);
+                        if (selectedContact) {
+                          const address = selectedContact.address ? 
+                            `${selectedContact.address}${selectedContact.city ? ', ' + selectedContact.city : ''}${selectedContact.state ? ', ' + selectedContact.state : ''}${selectedContact.zip ? ' ' + selectedContact.zip : ''}` 
+                            : '';
+                          setFormData({
+                            ...formData, 
+                            customer_id: v,
+                            delivery_address: address
+                          });
+                        } else {
+                          setFormData({...formData, customer_id: v});
+                        }
+                      }}>
                         <SelectTrigger>
                           <SelectValue placeholder="Choose a customer..." />
                         </SelectTrigger>
