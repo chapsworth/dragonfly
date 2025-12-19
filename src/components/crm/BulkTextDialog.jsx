@@ -63,8 +63,10 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
       return;
     }
 
-    const phoneNumbers = group.contacts.map(c => c.phone.replace(/\D/g, '')).join(',');
-    const smsUrl = `sms:${phoneNumbers}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(customMessage)}`;
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const phoneNumbers = group.contacts.map(c => c.phone.replace(/\D/g, '')).join(isIOS ? ';' : ',');
+    const separator = isIOS ? '&' : '?';
+    const smsUrl = `sms:${phoneNumbers}${separator}body=${encodeURIComponent(customMessage)}`;
     
     window.location.href = smsUrl;
     toast.success(`Opening message to ${group.contacts.length} contacts...`);
@@ -77,14 +79,16 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
     }
 
     const groupContacts = contacts.filter(c => group.contact_ids.includes(c.id));
-    const phoneNumbers = groupContacts.map(c => c.phone?.replace(/\D/g, '')).filter(Boolean).join(',');
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const phoneNumbers = groupContacts.map(c => c.phone?.replace(/\D/g, '')).filter(Boolean).join(isIOS ? ';' : ',');
     
     if (!phoneNumbers) {
       toast.error('No valid phone numbers in this group');
       return;
     }
 
-    const smsUrl = `sms:${phoneNumbers}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(customMessage)}`;
+    const separator = isIOS ? '&' : '?';
+    const smsUrl = `sms:${phoneNumbers}${separator}body=${encodeURIComponent(customMessage)}`;
     window.location.href = smsUrl;
     toast.success(`Opening message to ${groupContacts.length} contacts...`);
   };
