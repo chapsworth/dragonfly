@@ -227,6 +227,71 @@ export default function InteractiveOrderCard({ order }) {
             Nav
           </Button>
         </div>
+
+        {/* Compact Map Preview - Only when out for delivery */}
+        {order.status === 'out_for_delivery' && (driverLocation || order.driver_lat) && order.delivery_lat && order.delivery_lng && (
+          <div className="mt-3 rounded-lg overflow-hidden border-2 border-orange-200">
+            <div className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-2 py-1 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1">
+                <Truck className="w-3 h-3" />
+                <span className="font-semibold">Live Tracking</span>
+              </div>
+              {distance && (
+                <span className="font-bold">{distance} mi away</span>
+              )}
+            </div>
+            <div className="h-32 relative">
+              <MapContainer
+                center={[
+                  ((driverLocation?.lat || order.driver_lat) + order.delivery_lat) / 2,
+                  ((driverLocation?.lng || order.driver_lng) + order.delivery_lng) / 2
+                ]}
+                zoom={12}
+                style={{ height: '100%', width: '100%' }}
+                zoomControl={false}
+                attributionControl={false}
+                dragging={false}
+                scrollWheelZoom={false}
+                doubleClickZoom={false}
+                touchZoom={false}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                
+                {/* Driver Marker */}
+                <Marker position={[driverLocation?.lat || order.driver_lat, driverLocation?.lng || order.driver_lng]}>
+                  <Popup>
+                    <div className="text-xs">
+                      <p className="font-bold">Driver</p>
+                      <p>{order.driver_name || 'En route'}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+
+                {/* Customer Marker */}
+                <Marker position={[order.delivery_lat, order.delivery_lng]}>
+                  <Popup>
+                    <div className="text-xs">
+                      <p className="font-bold">{order.customer_name}</p>
+                      <p>{order.delivery_address}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+
+                {/* Route Line */}
+                <Polyline
+                  positions={[
+                    [driverLocation?.lat || order.driver_lat, driverLocation?.lng || order.driver_lng],
+                    [order.delivery_lat, order.delivery_lng]
+                  ]}
+                  color="#f97316"
+                  weight={2}
+                  opacity={0.6}
+                  dashArray="5, 5"
+                />
+              </MapContainer>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Out for Delivery Map - Always show when status is out_for_delivery */}
