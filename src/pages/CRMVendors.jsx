@@ -30,6 +30,7 @@ function CRMVendorsContent() {
   const [editingVendor, setEditingVendor] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [activeCallVendor, setActiveCallVendor] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: vendors = [] } = useQuery({
