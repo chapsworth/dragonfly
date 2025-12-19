@@ -17,6 +17,7 @@ import CallLogger from '@/components/crm/CallLogger';
 import EmailComposer from '@/components/crm/EmailComposer';
 import TextMessageDialog from '@/components/crm/TextMessageDialog';
 import BulkTextDialog from '@/components/crm/BulkTextDialog';
+import TextGroupManager from '@/components/crm/TextGroupManager';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -54,6 +55,7 @@ function CRMContactsContent() {
   const [isTextDialogOpen, setIsTextDialogOpen] = useState(false);
   const [selectedContactForText, setSelectedContactForText] = useState(null);
   const [isBulkTextOpen, setIsBulkTextOpen] = useState(false);
+  const [isTextGroupManagerOpen, setIsTextGroupManagerOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -667,6 +669,15 @@ function CRMContactsContent() {
               <span className="sm:hidden">Text</span>
             </Button>
             <Button 
+              onClick={() => setIsTextGroupManagerOpen(true)} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Text Groups</span>
+              <span className="sm:hidden">Groups</span>
+            </Button>
+            <Button 
               onClick={scanForDuplicates} 
               variant="outline" 
               className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
@@ -1256,6 +1267,13 @@ function CRMContactsContent() {
         contacts={filteredContacts}
         isOpen={isBulkTextOpen}
         onClose={() => setIsBulkTextOpen(false)}
+      />
+
+      {/* Text Group Manager */}
+      <TextGroupManager
+        isOpen={isTextGroupManagerOpen}
+        onClose={() => setIsTextGroupManagerOpen(false)}
+        allContacts={contacts}
       />
 
       {/* Duplicates Dialog */}

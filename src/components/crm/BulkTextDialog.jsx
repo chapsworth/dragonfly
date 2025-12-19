@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Send, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,6 +18,11 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
   const { data: templates = [] } = useQuery({
     queryKey: ['textTemplates'],
     queryFn: () => base44.entities.TextTemplate.filter({ is_active: true })
+  });
+
+  const { data: savedGroups = [] } = useQuery({
+    queryKey: ['textGroups'],
+    queryFn: () => base44.entities.TextGroup.list('-created_date')
   });
 
   // Group contacts alphabetically in batches of 32
@@ -64,6 +70,25 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
     toast.success(`Opening message to ${group.contacts.length} contacts...`);
   };
 
+  const handleSendToSavedGroup = (group) => {
+    if (!customMessage) {
+      toast.error('Please select or write a message first');
+      return;
+    }
+
+    const groupContacts = contacts.filter(c => group.contact_ids.includes(c.id));
+    const phoneNumbers = groupContacts.map(c => c.phone?.replace(/\D/g, '')).filter(Boolean).join(',');
+    
+    if (!phoneNumbers) {
+      toast.error('No valid phone numbers in this group');
+      return;
+    }
+
+    const smsUrl = `sms:${phoneNumbers}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(customMessage)}`;
+    window.location.href = smsUrl;
+    toast.success(`Opening message to ${groupContacts.length} contacts...`);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -72,9 +97,6 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
             <MessageSquare className="w-5 h-5 text-emerald-600" />
             Bulk Text Messaging
           </DialogTitle>
-          <p className="text-sm text-gray-600">
-            {contactGroups.length} groups of up to 32 contacts each
-          </p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
@@ -111,10 +133,16 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
             />
           </div>
 
-          {/* Contact Groups */}
-          <div>
-            <h3 className="font-semibold text-sm text-gray-700 mb-3">Contact Groups (32 per group)</h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {/* Groups Tabs */}
+          <Tabs defaultValue="auto" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="auto">Auto Groups (32 max)</TabsTrigger>
+              <TabsTrigger value="saved">Saved Groups</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="auto" className="mt-4">
+              <p className="text-sm text-gray-600 mb-3">{contactGroups.length} groups of up to 32 contacts each</p>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {contactGroups.map((group) => (
                 <Card key={group.id} className="border-emerald-200">
                   <CardContent className="p-0">
@@ -175,14 +203,58 @@ export default function BulkTextDialog({ contacts, isOpen, onClose }) {
                 </Card>
               ))}
 
-              {contactGroups.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No contacts with phone numbers found</p>
-                </div>
-              )}
-            </div>
-          </div>
+                {contactGroups.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No contacts with phone numbers found</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="saved" className="mt-4">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {savedGroups.map((group) => {
+                  const groupContacts = contacts.filter(c => group.contact_ids.includes(c.id));
+                  return (
+                    <Card key={group.id} className="border-emerald-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
+                              {group.name[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-emerald-900">{group.name}</h4>
+                              <p className="text-sm text-emerald-600">
+                                <Users className="w-3 h-3 inline mr-1" />
+                                {groupContacts.length} contacts
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSendToSavedGroup(group)}
+                            className="bg-gradient-to-r from-emerald-500 to-green-500"
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Text Group
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {savedGroups.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No saved groups yet</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </DialogContent>
     </Dialog>
