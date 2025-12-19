@@ -28,6 +28,7 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
+import CRMTextTemplates from './pages/CRMTextTemplates';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
+    "CRMTextTemplates": CRMTextTemplates,
 }
 
 export const pagesConfig = {
