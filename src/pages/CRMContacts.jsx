@@ -18,6 +18,7 @@ import EmailComposer from '@/components/crm/EmailComposer';
 import TextMessageDialog from '@/components/crm/TextMessageDialog';
 import BulkTextDialog from '@/components/crm/BulkTextDialog';
 import TextGroupManager from '@/components/crm/TextGroupManager';
+import EmailGroupManager from '@/components/crm/EmailGroupManager';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -56,6 +57,7 @@ function CRMContactsContent() {
   const [selectedContactForText, setSelectedContactForText] = useState(null);
   const [isBulkTextOpen, setIsBulkTextOpen] = useState(false);
   const [isTextGroupManagerOpen, setIsTextGroupManagerOpen] = useState(false);
+  const [isEmailGroupManagerOpen, setIsEmailGroupManagerOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -678,6 +680,15 @@ function CRMContactsContent() {
               <span className="sm:hidden">Groups</span>
             </Button>
             <Button 
+              onClick={() => setIsEmailGroupManagerOpen(true)} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200"
+            >
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Email Groups</span>
+              <span className="sm:hidden">Groups</span>
+            </Button>
+            <Button 
               onClick={scanForDuplicates} 
               variant="outline" 
               className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
@@ -1274,6 +1285,17 @@ function CRMContactsContent() {
         isOpen={isTextGroupManagerOpen}
         onClose={() => setIsTextGroupManagerOpen(false)}
         allContacts={contacts}
+      />
+
+      {/* Email Group Manager */}
+      <EmailGroupManager
+        isOpen={isEmailGroupManagerOpen}
+        onClose={() => setIsEmailGroupManagerOpen(false)}
+        allContacts={contacts}
+        onSelectGroup={(contacts) => {
+          setSelectedForEmail(contacts);
+          setIsEmailComposerOpen(true);
+        }}
       />
 
       {/* Duplicates Dialog */}

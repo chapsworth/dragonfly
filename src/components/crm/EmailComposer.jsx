@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, X, Loader2, FileText, Sparkles } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Mail, X, Loader2, FileText, Sparkles, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -18,6 +19,8 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   const [isSending, setIsSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [includeAppLink, setIncludeAppLink] = useState(true);
+  const [includeQR, setIncludeQR] = useState(true);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['email-templates'],
@@ -66,12 +69,74 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
 
     setIsSending(true);
     try {
+      const appUrl = window.location.origin;
+      let qrCodeUrl = '';
+      
+      if (includeQR) {
+        const qrResponse = await base44.functions.invoke('generateQRCode', { 
+          text: appUrl, 
+          size: 200 
+        });
+        qrCodeUrl = qrResponse.data.qr_url;
+      }
+
+      const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center; }
+    .logo { color: white; font-size: 28px; font-weight: bold; margin: 0; }
+    .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
+    .footer { background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb; }
+    .app-link { display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+    .qr-section { text-align: center; margin: 30px 0; padding: 20px; background-color: #f9fafb; border-radius: 8px; }
+    .qr-section img { max-width: 200px; height: auto; }
+    .qr-section p { color: #6b7280; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="logo">🌿 Dragonfly</h1>
+    </div>
+    <div class="content">
+      ${message.replace(/\n/g, '<br>')}
+      ${includeAppLink ? `
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${appUrl}" class="app-link">Visit Dragonfly</a>
+      </div>
+      ` : ''}
+      ${includeQR && qrCodeUrl ? `
+      <div class="qr-section">
+        <p style="font-weight: bold; color: #111827; margin-bottom: 15px;">Scan to visit our app</p>
+        <img src="${qrCodeUrl}" alt="QR Code">
+        <p>Scan this QR code with your phone camera</p>
+      </div>
+      ` : ''}
+    </div>
+    <div class="footer">
+      <p style="color: #6b7280; margin: 0; font-size: 14px;">
+        You're receiving this because you're a valued customer of Dragonfly.
+      </p>
+      <p style="color: #9ca3af; margin: 10px 0 0 0; font-size: 12px;">
+        © 2024 Dragonfly. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
       const emailPromises = selectedContacts.map(contact =>
         base44.integrations.Core.SendEmail({
           from_name: 'Dragonfly',
           to: contact.email,
           subject: subject,
-          body: message
+          body: htmlBody
         })
       );
 
@@ -209,6 +274,34 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
               placeholder="Type your message here..."
               className="h-64 border-purple-200"
             />
+          </div>
+
+          {/* HTML Options */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+            <Label className="text-purple-900 font-semibold mb-3 block">Email Enhancements</Label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="app-link" 
+                  checked={includeAppLink}
+                  onCheckedChange={setIncludeAppLink}
+                />
+                <label htmlFor="app-link" className="text-sm cursor-pointer">
+                  Include branded app link button
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="qr-code" 
+                  checked={includeQR}
+                  onCheckedChange={setIncludeQR}
+                />
+                <label htmlFor="qr-code" className="text-sm cursor-pointer flex items-center gap-1">
+                  <QrCode className="w-4 h-4" />
+                  Include QR code for easy mobile access
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
