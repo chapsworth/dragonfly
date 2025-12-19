@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package, DollarSign, Clock, Navigation2, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { toast } from 'sonner';
 
 // Separate component for map to avoid loader conflicts
 function OrderTrackingMap({ order, apiKey }) {
@@ -66,6 +69,17 @@ function OrderTrackingMap({ order, apiKey }) {
 }
 
 export default function CustomerOrderDetailModal({ order, isOpen, onClose, apiKey }) {
+  const navigate = useNavigate();
+
+  // Auto-navigate to tracking page when status changes to out_for_delivery
+  useEffect(() => {
+    if (order?.status === 'out_for_delivery') {
+      onClose();
+      navigate(createPageUrl('OrderTracking') + `?id=${order.id}`);
+      toast.success('Your order is out for delivery! Track it now.');
+    }
+  }, [order?.status, order?.id]);
+
   if (!order) return null;
 
   const statusColors = {
