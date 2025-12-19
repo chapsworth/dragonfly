@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Star, Globe } from 'lucide-react';
+import { Building2, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Star, Globe, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
@@ -104,6 +104,30 @@ function CRMVendorsContent() {
     }
   };
 
+  const handleImportVendorContacts = async () => {
+    if (!confirm('Import all vendor contacts as vendors? This will skip duplicates.')) {
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const response = await base44.functions.invoke('importVendorContacts', {});
+      
+      if (response.data.success) {
+        const { imported, skipped, total } = response.data;
+        toast.success(`Imported ${imported} vendors (${skipped} skipped, ${total} total)`);
+        queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      } else {
+        toast.error('Import failed: ' + response.data.error);
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Failed to import vendor contacts');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white pt-24 pb-32 px-4">
       <div className="max-w-7xl mx-auto">
@@ -115,10 +139,30 @@ function CRMVendorsContent() {
             </h1>
             <p className="text-blue-600">Manage your supplier relationships</p>
           </div>
-          <Button onClick={() => setIsCreating(true)} className="bg-gradient-to-r from-blue-500 to-cyan-500">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Vendor
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleImportVendorContacts}
+              disabled={isImporting}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Import Contacts
+                </>
+              )}
+            </Button>
+            <Button onClick={() => setIsCreating(true)} className="bg-gradient-to-r from-blue-500 to-cyan-500">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Vendor
+            </Button>
+          </div>
         </div>
 
         <Card className="mb-6 bg-white border-blue-200">
