@@ -43,11 +43,11 @@ export default function DeliveryNavigation() {
   }, []);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
+    googleMapsApiKey: apiKey,
     libraries: ['places', 'geometry'],
     id: 'google-maps-script',
     preventGoogleFontsLoading: true
-  });
+  }, { skip: !apiKey });
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
