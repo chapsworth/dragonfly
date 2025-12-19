@@ -29,6 +29,9 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
+import Favorites from './pages/Favorites';
+import Analytics from './pages/Analytics';
+import Automations from './pages/Automations';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +67,9 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
+    "Favorites": Favorites,
+    "Analytics": Analytics,
+    "Automations": Automations,
 }
 
 export const pagesConfig = {
