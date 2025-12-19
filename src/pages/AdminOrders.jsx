@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import ProductSelector from '@/components/orders/ProductSelector';
 import OrderDetailModal from '@/components/orders/OrderDetailModal';
 import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
+import OrderNotification from '@/components/admin/OrderNotification';
 
 const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -426,6 +427,7 @@ export default function AdminOrders() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+      <OrderNotification />
       {/* Mobile Header with Tabs */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40">
         <div className="px-4 py-3 flex items-center gap-3">
