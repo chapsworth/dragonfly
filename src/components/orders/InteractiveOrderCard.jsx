@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Phone, MessageSquare, Navigation, Package, User, MapPin } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown, ChevronUp, Phone, MessageSquare, Navigation, Package, User, MapPin, Truck, Clock } from 'lucide-react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -19,7 +30,66 @@ const statusColors = {
 
 export default function InteractiveOrderCard({ order }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [distance, setDistance] = useState(null);
+  const [driverLocation, setDriverLocation] = useState(null);
   const queryClient = useQueryClient();
+
+  // Fetch current user as potential driver
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  // Get driver location when status is out_for_delivery
+  useEffect(() => {
+    if (order.status === 'out_for_delivery' && currentUser?.email === order.driver_email && navigator.geolocation) {
+      // Get initial location
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setDriverLocation({ lat, lng });
+        
+        // Update order with driver location
+        base44.entities.Order.update(order.id, {
+          driver_lat: lat,
+          driver_lng: lng
+        }).catch(err => console.error('Failed to update driver location:', err));
+      });
+
+      // Watch for location changes
+      const watchId = navigator.geolocation.watchPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setDriverLocation({ lat, lng });
+        
+        // Update order with driver location
+        base44.entities.Order.update(order.id, {
+          driver_lat: lat,
+          driver_lng: lng
+        }).catch(err => console.error('Failed to update driver location:', err));
+      });
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, [order.status, order.driver_email, currentUser?.email, order.id]);
+
+  // Calculate distance when driver and delivery locations are available
+  useEffect(() => {
+    const driverLat = driverLocation?.lat || order.driver_lat;
+    const driverLng = driverLocation?.lng || order.driver_lng;
+
+    if (driverLat && driverLng && order.delivery_lat && order.delivery_lng) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (order.delivery_lat - driverLat) * Math.PI / 180;
+      const dLon = (order.delivery_lng - driverLng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(driverLat * Math.PI / 180) * Math.cos(order.delivery_lat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const dist = R * c;
+      setDistance((dist * 0.621371).toFixed(2)); // Convert to miles
+    }
+  }, [driverLocation, order.driver_lat, order.driver_lng, order.delivery_lat, order.delivery_lng]);
 
   const updateStatusMutation = useMutation({
     mutationFn: (newStatus) => base44.entities.Order.update(order.id, { status: newStatus }),
@@ -158,6 +228,87 @@ export default function InteractiveOrderCard({ order }) {
           </Button>
         </div>
       </div>
+
+      {/* Out for Delivery Map - Always show when status is out_for_delivery */}
+      {order.status === 'out_for_delivery' && (driverLocation || order.driver_lat) && order.delivery_lat && order.delivery_lng && (
+        <div className="border-t border-emerald-100">
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Truck className="w-5 h-5" />
+              <div>
+                <p className="font-bold text-sm">Out for Delivery</p>
+                {order.driver_name && <p className="text-xs opacity-90">{order.driver_name}</p>}
+              </div>
+            </div>
+            {distance && (
+              <div className="text-right">
+                <p className="text-xl font-bold">{distance}</p>
+                <p className="text-[10px] opacity-90">miles away</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="h-64 relative">
+            <MapContainer
+              center={[
+                ((driverLocation?.lat || order.driver_lat) + order.delivery_lat) / 2,
+                ((driverLocation?.lng || order.driver_lng) + order.delivery_lng) / 2
+              ]}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+              attributionControl={false}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              
+              {/* Driver Marker */}
+              <Marker position={[driverLocation?.lat || order.driver_lat, driverLocation?.lng || order.driver_lng]}>
+                <Popup>
+                  <div className="text-center">
+                    <p className="font-bold">{order.driver_name || 'Driver'}</p>
+                    <p className="text-xs">Current Location</p>
+                  </div>
+                </Popup>
+              </Marker>
+
+              {/* Customer Marker */}
+              <Marker position={[order.delivery_lat, order.delivery_lng]}>
+                <Popup>
+                  <div className="text-center">
+                    <p className="font-bold">{order.customer_name}</p>
+                    <p className="text-xs">{order.delivery_address}</p>
+                  </div>
+                </Popup>
+              </Marker>
+
+              {/* Route Line */}
+              <Polyline
+                positions={[
+                  [driverLocation?.lat || order.driver_lat, driverLocation?.lng || order.driver_lng],
+                  [order.delivery_lat, order.delivery_lng]
+                ]}
+                color="#f97316"
+                weight={3}
+                opacity={0.7}
+                dashArray="10, 10"
+              />
+            </MapContainer>
+
+            {/* ETA Overlay */}
+            {order.eta_minutes && (
+              <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 border border-orange-200">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-orange-600" />
+                  <div>
+                    <p className="text-[10px] text-gray-600">ETA</p>
+                    <p className="text-sm font-bold text-orange-600">{order.eta_minutes} min</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expanded Details */}
       {isExpanded && (
