@@ -543,13 +543,13 @@ export default function DeliveryNavigation() {
             </div>
           )}
         </div>
-        </div>
+      </div>
 
-        <ChatModal 
+      <ChatModal 
         order={chatOrder}
         isOpen={!!chatOrder}
         onClose={() => setChatOrder(null)}
-        />
-        </div>
-        );
-        }
+      />
+    </div>
+  );
+}
