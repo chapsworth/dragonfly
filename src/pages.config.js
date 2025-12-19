@@ -14,6 +14,7 @@ import CRMContacts from './pages/CRMContacts';
 import CRMDeals from './pages/CRMDeals';
 import CRMDocuments from './pages/CRMDocuments';
 import CRMTasks from './pages/CRMTasks';
+import CRMTextTemplates from './pages/CRMTextTemplates';
 import CRMVendors from './pages/CRMVendors';
 import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
@@ -28,7 +29,6 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
-import CRMTextTemplates from './pages/CRMTextTemplates';
 import __Layout from './Layout.jsx';
 
 
@@ -49,6 +49,7 @@ export const PAGES = {
     "CRMDeals": CRMDeals,
     "CRMDocuments": CRMDocuments,
     "CRMTasks": CRMTasks,
+    "CRMTextTemplates": CRMTextTemplates,
     "CRMVendors": CRMVendors,
     "ComponentLibrary": ComponentLibrary,
     "Contact": Contact,
@@ -63,7 +64,6 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
-    "CRMTextTemplates": CRMTextTemplates,
 }
 
 export const pagesConfig = {

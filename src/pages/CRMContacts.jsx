@@ -16,6 +16,7 @@ import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
 import EmailComposer from '@/components/crm/EmailComposer';
 import TextMessageDialog from '@/components/crm/TextMessageDialog';
+import BulkTextDialog from '@/components/crm/BulkTextDialog';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -52,6 +53,7 @@ function CRMContactsContent() {
   const [selectedForEmail, setSelectedForEmail] = useState([]);
   const [isTextDialogOpen, setIsTextDialogOpen] = useState(false);
   const [selectedContactForText, setSelectedContactForText] = useState(null);
+  const [isBulkTextOpen, setIsBulkTextOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
@@ -655,6 +657,16 @@ function CRMContactsContent() {
               <span className="sm:hidden">Email</span>
             </Button>
             <Button 
+              onClick={() => setIsBulkTextOpen(true)} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+              disabled={filteredContacts.filter(c => c.phone).length === 0}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Text All</span>
+              <span className="sm:hidden">Text</span>
+            </Button>
+            <Button 
               onClick={scanForDuplicates} 
               variant="outline" 
               className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
@@ -1237,6 +1249,13 @@ function CRMContactsContent() {
           setIsTextDialogOpen(false);
           setSelectedContactForText(null);
         }}
+      />
+
+      {/* Bulk Text Dialog */}
+      <BulkTextDialog
+        contacts={filteredContacts}
+        isOpen={isBulkTextOpen}
+        onClose={() => setIsBulkTextOpen(false)}
       />
 
       {/* Duplicates Dialog */}
