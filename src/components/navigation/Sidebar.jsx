@@ -34,7 +34,6 @@ const navItems = [
   { name: 'Strain Library', page: 'StrainLibrary', icon: Leaf },
   { name: 'Product Library', page: 'ProductLibrary', icon: Package },
   { name: 'Glass Portal', page: 'GlassPortal', icon: Glasses },
-  { name: 'Radio', page: 'Radio', icon: Wind },
   { name: 'Rewards', page: 'Rewards', icon: Sparkles },
   { name: 'My Orders', page: 'Orders', icon: ClipboardList },
   { name: 'My Profile', page: 'Profile', icon: User },
