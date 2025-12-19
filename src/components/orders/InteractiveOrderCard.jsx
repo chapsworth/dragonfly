@@ -34,6 +34,10 @@ export default function InteractiveOrderCard({ order }) {
   const [driverLocation, setDriverLocation] = useState(null);
   const queryClient = useQueryClient();
 
+  if (!order) {
+    return null;
+  }
+
   // Fetch current user as potential driver
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
