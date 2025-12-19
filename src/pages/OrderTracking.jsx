@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation } from 'lucide-react';
+import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -24,9 +26,41 @@ export default function OrderTracking() {
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
-    refetchInterval: order?.status === 'out_for_delivery' ? 10000 : false, // Poll every 10s when out for delivery
     enabled: !!orderId
   });
+
+  // Set up refetch interval based on order status
+  React.useEffect(() => {
+    if (order?.status === 'out_for_delivery') {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [order?.status, orderId]);
+
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState(null);
+  const [distance, setDistance] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  // Calculate distance when driver location is available
+  useEffect(() => {
+    if (order?.driver_lat && order?.driver_lng && order?.delivery_lat && order?.delivery_lng) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (order.delivery_lat - order.driver_lat) * Math.PI / 180;
+      const dLon = (order.delivery_lng - order.driver_lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(order.driver_lat * Math.PI / 180) * Math.cos(order.delivery_lat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const dist = R * c;
+      setDistance((dist * 0.621371).toFixed(2)); // Convert to miles
+    }
+  }, [order?.driver_lat, order?.driver_lng, order?.delivery_lat, order?.delivery_lng]);
 
   if (isLoading) {
     return (
@@ -63,6 +97,15 @@ export default function OrderTracking() {
   const currentStatus = statusConfig[order.status] || statusConfig.pending;
   const StatusIcon = currentStatus.icon;
   const showDriverLocation = order.status === 'out_for_delivery' && order.driver_lat && order.driver_lng;
+  const isAdmin = user?.role === 'admin';
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+      toast.success('Order status updated');
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4">
@@ -85,29 +128,41 @@ export default function OrderTracking() {
         {showDriverLocation && (
           <Card className="mb-6 overflow-hidden border-emerald-200">
             <CardContent className="p-0">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Truck className="w-6 h-6" />
-                  <div>
-                    <h3 className="font-bold text-lg">Your Driver is on the way!</h3>
-                    {order.eta_minutes && (
-                      <p className="text-emerald-100 text-sm">ETA: {order.eta_minutes} minutes</p>
-                    )}
+              <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <Truck className="w-6 h-6" />
+                    <div>
+                      <h3 className="font-bold text-lg">Your Driver is on the way!</h3>
+                      {order.eta_minutes && (
+                        <p className="text-emerald-100 text-sm">ETA: {order.eta_minutes} minutes</p>
+                      )}
+                    </div>
                   </div>
+                  {distance && (
+                    <div className="text-right">
+                      <p className="text-2xl font-bold">{distance}</p>
+                      <p className="text-xs text-emerald-100">miles away</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Map */}
-              <div className="h-64">
+              <div className="h-96">
                 <MapContainer
-                  center={[order.driver_lat, order.driver_lng]}
-                  zoom={15}
+                  center={order.delivery_lat && order.delivery_lng ? 
+                    [(order.driver_lat + order.delivery_lat) / 2, (order.driver_lng + order.delivery_lng) / 2] :
+                    [order.driver_lat, order.driver_lng]
+                  }
+                  zoom={13}
                   style={{ height: '100%', width: '100%' }}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   />
+                  {/* Driver Marker */}
                   <Marker position={[order.driver_lat, order.driver_lng]}>
                     <Popup>
                       <div className="text-center">
@@ -116,6 +171,30 @@ export default function OrderTracking() {
                       </div>
                     </Popup>
                   </Marker>
+                  {/* Delivery Location Marker */}
+                  {order.delivery_lat && order.delivery_lng && (
+                    <Marker position={[order.delivery_lat, order.delivery_lng]}>
+                      <Popup>
+                        <div className="text-center">
+                          <p className="font-bold">Delivery Location</p>
+                          <p className="text-sm">{order.delivery_address}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                  {/* Route Line */}
+                  {order.delivery_lat && order.delivery_lng && (
+                    <Polyline
+                      positions={[
+                        [order.driver_lat, order.driver_lng],
+                        [order.delivery_lat, order.delivery_lng]
+                      ]}
+                      color="#10b981"
+                      weight={4}
+                      opacity={0.7}
+                      dashArray="10, 10"
+                    />
+                  )}
                 </MapContainer>
               </div>
 
@@ -137,6 +216,42 @@ export default function OrderTracking() {
                     </a>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin Controls */}
+        {isAdmin && (
+          <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                <Navigation className="w-5 h-5" />
+                Admin Controls
+              </h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-semibold text-indigo-800 mb-2 block">Update Order Status</label>
+                  <Select 
+                    value={order.status} 
+                    onValueChange={(val) => updateStatusMutation.mutate({ id: order.id, status: val })}
+                  >
+                    <SelectTrigger className="bg-white border-indigo-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="preparing">Preparing</SelectItem>
+                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-indigo-600">
+                  💡 Changing to "Out for Delivery" will show live tracking with map
+                </p>
               </div>
             </CardContent>
           </Card>
