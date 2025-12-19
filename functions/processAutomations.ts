@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
           } else if (rule.action_type === 'send_email' && target.email) {
             // Send email using Core.SendEmail
             await base44.asServiceRole.integrations.Core.SendEmail({
+              from_name: 'Dragonfly',
               to: target.email,
               subject: rule.name,
               body: rule.message_template

@@ -39,6 +39,7 @@ Please restock these items soon to avoid running out.
       `;
 
       await base44.asServiceRole.integrations.Core.SendEmail({
+        from_name: 'Dragonfly',
         to: admin.email,
         subject: `⚠️ ${lowStock.length} Product(s) Low in Stock`,
         body: emailBody

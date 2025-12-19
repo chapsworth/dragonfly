@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
     // Send email to each admin
     const emailPromises = admins.map(admin => 
       base44.asServiceRole.integrations.Core.SendEmail({
+        from_name: 'Dragonfly',
         to: admin.email,
         subject: `🎉 New Order #${order_number}`,
         body: `

@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
         }
 
         await base44.integrations.Core.SendEmail({
-            from_name: 'GreenLeaf Delivery',
+            from_name: 'Dragonfly',
             to: customerEmail,
             subject: emailContent.subject,
             body: emailContent.body
