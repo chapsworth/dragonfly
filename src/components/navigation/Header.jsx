@@ -8,6 +8,7 @@ import { useCart } from '../cart/CartContext';
 import { motion } from 'framer-motion';
 import QuickCreateMenu from './QuickCreateMenu';
 import { Button } from '@/components/ui/button';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 export default function Header({ onMenuClick }) {
   const { cartCount, setIsCartOpen } = useCart();
@@ -75,6 +76,7 @@ export default function Header({ onMenuClick }) {
 
             <div className="flex items-center gap-1 z-10">
               <QuickCreateMenu />
+              {user && <NotificationBell />}
               <button
                 onClick={() => setIsCartOpen(true)}
                 data-cart-button
