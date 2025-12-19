@@ -505,7 +505,7 @@ export default function StrainLibrary() {
             })}
           </div>
         ) : (
-          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4'}>
+          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 lg:grid-cols-5 gap-4' : 'grid grid-cols-1 gap-4'}>
             {filteredStrains.map((strain, i) => (
               <motion.div
                 key={strain.id}

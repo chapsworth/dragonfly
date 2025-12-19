@@ -608,7 +608,7 @@ export default function ProductLibrary() {
             })}
           </div>
         ) : (
-          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4'}>
+          <div className={viewMode === 'grid2x2' ? 'grid grid-cols-2 lg:grid-cols-5 gap-4' : 'grid grid-cols-1 gap-4'}>
             {filteredProducts.map((product, i) => (
               <motion.div
                 key={product.id}
