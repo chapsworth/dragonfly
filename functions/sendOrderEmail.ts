@@ -11,10 +11,8 @@ Deno.serve(async (req) => {
 
         const { orderId, status, customerEmail, customerName } = await req.json();
 
-        // Use live tracking page for out_for_delivery status
-        const orderUrl = status === 'out_for_delivery' 
-            ? `https://mydragonfly.club/CustomerOrderTracking?id=${orderId}`
-            : `https://mydragonfly.club/Orders?orderId=${orderId}`;
+        // Always use customer order tracking page
+        const orderUrl = `https://mydragonfly.club/CustomerOrderTracking?id=${orderId}`;
         const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/6d84e9958_IMG_0305.jpeg';
         
         const emailHeader = `
