@@ -370,40 +370,57 @@ function VendorOrdersContent() {
                 <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto" />
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                  <Card key={category}>
-                    <CardHeader>
-                      <CardTitle className="text-emerald-900">{category}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {categoryProducts.map(product => (
-                        <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex-1">
-                            <p className="font-semibold text-gray-900">{product.product_name}</p>
-                            {product.variant && (
-                              <p className="text-sm text-gray-600">{product.variant}</p>
-                            )}
-                            {product.size && (
-                              <p className="text-xs text-gray-500">{product.size}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
-                            <Button 
-                              onClick={(e) => {
-                                addToCart(product, { current: e.currentTarget });
-                              }} 
-                              size="sm" 
-                              className="bg-emerald-600"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
+                  <Collapsible 
+                    key={category} 
+                    open={expandedCategories[category] !== false}
+                    onOpenChange={(isOpen) => setExpandedCategories(prev => ({ ...prev, [category]: isOpen }))}
+                  >
+                    <Card>
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="hover:bg-emerald-50/50 transition-colors cursor-pointer">
+                          <CardTitle className="flex items-center justify-between text-emerald-900">
+                            <div className="flex items-center gap-2">
+                              <Package className="w-5 h-5" />
+                              {category}
+                              <Badge variant="outline">{categoryProducts.length}</Badge>
+                            </div>
+                            <ChevronDown className={`w-5 h-5 transition-transform ${expandedCategories[category] !== false ? 'rotate-180' : ''}`} />
+                          </CardTitle>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="space-y-2">
+                          {categoryProducts.map(product => (
+                            <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900">{product.product_name}</p>
+                                {product.variant && (
+                                  <p className="text-sm text-gray-600">{product.variant}</p>
+                                )}
+                                {product.size && (
+                                  <p className="text-xs text-gray-500">{product.size}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                                <Button 
+                                  onClick={(e) => {
+                                    addToCart(product, { current: e.currentTarget });
+                                  }} 
+                                  size="sm" 
+                                  className="bg-emerald-600"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
                 ))}
               </div>
             )}
