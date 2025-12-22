@@ -53,6 +53,20 @@ const makeEmojiIcon = (bg = '#3b82f6', emoji = '📍') =>
   });
 
 const deliveryIcon = makeEmojiIcon('#10b981', '🏠');
+const customerIcon = L.divIcon({
+  html: `
+    <div class="relative flex items-center justify-center">
+      <div class="w-12 h-12 rounded-full shadow-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 border-3 border-white">
+        <span class="text-white text-xl">📱</span>
+      </div>
+      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-purple-500 opacity-40"></div>
+    </div>
+  `,
+  className: 'customer-marker',
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+  popupAnchor: [0, -28],
+});
 const driverIcon = L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
@@ -673,17 +687,30 @@ export default function OrderTracking() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* Delivery Location - Always shown during active delivery */}
+          {/* Delivery Address Pin - Always shown during active delivery */}
           {order.delivery_lat && order.delivery_lng && (
             <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
               <Popup>
                 <div className="text-center p-2">
-                  <p className="font-bold text-emerald-600">🏠 Customer Location</p>
+                  <p className="font-bold text-emerald-600">🏠 Delivery Address</p>
                   <p className="text-sm text-gray-700">{order.customer_name}</p>
                   <p className="text-sm text-gray-600">{order.delivery_address}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Customer Live Location - GPS from customer's device */}
+          {order.customer_lat && order.customer_lng && (
+            <Marker position={[order.customer_lat, order.customer_lng]} icon={customerIcon}>
+              <Popup>
+                <div className="text-center p-2">
+                  <p className="font-bold text-purple-600">📱 Customer Live Location</p>
+                  <p className="text-sm text-gray-700">{order.customer_name}</p>
                   {order.customer_phone && (
                     <p className="text-xs text-gray-500 mt-1">📞 {order.customer_phone}</p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">GPS: {order.customer_lat.toFixed(5)}, {order.customer_lng.toFixed(5)}</p>
                 </div>
               </Popup>
             </Marker>

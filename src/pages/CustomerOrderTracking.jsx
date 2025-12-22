@@ -70,6 +70,29 @@ export default function CustomerOrderTracking() {
   const [mapCenter, setMapCenter] = useState(null);
   const [mapZoom, setMapZoom] = useState(14);
   const [calculatedETA, setCalculatedETA] = useState(null);
+  const [customerLocation, setCustomerLocation] = useState(null);
+
+  // Track customer's live location and update order
+  useEffect(() => {
+    if (!order || order.status !== 'out_for_delivery') return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCustomerLocation([latitude, longitude]);
+        
+        // Update order with customer location
+        base44.entities.Order.update(order.id, {
+          customer_lat: latitude,
+          customer_lng: longitude
+        }).catch(err => console.error('Failed to update customer location:', err));
+      },
+      (error) => console.error('Location error:', error),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [order?.id, order?.status]);
 
   // Calculate distance and ETA between driver and delivery location
   useEffect(() => {
