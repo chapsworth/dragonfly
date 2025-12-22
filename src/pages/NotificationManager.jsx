@@ -308,9 +308,12 @@ function NotificationDialog({ isOpen, onClose, notification, contacts }) {
             <Textarea
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="Notification message..."
-              className="h-32 border-emerald-200"
+              placeholder="Write your full notification message here. This will be fully visible to recipients. You can use line breaks and formatting."
+              className="h-48 border-emerald-200 text-base"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Full message will be readable in the notification panel and detail page
+            </p>
           </div>
 
           {/* Type and Priority */}

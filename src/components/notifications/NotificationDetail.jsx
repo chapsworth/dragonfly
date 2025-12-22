@@ -2,7 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Info, Package, DollarSign, Megaphone, AlertTriangle, ExternalLink } from 'lucide-react';
+import { AlertCircle, Info, Package, DollarSign, Megaphone, AlertTriangle, ExternalLink, Share2, ShoppingCart } from 'lucide-react';
 
 export default function NotificationDetail({ notification, isOpen, onClose, onAction }) {
   const getNotificationIcon = (type, priority) => {
@@ -61,9 +61,10 @@ export default function NotificationDetail({ notification, isOpen, onClose, onAc
             )}
           </div>
 
-          {/* Message */}
-          <div className="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-lg border border-emerald-200">
-            <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
+          {/* Full Message Content */}
+          <div className="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-lg border border-emerald-200 shadow-sm">
+            <h3 className="text-sm font-semibold text-emerald-900 uppercase tracking-wide mb-3">Message</h3>
+            <p className="text-gray-900 text-base leading-relaxed whitespace-pre-wrap">
               {notification.message}
             </p>
           </div>
@@ -84,9 +85,13 @@ export default function NotificationDetail({ notification, isOpen, onClose, onAc
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 pt-6 border-t border-emerald-200">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="flex-1 min-w-[120px]"
+            >
               Close
             </Button>
             {notification.link_type !== 'none' && (
@@ -95,10 +100,43 @@ export default function NotificationDetail({ notification, isOpen, onClose, onAc
                   onAction();
                   onClose();
                 }}
-                className="bg-gradient-to-r from-emerald-500 to-green-500"
+                className="flex-1 min-w-[120px] bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Go to {notification.link_type}
+                {notification.link_type === 'page' && 'Go to Page'}
+                {notification.link_type === 'product' && 'View Product'}
+                {notification.link_type === 'deal' && 'View Deal'}
+                {notification.link_type === 'order' && 'View Order'}
+                {notification.link_type === 'url' && 'Open Link'}
+              </Button>
+            )}
+            {notification.type === 'product' && notification.link_value && (
+              <Button 
+                variant="outline"
+                className="flex-1 min-w-[120px] border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                onClick={() => {
+                  // Add to cart functionality
+                  onClose();
+                }}
+              >
+                Add to Cart
+              </Button>
+            )}
+            {notification.type === 'deal' && (
+              <Button 
+                variant="outline"
+                className="flex-1 min-w-[120px] border-purple-500 text-purple-700 hover:bg-purple-50"
+                onClick={() => {
+                  // Share deal functionality
+                  if (navigator.share) {
+                    navigator.share({
+                      title: notification.title,
+                      text: notification.message,
+                    }).catch(() => {});
+                  }
+                }}
+              >
+                Share Deal
               </Button>
             )}
           </div>

@@ -175,7 +175,7 @@ export default function NotificationPanel({ isOpen, onClose, notifications, user
                             <X className="w-3 h-3" />
                           </Button>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                        <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between">
