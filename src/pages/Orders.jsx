@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2, Radar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ import CustomerOrderDetailModal from '@/components/orders/CustomerOrderDetailMod
 import OrderStatusTracker from '@/components/orders/OrderStatusTracker';
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [apiKey, setApiKey] = useState(null);
@@ -468,14 +469,16 @@ export default function Orders() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 mt-2">
-                        <Link to={createPageUrl('OrderTracking') + `?id=${order.id}`} className="flex-1">
-                          <Button
-                            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-                          >
-                            <Radar className="w-4 h-4 mr-2" />
-                            Track Order
-                          </Button>
-                        </Link>
+                        <Button
+                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`${createPageUrl('CustomerOrderTracking')}?id=${order.id}`);
+                          }}
+                        >
+                          <Radar className="w-4 h-4 mr-2" />
+                          Track Order
+                        </Button>
                         <Button
                           variant="outline"
                           className="border-emerald-200 hover:bg-emerald-50"
