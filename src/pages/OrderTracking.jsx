@@ -472,15 +472,18 @@ export default function OrderTracking() {
   const orderId = urlParams.get('id');
   const queryClient = useQueryClient();
 
-  const { data: order, isLoading } = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
-    enabled: !!orderId,
-    refetchInterval: (data) => {
-      const status = data?.status;
-      return ['confirmed', 'preparing', 'out_for_delivery'].includes(status) ? 5000 : false;
-    }
+  const { data: allOrders = [], isLoading: isLoadingAll } = useQuery({
+    queryKey: ['active-orders'],
+    queryFn: async () => {
+      const orders = await base44.entities.Order.list('-created_date');
+      return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
+    },
+    refetchInterval: 5000
   });
+
+  const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
+  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex];
+  const isLoading = isLoadingAll;
 
   const [user, setUser] = useState(null);
   const [distance, setDistance] = useState(null);
@@ -496,16 +499,34 @@ export default function OrderTracking() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
+  // Track driver/admin location continuously
   useEffect(() => {
-    if (navigator.geolocation && user?.role === 'admin') {
-      navigator.geolocation.getCurrentPosition(
+    if (!user || !order) return;
+    
+    const isDriver = user.email === order.driver_email;
+    const isAdmin = user.role === 'admin';
+    
+    if (isDriver || isAdmin) {
+      const watchId = navigator.geolocation.watchPosition(
         (position) => {
-          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
+          const { latitude, longitude } = position.coords;
+          setCurrentLocation([latitude, longitude]);
+          
+          // Update order with driver location
+          if (isDriver && order.id) {
+            base44.entities.Order.update(order.id, {
+              driver_lat: latitude,
+              driver_lng: longitude
+            }).catch(err => console.error('Failed to update driver location:', err));
+          }
         },
-        (error) => console.log('Error getting location:', error)
+        (error) => console.log('Error getting location:', error),
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
       );
+
+      return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [user]);
+  }, [user, order?.id, order?.driver_email]);
 
   // Calculate distance
   useEffect(() => {
@@ -534,34 +555,61 @@ export default function OrderTracking() {
     queryClient.setQueryData(['order', orderId], updatedOrder);
   };
 
+  const goToPreviousOrder = () => {
+    if (currentOrderIndex > 0) {
+      setCurrentOrderIndex(currentOrderIndex - 1);
+    }
+  };
+
+  const goToNextOrder = () => {
+    if (currentOrderIndex < allOrders.length - 1) {
+      setCurrentOrderIndex(currentOrderIndex + 1);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
-          <p className="text-emerald-600">Loading order...</p>
+          <p className="text-emerald-600">Loading orders...</p>
         </div>
       </div>
     );
   }
 
-  if (!order) {
+  if (!order && allOrders.length === 0) {
     return (
       <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Package className="w-16 h-16 text-emerald-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-emerald-900 mb-2">Order Not Found</h1>
-          <p className="text-emerald-600">Please check your order ID and try again.</p>
+          <h1 className="text-2xl font-bold text-emerald-900 mb-2">No Active Deliveries</h1>
+          <p className="text-emerald-600 mb-4">There are no orders currently in delivery.</p>
+          <Button onClick={() => navigate(createPageUrl('AdminOrders'))} className="bg-emerald-600">
+            View All Orders
+          </Button>
         </div>
       </div>
     );
   }
 
-  const defaultMapCenter = order.delivery_lat && order.delivery_lng && order.driver_lat && order.driver_lng
-    ? [(order.driver_lat + order.delivery_lat) / 2, (order.driver_lng + order.delivery_lng) / 2]
-    : order.delivery_lat && order.delivery_lng
-    ? [order.delivery_lat, order.delivery_lng]
-    : currentLocation || [34.0522, -118.2437];
+  if (!order && allOrders.length > 0) {
+    return null;
+  }
+
+  const defaultMapCenter = React.useMemo(() => {
+    const locations = [];
+    if (currentLocation) locations.push(currentLocation);
+    if (order?.driver_lat && order?.driver_lng) locations.push([order.driver_lat, order.driver_lng]);
+    if (order?.customer_lat && order?.customer_lng) locations.push([order.customer_lat, order.customer_lng]);
+    if (order?.delivery_lat && order?.delivery_lng) locations.push([order.delivery_lat, order.delivery_lng]);
+    
+    if (locations.length === 0) return [34.0522, -118.2437];
+    
+    const avgLat = locations.reduce((sum, loc) => sum + loc[0], 0) / locations.length;
+    const avgLng = locations.reduce((sum, loc) => sum + loc[1], 0) / locations.length;
+    return [avgLat, avgLng];
+  }, [currentLocation, order?.driver_lat, order?.driver_lng, order?.customer_lat, order?.customer_lng, order?.delivery_lat, order?.delivery_lng]);
 
   const centerOnLocation = () => {
     if (currentLocation && mapRef.current) {
@@ -687,7 +735,19 @@ export default function OrderTracking() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* Delivery Address Pin - Always shown during active delivery */}
+          {/* My Location (Admin/Driver viewing) */}
+          {currentLocation && (
+            <Marker position={currentLocation} icon={makeEmojiIcon('#3b82f6', '📍')}>
+              <Popup>
+                <div className="text-center p-2">
+                  <p className="font-bold text-blue-600">📍 My Location</p>
+                  <p className="text-xs text-gray-500">GPS: {currentLocation[0].toFixed(5)}, {currentLocation[1].toFixed(5)}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Delivery Address Pin - Always shown */}
           {order.delivery_lat && order.delivery_lng && (
             <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
               <Popup>
@@ -716,8 +776,8 @@ export default function OrderTracking() {
             </Marker>
           )}
 
-          {/* Driver Location - Shown during active delivery */}
-          {order.driver_lat && order.driver_lng && (
+          {/* Driver Location - Shown if different from current user */}
+          {order.driver_lat && order.driver_lng && (!currentLocation || (order.driver_lat !== currentLocation[0] || order.driver_lng !== currentLocation[1])) && (
             <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
@@ -756,16 +816,49 @@ export default function OrderTracking() {
         </MapContainer>
       </div>
 
-      {/* Map Controls */}
-      <div className="fixed top-4 left-4 z-30 flex flex-col gap-2">
+      {/* Header with Order Navigation */}
+      <div className="fixed top-4 left-0 right-0 z-30 flex items-center justify-between px-4">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full shadow-lg bg-white/40 backdrop-blur-sm hover:bg-white/60 border-0"
+          className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white border-0"
           onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
         >
           <ArrowLeft className="w-5 h-5 text-emerald-900" />
         </Button>
+
+        {allOrders.length > 1 && (
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-4 py-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToPreviousOrder}
+              disabled={currentOrderIndex === 0}
+              className="h-8 w-8 rounded-full"
+            >
+              <ChevronDown className="w-5 h-5 rotate-90" />
+            </Button>
+            <div className="text-center min-w-[120px]">
+              <p className="text-xs text-gray-500">Order {currentOrderIndex + 1} of {allOrders.length}</p>
+              <p className="text-sm font-bold text-emerald-900">#{order?.id?.slice(0, 8)}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToNextOrder}
+              disabled={currentOrderIndex === allOrders.length - 1}
+              className="h-8 w-8 rounded-full"
+            >
+              <ChevronDown className="w-5 h-5 -rotate-90" />
+            </Button>
+          </div>
+        )}
+
+        <div className="w-10" />
+      </div>
+
+      {/* Map Controls */}
+      <div className="fixed top-20 left-4 z-30 flex flex-col gap-2">
         <Button
           variant="ghost"
           size="icon"
