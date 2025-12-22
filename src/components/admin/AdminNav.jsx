@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft, FolderTree, Image, PackageCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, ArrowLeft, FolderTree, Image, PackageCheck, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { name: 'Inventory', page: 'AdminInventory', icon: PackageCheck },
   { name: 'Categories', page: 'AdminCategories', icon: FolderTree },
   { name: 'Orders', page: 'AdminOrders', icon: ShoppingCart },
+  { name: 'Tracking', page: 'OrderTracking', icon: Truck },
   { name: 'Users', page: 'AdminUsers', icon: Users },
   { name: 'Carousel', page: 'AdminCarousel', icon: Image },
   { name: 'Settings', page: 'AdminSettings', icon: Settings },
