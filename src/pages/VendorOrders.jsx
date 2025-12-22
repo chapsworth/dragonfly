@@ -35,6 +35,7 @@ function VendorOrdersContent() {
   const [addedItems, setAddedItems] = useState([]);
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [isDragging, setIsDragging] = useState(false);
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -248,14 +249,38 @@ function VendorOrdersContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 sm:p-6 lg:p-8">
+      {/* Freeze Overlay when dragging */}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Floating Total Widget */}
       <motion.div
         ref={floatingTotalRef}
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed top-4 right-4 z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px]"
+        drag
+        dragMomentum={false}
+        dragElastic={0.1}
+        dragConstraints={{
+          top: 0,
+          left: 0,
+          right: window.innerWidth - 250,
+          bottom: window.innerHeight - 100
+        }}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={() => setIsDragging(false)}
+        initial={{ x: window.innerWidth - 270, y: 16, opacity: 0 }}
+        animate={{ opacity: 1 }}
+        whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+        className="fixed z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px] cursor-grab active:cursor-grabbing"
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 pointer-events-none">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
               <ShoppingCart className="w-5 h-5 text-white" />
