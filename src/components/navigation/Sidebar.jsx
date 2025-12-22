@@ -93,8 +93,12 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="h-full flex flex-col">
           <SheetHeader className="p-6 border-b border-emerald-100/50">
             <SheetTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center">
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/26367df10_IMG_0305.jpeg" 
+                  alt="Dragonfly Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                 Dragonfly
