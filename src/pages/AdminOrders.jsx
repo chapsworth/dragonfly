@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus, Eye, Trash2 } from 'lucide-react';
+import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus, Eye, Trash2, TestTube } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
@@ -202,6 +202,33 @@ export default function AdminOrders() {
     mutationFn: (id) => base44.entities.Order.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+    }
+  });
+
+  const testAdminEmailMutation = useMutation({
+    mutationFn: async (orderId) => {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) throw new Error('Order not found');
+      
+      return await base44.functions.invoke('notifyAdminsNewOrder', {
+        order_id: order.id,
+        order_number: order.id.slice(0, 8).toUpperCase(),
+        customer_name: order.customer_name || 'N/A',
+        customer_email: order.customer_email || '',
+        customer_phone: order.customer_phone || '',
+        delivery_address: order.delivery_address || '',
+        total: order.total,
+        items_count: order.items?.length || 0,
+        items: order.items || []
+      });
+    },
+    onSuccess: (result) => {
+      toast.success(`Admin email test completed! Check function logs for details.`);
+      console.log('Test result:', result);
+    },
+    onError: (error) => {
+      toast.error(`Failed to send test email: ${error.message}`);
+      console.error('Test error:', error);
     }
   });
 
@@ -478,10 +505,23 @@ export default function AdminOrders() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Orders</h1>
                 <p className="text-sm sm:text-base text-emerald-600">Manage customer orders</p>
               </div>
-              <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-500 to-green-500">
-                <Plus className="w-5 h-5 mr-2" />
-                Create Order
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-500 to-green-500">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Order
+                </Button>
+                {orders.length > 0 && (
+                  <Button 
+                    onClick={() => testAdminEmailMutation.mutate(orders[0].id)} 
+                    disabled={testAdminEmailMutation.isPending}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <TestTube className="w-4 h-4" />
+                    {testAdminEmailMutation.isPending ? 'Testing...' : 'Test Admin Email'}
+                  </Button>
+                )}
+              </div>
               
               {selectedOrders.length > 0 && (
                 <div className="flex items-center gap-2 w-full sm:w-auto">
