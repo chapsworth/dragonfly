@@ -13,8 +13,17 @@ import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText 
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import BiometricGuard from '@/components/auth/BiometricGuard';
 
 export default function VendorOrders() {
+  return (
+    <BiometricGuard>
+      <VendorOrdersContent />
+    </BiometricGuard>
+  );
+}
+
+function VendorOrdersContent() {
   const [selectedVendor, setSelectedVendor] = useState('Jared Cookie Factory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
