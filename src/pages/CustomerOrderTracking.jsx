@@ -250,10 +250,10 @@ export default function CustomerOrderTracking() {
                 {/* Driver on the way but not within 0.5 miles */}
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Truck className="w-10 h-10 text-emerald-600" />
+                    <Truck className="w-10 h-10 text-emerald-600 animate-bounce" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">On The Way</h2>
-                  <p className="text-gray-600">Your driver is heading to your location</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Driver is On The Way! 🚗</h2>
+                  <p className="text-gray-600 text-lg">Heading to your location now</p>
                 </div>
 
                 {order.eta_minutes && (
@@ -264,10 +264,19 @@ export default function CustomerOrderTracking() {
                   </div>
                 )}
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm text-blue-900">
-                    <strong>📍 Tip:</strong> You'll be able to see your driver's live location once they're within half a mile of your address.
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MapPin className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-blue-900 mb-2">Stay Tuned!</h3>
+                  <p className="text-blue-800 mb-3">
+                    Your driver will be arriving soon. Once they're within <strong>half a mile</strong> of your location, you'll be able to see them on the map in real-time!
                   </p>
+                  <div className="bg-white/60 backdrop-blur rounded-lg p-3 inline-block">
+                    <p className="text-sm text-blue-700">
+                      <strong>📍 Live Tracking Coming Soon</strong>
+                    </p>
+                  </div>
                 </div>
               </>
             )}
