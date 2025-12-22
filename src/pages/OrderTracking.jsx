@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { 
         Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
         ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
-        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus
+        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus, Route
       } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -470,6 +470,8 @@ export default function OrderTracking() {
   const [mapCenter, setMapCenter] = useState(null);
   const [mapZoom, setMapZoom] = useState(13);
   const mapRef = React.useRef(null);
+  const [routePolyline, setRoutePolyline] = useState(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -562,6 +564,89 @@ export default function OrderTracking() {
     }
   };
 
+  // Decode Google polyline format
+  const decodePolyline = (encoded) => {
+    if (!encoded) return [];
+    const points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push([lat / 1e5, lng / 1e5]);
+    }
+    return points;
+  };
+
+  // Get optimized route
+  const getOptimizedRoute = async () => {
+    if (!order.delivery_lat || !order.delivery_lng) {
+      toast.error('Delivery location not available');
+      return;
+    }
+
+    setIsLoadingRoute(true);
+    try {
+      const origin = currentLocation 
+        ? `${currentLocation[0]},${currentLocation[1]}`
+        : order.driver_lat && order.driver_lng
+        ? `${order.driver_lat},${order.driver_lng}`
+        : null;
+
+      if (!origin) {
+        toast.error('Driver location not available');
+        setIsLoadingRoute(false);
+        return;
+      }
+
+      const response = await base44.functions.invoke('getOptimizedRoute', {
+        origin,
+        destinations: [`${order.delivery_lat},${order.delivery_lng}`]
+      });
+
+      if (response.data?.routes?.[0]) {
+        const route = response.data.routes[0];
+        const decodedPoints = decodePolyline(route.overview_polyline);
+        setRoutePolyline(decodedPoints);
+        
+        // Fit map to route
+        if (mapRef.current && decodedPoints.length > 0) {
+          mapRef.current.fitBounds(decodedPoints, { padding: [80, 80] });
+        }
+
+        const leg = route.legs[0];
+        toast.success(`Route found: ${leg.distance.text}, ${leg.duration.text}`);
+
+        // Open Google Maps for turn-by-turn directions
+        const destination = `${order.delivery_lat},${order.delivery_lng}`;
+        window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
+      }
+    } catch (error) {
+      console.error('Route error:', error);
+      toast.error('Failed to get route');
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+
   const isDriver = user?.email === order.driver_email;
 
   return (
@@ -608,18 +693,28 @@ export default function OrderTracking() {
             </Marker>
           )}
 
-          {/* Route Line */}
-          {order.driver_lat && order.driver_lng && order.delivery_lat && order.delivery_lng && (
+          {/* Optimized Route */}
+          {routePolyline && routePolyline.length > 0 ? (
             <Polyline
-              positions={[
-                [order.driver_lat, order.driver_lng],
-                [order.delivery_lat, order.delivery_lng]
-              ]}
-              color="#10b981"
-              weight={4}
-              opacity={0.7}
-              dashArray="10, 10"
+              positions={routePolyline}
+              color="#3b82f6"
+              weight={5}
+              opacity={0.8}
             />
+          ) : (
+            /* Simple straight line */
+            order.driver_lat && order.driver_lng && order.delivery_lat && order.delivery_lng && (
+              <Polyline
+                positions={[
+                  [order.driver_lat, order.driver_lng],
+                  [order.delivery_lat, order.delivery_lng]
+                ]}
+                color="#10b981"
+                weight={4}
+                opacity={0.7}
+                dashArray="10, 10"
+              />
+            )
           )}
         </MapContainer>
       </div>
@@ -642,6 +737,20 @@ export default function OrderTracking() {
           title="Center on my location"
         >
           <Navigation className="w-5 h-5 text-emerald-900" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full shadow-lg bg-white/40 backdrop-blur-sm hover:bg-white/60 border-0"
+          onClick={getOptimizedRoute}
+          disabled={isLoadingRoute}
+          title="Get optimized route"
+        >
+          {isLoadingRoute ? (
+            <Loader2 className="w-5 h-5 text-emerald-900 animate-spin" />
+          ) : (
+            <Route className="w-5 h-5 text-emerald-900" />
+          )}
         </Button>
       </div>
 
