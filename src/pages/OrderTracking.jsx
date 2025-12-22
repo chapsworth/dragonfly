@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
+  ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
+  StickyNote, Upload, Trash2, GripHorizontal, FileText, User
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -19,38 +30,446 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Custom icons for map markers
+const makeEmojiIcon = (bg = '#3b82f6', emoji = '📍') =>
+  L.divIcon({
+    className: 'custom-emoji-icon',
+    html: `<div style="width:32px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);font-size:18px;">${emoji}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  });
+
+const deliveryIcon = makeEmojiIcon('#10b981', '🏠');
+const driverIcon = L.divIcon({
+  html: `
+    <div class="relative flex items-center justify-center">
+      <div class="w-10 h-10 rounded-full shadow-lg flex items-center justify-center bg-blue-600 border-2 border-white">
+        <span class="text-white text-xl">🚗</span>
+      </div>
+      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-blue-600 opacity-50"></div>
+    </div>
+  `,
+  className: 'driver-marker',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -24],
+});
+
+// Snap-to-Position Delivery Panel Component
+const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser }) => {
+  const [snapPosition, setSnapPosition] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragCurrentY, setDragCurrentY] = useState(0);
+  const [activeTab, setActiveTab] = useState('details');
+  const [newNote, setNewNote] = useState('');
+  const queryClient = useQueryClient();
+
+  const snapPositions = [
+    { position: 0, height: 40, label: 'bottom' },
+    { position: 1, height: 70, label: 'middle' },
+    { position: 2, height: 95, label: 'top' }
+  ];
+
+  const currentSnap = snapPositions[snapPosition];
+  const panelHeight = `${currentSnap.height}vh`;
+
+  const handleDragStart = (e) => {
+    setIsDragging(true);
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragStartY(clientY);
+    setDragCurrentY(clientY);
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleDragMove = useCallback((e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragCurrentY(clientY);
+
+    const deltaY = dragStartY - clientY;
+    const sensitivity = 50;
+
+    if (deltaY > sensitivity && snapPosition < 2) {
+      setSnapPosition(snapPosition + 1);
+      setDragStartY(clientY);
+    }
+    else if (deltaY < -sensitivity && snapPosition > 0) {
+      setSnapPosition(snapPosition - 1);
+      setDragStartY(clientY);
+    }
+  }, [isDragging, dragStartY, snapPosition]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    document.body.style.userSelect = '';
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e) => handleDragMove(e);
+      const handleTouchMove = (e) => {
+        e.preventDefault();
+        handleDragMove(e);
+      };
+      const handleMouseUp = () => handleDragEnd();
+      const handleTouchEnd = () => handleDragEnd();
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, handleDragMove, handleDragEnd]);
+
+  const deliverySteps = [
+    { status: 'pending', label: 'Order Received', icon: CheckCircle2, color: 'bg-green-500' },
+    { status: 'confirmed', label: 'Confirmed', icon: CheckCircle2, color: 'bg-blue-500' },
+    { status: 'preparing', label: 'Preparing', icon: Package, color: 'bg-orange-500' },
+    { status: 'out_for_delivery', label: 'Out for Delivery', icon: Truck, color: 'bg-purple-500' },
+    { status: 'delivered', label: 'Delivered', icon: CheckCircle2, color: 'bg-green-600' }
+  ];
+
+  const currentStepIndex = deliverySteps.findIndex(step => step.status === order.status);
+
+  const addNote = async () => {
+    if (!newNote.trim()) return;
+    
+    try {
+      const noteData = {
+        note: newNote.trim(),
+        timestamp: new Date().toISOString(),
+        author: currentUser?.full_name || currentUser?.email || 'Driver'
+      };
+
+      const updatedNotes = [...(order.notes_list || []), noteData];
+      await base44.entities.Order.update(order.id, { notes_list: updatedNotes });
+      
+      onOrderUpdate?.({ ...order, notes_list: updatedNotes });
+      toast.success('Note added');
+      setNewNote('');
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast.error('Failed to add note');
+    }
+  };
+
+  return (
+    <div
+      className="bg-white rounded-t-3xl shadow-2xl border border-gray-200 fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out overflow-hidden"
+      style={{ height: panelHeight }}
+    >
+      {/* Drag Handle */}
+      <div
+        className="w-full py-3 flex justify-center items-center cursor-grab active:cursor-grabbing bg-gray-50 border-b border-gray-200 relative"
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+      >
+        <GripHorizontal className="w-6 h-6 text-gray-400" />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex gap-1">
+          {snapPositions.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors cursor-pointer ${
+                index === snapPosition ? 'bg-emerald-500' : 'bg-gray-300'
+              }`}
+              onClick={() => setSnapPosition(index)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Order Header */}
+      <div className="px-4 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <Package className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">Order #{order.id.slice(0, 8)}</h2>
+              <p className="text-sm text-gray-500">{order.customer_name}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="w-4 h-4" />
+              <span className="truncate max-w-32">{order.customer_name}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <span className="truncate max-w-32">{order.delivery_address?.split(',')[0] || 'Address'}</span>
+            </div>
+          </div>
+
+          <Badge className={`${
+            order.status === 'delivered' ? 'bg-green-500' :
+            order.status === 'out_for_delivery' ? 'bg-purple-500' :
+            order.status === 'preparing' ? 'bg-orange-500' :
+            order.status === 'confirmed' ? 'bg-blue-500' : 'bg-yellow-500'
+          } text-white`}>
+            {order.status.replace(/_/g, ' ')}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <Button onClick={() => window.location.href = `tel:${order.customer_phone}`} size="sm" variant="outline">
+            <Phone className="w-4 h-4 mr-2" />
+            Call
+          </Button>
+          <Button onClick={() => {
+            const body = encodeURIComponent(`Hi ${order.customer_name}, your order is on the way!`);
+            window.location.href = `sms:${order.customer_phone}?body=${body}`;
+          }} size="sm" variant="outline">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            SMS
+          </Button>
+          <Button onClick={() => {
+            const destination = order.delivery_lat && order.delivery_lng
+              ? `${order.delivery_lat},${order.delivery_lng}`
+              : encodeURIComponent(order.delivery_address);
+            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+          }} size="sm" variant="outline">
+            <Navigation className="w-4 h-4 mr-2" />
+            Navigate
+          </Button>
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="h-full overflow-y-auto pb-32">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            {[
+              { id: 'details', label: 'Details', icon: FileText },
+              { id: 'steps', label: 'Steps', icon: Clock },
+              { id: 'notes', label: 'Notes', icon: StickyNote }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-emerald-500 text-emerald-600 bg-emerald-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-4">
+          {activeTab === 'details' && (
+            <div className="space-y-4">
+              {/* Order Items */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Order Items</h4>
+                <div className="space-y-2">
+                  {order.items?.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      {item.image_url && (
+                        <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold text-emerald-600">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="bg-emerald-50 rounded-lg p-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold text-emerald-900">Total</span>
+                  <span className="text-2xl font-bold text-emerald-600">${order.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Delivery Address</h4>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-gray-700">{order.delivery_address}</p>
+                </div>
+              </div>
+
+              {/* Customer Contact */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Customer Contact</h4>
+                <div className="space-y-2">
+                  {order.customer_phone && (
+                    <a href={`tel:${order.customer_phone}`} className="flex items-center gap-2 text-emerald-600">
+                      <Phone className="w-4 h-4" />
+                      {order.customer_phone}
+                    </a>
+                  )}
+                  {order.customer_email && (
+                    <a href={`mailto:${order.customer_email}`} className="flex items-center gap-2 text-emerald-600">
+                      <Mail className="w-4 h-4" />
+                      {order.customer_email}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Delivery Notes */}
+              {order.notes && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Delivery Instructions</h4>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-gray-700">{order.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'steps' && (
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900">Delivery Progress</h4>
+              <div className="space-y-3">
+                {deliverySteps.map((step, idx) => {
+                  const StepIcon = step.icon;
+                  const isActive = idx <= currentStepIndex;
+                  const isCurrent = idx === currentStepIndex;
+
+                  return (
+                    <div key={step.status} className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isActive ? step.color : 'bg-gray-300'
+                      } text-white transition-colors`}>
+                        <StepIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`font-semibold ${isCurrent ? 'text-emerald-900' : 'text-gray-600'}`}>
+                          {step.label}
+                        </p>
+                        {isCurrent && <p className="text-sm text-emerald-600">Current status</p>}
+                      </div>
+                      {isActive && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notes' && (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Add Delivery Note</Label>
+                <Textarea
+                  placeholder="Add note about this delivery..."
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="min-h-[80px]"
+                />
+                <Button
+                  onClick={addNote}
+                  disabled={!newNote.trim()}
+                  size="sm"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <StickyNote className="w-3 h-3 mr-2" />
+                  Add Note
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900">Delivery Notes</h4>
+                {order.notes_list && order.notes_list.length > 0 ? (
+                  order.notes_list.map((note, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-gray-800 text-sm mb-1">{note.note}</p>
+                      <p className="text-xs text-gray-500">
+                        {note.author} • {format(new Date(note.timestamp), 'MMM d, h:mm a')}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6">
+                    <StickyNote className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No notes yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function OrderTracking() {
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('id');
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
-    enabled: !!orderId
+    enabled: !!orderId,
+    refetchInterval: (data) => data?.status === 'out_for_delivery' ? 10000 : false
   });
 
-  // Set up refetch interval based on order status
-  React.useEffect(() => {
-    if (order?.status === 'out_for_delivery') {
-      const interval = setInterval(() => {
-        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      }, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [order?.status, orderId]);
-
-  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [showPanel, setShowPanel] = useState(true);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Calculate distance when driver location is available
+  useEffect(() => {
+    if (navigator.geolocation && user?.role === 'admin') {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
+        },
+        (error) => console.log('Error getting location:', error)
+      );
+    }
+  }, [user]);
+
+  // Calculate distance
   useEffect(() => {
     if (order?.driver_lat && order?.driver_lng && order?.delivery_lat && order?.delivery_lng) {
-      const R = 6371; // Earth's radius in km
+      const R = 6371;
       const dLat = (order.delivery_lat - order.driver_lat) * Math.PI / 180;
       const dLon = (order.delivery_lng - order.driver_lng) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -58,13 +477,25 @@ export default function OrderTracking() {
                 Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       const dist = R * c;
-      setDistance((dist * 0.621371).toFixed(2)); // Convert to miles
+      setDistance((dist * 0.621371).toFixed(2));
     }
   }, [order?.driver_lat, order?.driver_lng, order?.delivery_lat, order?.delivery_lng]);
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+      toast.success('Status updated');
+    }
+  });
+
+  const handleOrderUpdate = (updatedOrder) => {
+    queryClient.setQueryData(['order', orderId], updatedOrder);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
           <p className="text-emerald-600">Loading order...</p>
@@ -75,8 +506,8 @@ export default function OrderTracking() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4">
-        <div className="max-w-2xl mx-auto text-center">
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
           <Package className="w-16 h-16 text-emerald-300 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-emerald-900 mb-2">Order Not Found</h1>
           <p className="text-emerald-600">Please check your order ID and try again.</p>
@@ -85,287 +516,123 @@ export default function OrderTracking() {
     );
   }
 
-  const statusConfig = {
-    pending: { icon: Clock, color: 'bg-yellow-500', text: 'Order Received' },
-    confirmed: { icon: CheckCircle2, color: 'bg-blue-500', text: 'Confirmed' },
-    preparing: { icon: Package, color: 'bg-orange-500', text: 'Preparing' },
-    out_for_delivery: { icon: Truck, color: 'bg-purple-500', text: 'Out for Delivery' },
-    delivered: { icon: CheckCircle2, color: 'bg-green-500', text: 'Delivered' },
-    cancelled: { icon: Package, color: 'bg-red-500', text: 'Cancelled' }
-  };
+  const mapCenter = order.delivery_lat && order.delivery_lng && order.driver_lat && order.driver_lng
+    ? [(order.driver_lat + order.delivery_lat) / 2, (order.driver_lng + order.delivery_lng) / 2]
+    : order.delivery_lat && order.delivery_lng
+    ? [order.delivery_lat, order.delivery_lng]
+    : currentLocation || [34.0522, -118.2437];
 
-  const currentStatus = statusConfig[order.status] || statusConfig.pending;
-  const StatusIcon = currentStatus.icon;
-  const showDriverLocation = order.status === 'out_for_delivery' && order.driver_lat && order.driver_lng;
-  const isAdmin = user?.role === 'admin';
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['order'] });
-      toast.success('Order status updated');
-    }
-  });
+  const isDriver = user?.email === order.driver_email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white pt-24 pb-32 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-emerald-900 mb-2">Track Your Order</h1>
-          <p className="text-emerald-600">Order #{order.id.slice(0, 8)}</p>
-        </div>
+    <div className="fixed inset-0 overflow-hidden bg-gray-100">
+      {/* Map Background */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={mapCenter}
+          zoom={13}
+          style={{ height: '100vh', width: '100vw' }}
+          zoomControl={false}
+          attributionControl={false}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
 
-        {/* Status Badge */}
-        <div className="flex justify-center mb-8">
-          <Badge className={`${currentStatus.color} text-white text-lg px-6 py-3 flex items-center gap-2`}>
-            <StatusIcon className="w-5 h-5" />
-            {currentStatus.text}
-          </Badge>
-        </div>
-
-        {/* Driver Location Map - Only show when out for delivery */}
-        {showDriverLocation && (
-          <Card className="mb-6 overflow-hidden border-emerald-200">
-            <CardContent className="p-0">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <Truck className="w-6 h-6" />
-                    <div>
-                      <h3 className="font-bold text-lg">Your Driver is on the way!</h3>
-                      {order.eta_minutes && (
-                        <p className="text-emerald-100 text-sm">ETA: {order.eta_minutes} minutes</p>
-                      )}
-                    </div>
-                  </div>
-                  {distance && (
-                    <div className="text-right">
-                      <p className="text-2xl font-bold">{distance}</p>
-                      <p className="text-xs text-emerald-100">miles away</p>
-                    </div>
-                  )}
+          {/* Driver Location */}
+          {order.driver_lat && order.driver_lng && (
+            <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
+              <Popup>
+                <div className="text-center">
+                  <p className="font-bold">{order.driver_name || 'Driver'}</p>
+                  {order.eta_minutes && <p className="text-sm">ETA: {order.eta_minutes} min</p>}
+                  {distance && <p className="text-sm">{distance} miles away</p>}
                 </div>
-              </div>
+              </Popup>
+            </Marker>
+          )}
 
-              {/* Map */}
-              <div className="h-96">
-                <MapContainer
-                  center={order.delivery_lat && order.delivery_lng ? 
-                    [(order.driver_lat + order.delivery_lat) / 2, (order.driver_lng + order.delivery_lng) / 2] :
-                    [order.driver_lat, order.driver_lng]
-                  }
-                  zoom={13}
-                  style={{ height: '100%', width: '100%' }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  />
-                  {/* Driver Marker */}
-                  <Marker position={[order.driver_lat, order.driver_lng]}>
-                    <Popup>
-                      <div className="text-center">
-                        <p className="font-bold">{order.driver_name || 'Your Driver'}</p>
-                        {order.eta_minutes && <p className="text-sm">ETA: {order.eta_minutes} min</p>}
-                      </div>
-                    </Popup>
-                  </Marker>
-                  {/* Delivery Location Marker */}
-                  {order.delivery_lat && order.delivery_lng && (
-                    <Marker position={[order.delivery_lat, order.delivery_lng]}>
-                      <Popup>
-                        <div className="text-center">
-                          <p className="font-bold">Delivery Location</p>
-                          <p className="text-sm">{order.delivery_address}</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
-                  {/* Route Line */}
-                  {order.delivery_lat && order.delivery_lng && (
-                    <Polyline
-                      positions={[
-                        [order.driver_lat, order.driver_lng],
-                        [order.delivery_lat, order.delivery_lng]
-                      ]}
-                      color="#10b981"
-                      weight={4}
-                      opacity={0.7}
-                      dashArray="10, 10"
-                    />
-                  )}
-                </MapContainer>
-              </div>
-
-              {/* Driver Contact Info */}
-              <div className="p-4 bg-emerald-50 border-t border-emerald-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-emerald-900">{order.driver_name || 'Your Driver'}</p>
-                    {order.driver_phone && (
-                      <p className="text-sm text-emerald-600">Contact your driver</p>
-                    )}
-                  </div>
-                  {order.driver_phone && (
-                    <a href={`tel:${order.driver_phone}`}>
-                      <Button className="bg-gradient-to-r from-emerald-500 to-green-500">
-                        <Phone className="w-4 h-4 mr-2" />
-                        Call Driver
-                      </Button>
-                    </a>
-                  )}
+          {/* Delivery Location */}
+          {order.delivery_lat && order.delivery_lng && (
+            <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
+              <Popup>
+                <div className="text-center">
+                  <p className="font-bold">Delivery Location</p>
+                  <p className="text-sm">{order.delivery_address}</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </Popup>
+            </Marker>
+          )}
 
-        {/* Admin Controls */}
-        {isAdmin && (
-          <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                <Navigation className="w-5 h-5" />
-                Admin Controls
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-semibold text-indigo-800 mb-2 block">Update Order Status</label>
-                  <Select 
-                    value={order.status} 
-                    onValueChange={(val) => updateStatusMutation.mutate({ id: order.id, status: val })}
-                  >
-                    <SelectTrigger className="bg-white border-indigo-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="preparing">Preparing</SelectItem>
-                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="text-xs text-indigo-600">
-                  💡 Changing to "Out for Delivery" will show live tracking with map
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Order Details */}
-        <Card className="mb-6 border-emerald-200">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold text-emerald-900 mb-4">Order Details</h2>
-            
-            <div className="space-y-4">
-              {/* Items */}
-              <div>
-                <h3 className="font-semibold text-emerald-800 mb-2">Items</h3>
-                <div className="space-y-2">
-                  {order.items?.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-2 bg-emerald-50 rounded-lg">
-                      {item.image_url && (
-                        <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium text-emerald-900">{item.name}</p>
-                        {item.variant && <p className="text-sm text-emerald-600">{item.variant}</p>}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-emerald-900">x{item.quantity}</p>
-                        <p className="text-sm text-emerald-600">${item.price.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="pt-4 border-t border-emerald-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-emerald-900">Total</span>
-                  <span className="text-2xl font-bold text-green-600">${order.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Delivery Address */}
-              <div className="pt-4 border-t border-emerald-200">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-5 h-5 text-emerald-600 mt-1" />
-                  <div>
-                    <p className="font-semibold text-emerald-900">Delivery Address</p>
-                    <p className="text-emerald-700">{order.delivery_address}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer Info */}
-              <div className="pt-4 border-t border-emerald-200">
-                <p className="font-semibold text-emerald-900 mb-2">Contact Information</p>
-                <div className="space-y-1">
-                  <p className="text-emerald-700">{order.customer_name}</p>
-                  {order.customer_email && (
-                    <a href={`mailto:${order.customer_email}`} className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
-                      {order.customer_email}
-                    </a>
-                  )}
-                  {order.customer_phone && (
-                    <a href={`tel:${order.customer_phone}`} className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                      <Phone className="w-4 h-4" />
-                      {order.customer_phone}
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Notes */}
-              {order.notes && (
-                <div className="pt-4 border-t border-emerald-200">
-                  <p className="font-semibold text-emerald-900 mb-1">Delivery Notes</p>
-                  <p className="text-emerald-700">{order.notes}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Timeline */}
-        <Card className="border-emerald-200">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold text-emerald-900 mb-4">Order Timeline</h2>
-            <div className="space-y-4">
-              {['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'].map((status, idx) => {
-                const config = statusConfig[status];
-                const Icon = config.icon;
-                const isActive = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'].indexOf(order.status) >= idx;
-                const isCurrent = order.status === status;
-
-                return (
-                  <div key={status} className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isActive ? config.color : 'bg-gray-300'
-                    } text-white`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-semibold ${isCurrent ? 'text-emerald-900' : 'text-gray-600'}`}>
-                        {config.text}
-                      </p>
-                      {isCurrent && <p className="text-sm text-emerald-600">Current status</p>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Route Line */}
+          {order.driver_lat && order.driver_lng && order.delivery_lat && order.delivery_lng && (
+            <Polyline
+              positions={[
+                [order.driver_lat, order.driver_lng],
+                [order.delivery_lat, order.delivery_lng]
+              ]}
+              color="#10b981"
+              weight={4}
+              opacity={0.7}
+              dashArray="10, 10"
+            />
+          )}
+        </MapContainer>
       </div>
+
+      {/* Top Controls */}
+      <div className="fixed top-4 left-4 right-4 z-30 flex items-center justify-between">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
+          onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+
+        {distance && order.status === 'out_for_delivery' && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+            <span className="text-sm font-bold text-emerald-600">{distance} miles</span>
+          </div>
+        )}
+
+        <Button
+          variant="secondary"
+          size="icon"
+          className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
+          onClick={() => {
+            const destination = order.delivery_lat && order.delivery_lng
+              ? `${order.delivery_lat},${order.delivery_lng}`
+              : encodeURIComponent(order.delivery_address);
+            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+          }}
+        >
+          <Navigation className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Delivery Panel */}
+      {showPanel && order && (
+        <SnapDeliveryPanel
+          order={order}
+          onOrderUpdate={handleOrderUpdate}
+          onClose={() => setShowPanel(false)}
+          currentUser={user}
+        />
+      )}
+
+      {/* Show Panel Button */}
+      {!showPanel && (
+        <Button
+          size="lg"
+          className="fixed bottom-6 right-6 z-40 rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 h-14 w-14"
+          onClick={() => setShowPanel(true)}
+        >
+          <ChevronUp className="w-6 h-6" />
+        </Button>
+      )}
     </div>
   );
 }
