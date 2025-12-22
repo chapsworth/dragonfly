@@ -34,6 +34,7 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
+import VendorOrders from './pages/VendorOrders';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +75,7 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
+    "VendorOrders": VendorOrders,
 }
 
 export const pagesConfig = {
