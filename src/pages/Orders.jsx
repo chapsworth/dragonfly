@@ -509,18 +509,16 @@ export default function Orders() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 mt-2">
-                        {order.status === 'out_for_delivery' && (
-                          <Button
-                            className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`${createPageUrl('CustomerOrderTracking')}?id=${order.id}`);
-                            }}
-                          >
-                            <Radar className="w-4 h-4 mr-2" />
-                            Track Order
-                          </Button>
-                        )}
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`${createPageUrl('CustomerOrderTracking')}?id=${order.id}`);
+                          }}
+                        >
+                          <Radar className="w-4 h-4 mr-2" />
+                          Track Order
+                        </Button>
                         {order.status === 'delivered' && (
                           <Button
                             className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
