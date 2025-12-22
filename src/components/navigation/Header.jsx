@@ -55,6 +55,7 @@ export default function Header({ onMenuClick }) {
                   </button>
                 </Link>
               )}
+              {user && <NotificationBell />}
             </div>
 
             <Link to={createPageUrl('Home')} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -76,7 +77,6 @@ export default function Header({ onMenuClick }) {
 
             <div className="flex items-center gap-1 z-10">
               <QuickCreateMenu />
-              {user && <NotificationBell />}
               <button
                 onClick={() => setIsCartOpen(true)}
                 data-cart-button
