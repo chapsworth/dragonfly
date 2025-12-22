@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2, Radar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -381,19 +383,27 @@ export default function Orders() {
                         </div>
                       )}
 
-                      {/* View Details Button */}
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2 border-emerald-200 hover:bg-emerald-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedOrder(order);
-                        }}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Full Details
-                        <ChevronRight className="w-4 h-4 ml-auto" />
-                      </Button>
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 mt-2">
+                        <Link to={createPageUrl('OrderTracking') + `?id=${order.id}`} className="flex-1">
+                          <Button
+                            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                          >
+                            <Radar className="w-4 h-4 mr-2" />
+                            Track Order
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          className="border-emerald-200 hover:bg-emerald-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(order);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
