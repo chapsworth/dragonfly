@@ -11,7 +11,10 @@ Deno.serve(async (req) => {
 
         const { orderId, status, customerEmail, customerName } = await req.json();
 
-        const orderUrl = `https://mydragonfly.club/Orders?orderId=${orderId}`;
+        // Use live tracking page for out_for_delivery status
+        const orderUrl = status === 'out_for_delivery' 
+            ? `https://mydragonfly.club/CustomerOrderTracking?id=${orderId}`
+            : `https://mydragonfly.club/Orders?orderId=${orderId}`;
         const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/6d84e9958_IMG_0305.jpeg';
         
         const emailHeader = `
@@ -120,7 +123,12 @@ Deno.serve(async (req) => {
                             <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0;">
                                 <p style="color: #92400e; margin: 0; font-size: 14px;"><strong>⚠️ Important:</strong> Please ensure someone is available to receive the delivery. Our driver will contact you when nearby.</p>
                             </div>
-                            <p style="color: #374151; line-height: 1.6; margin: 20px 0;">Track your driver's location in real-time using the button below!</p>
+                            <div style="text-align: center; margin: 25px 0;">
+                                <a href="${orderUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+                                    📍 Track Live Location
+                                </a>
+                            </div>
+                            <p style="color: #374151; line-height: 1.6; margin: 20px 0; text-align: center; font-size: 13px;">Click the button above to see your driver's real-time location on the map!</p>
                         </div>
                         ${emailFooter}
                     </div>
