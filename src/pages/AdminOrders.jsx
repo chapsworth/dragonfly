@@ -22,6 +22,7 @@ import ProductSelector from '@/components/orders/ProductSelector';
 import OrderDetailModal from '@/components/orders/OrderDetailModal';
 import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
 import OrderNotification from '@/components/admin/OrderNotification';
+import AdminOrdersMap from '@/components/admin/AdminOrdersMap';
 
 const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
