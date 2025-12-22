@@ -23,7 +23,7 @@ export default function Orders() {
   const [apiKey, setApiKey] = useState(null);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [previousOrderStatuses, setPreviousOrderStatuses] = useState({});
-  const { addItem } = useCart();
+  const { addToCart, setIsCartOpen } = useCart();
   
   const queryClient = useQueryClient();
 
@@ -232,21 +232,29 @@ export default function Orders() {
     }
 
     // Add all items from the order to the cart
+    let addedCount = 0;
     order.items.forEach(item => {
-      addItem({
+      const product = {
         id: item.product_id,
         name: item.name,
         price: item.price,
-        image_url: item.image_url,
-        variant: item.variant
-      }, item.quantity);
+        image_url: item.image_url
+      };
+      
+      const variant = item.variant ? { name: item.variant, price: item.price } : null;
+      
+      // Add item multiple times based on quantity
+      for (let i = 0; i < item.quantity; i++) {
+        addToCart(product, variant);
+      }
+      addedCount++;
     });
 
-    toast.success(`Added ${order.items.length} items to cart`, {
-      duration: 2000,
+    toast.success(`Added ${order.items.length} product(s) to cart!`, {
+      duration: 3000,
       action: {
         label: 'View Cart',
-        onClick: () => {} // Cart drawer will open automatically
+        onClick: () => setIsCartOpen(true)
       }
     });
   };
