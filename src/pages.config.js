@@ -20,6 +20,7 @@ import CRMTextTemplates from './pages/CRMTextTemplates';
 import CRMVendors from './pages/CRMVendors';
 import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
+import CustomerOrderTracking from './pages/CustomerOrderTracking';
 import DeliveryNavigation from './pages/DeliveryNavigation';
 import Favorites from './pages/Favorites';
 import GlassPortal from './pages/GlassPortal';
@@ -33,7 +34,6 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
-import CustomerOrderTracking from './pages/CustomerOrderTracking';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +60,7 @@ export const PAGES = {
     "CRMVendors": CRMVendors,
     "ComponentLibrary": ComponentLibrary,
     "Contact": Contact,
+    "CustomerOrderTracking": CustomerOrderTracking,
     "DeliveryNavigation": DeliveryNavigation,
     "Favorites": Favorites,
     "GlassPortal": GlassPortal,
@@ -73,7 +74,6 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
-    "CustomerOrderTracking": CustomerOrderTracking,
 }
 
 export const pagesConfig = {

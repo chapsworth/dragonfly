@@ -28,16 +28,18 @@ const deliveryIcon = L.divIcon({
 const driverIcon = L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
-      <div class="w-12 h-12 rounded-full shadow-xl flex items-center justify-center bg-blue-600 border-4 border-white">
-        <span class="text-white text-2xl">🚗</span>
+      <div class="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center bg-white border-4 border-emerald-400">
+        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/2bd4e5c04_IMG_0305.jpeg" 
+             alt="Driver" 
+             class="w-10 h-10 object-contain" />
       </div>
-      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-blue-600 opacity-50"></div>
+      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-emerald-400 opacity-40"></div>
     </div>
   `,
   className: 'driver-marker',
-  iconSize: [48, 48],
-  iconAnchor: [24, 24],
-  popupAnchor: [0, -24],
+  iconSize: [56, 56],
+  iconAnchor: [28, 28],
+  popupAnchor: [0, -28],
 });
 
 function MapController({ center, zoom }) {
@@ -61,14 +63,15 @@ export default function CustomerOrderTracking() {
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
     enabled: !!orderId,
-    refetchInterval: (data) => data?.status === 'out_for_delivery' ? 10000 : false
+    refetchInterval: (data) => data?.status === 'out_for_delivery' ? 5000 : false // Update every 5 seconds
   });
 
   const [distance, setDistance] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
-  const [mapZoom] = useState(14);
+  const [mapZoom, setMapZoom] = useState(14);
+  const [calculatedETA, setCalculatedETA] = useState(null);
 
-  // Calculate distance between driver and delivery location
+  // Calculate distance and ETA between driver and delivery location
   useEffect(() => {
     if (order?.driver_lat && order?.driver_lng && order?.delivery_lat && order?.delivery_lng) {
       const R = 6371; // km
@@ -82,10 +85,29 @@ export default function CustomerOrderTracking() {
       const distMiles = distKm * 0.621371;
       setDistance(distMiles);
       
-      // Center map on delivery location
-      setMapCenter([order.delivery_lat, order.delivery_lng]);
+      // Calculate ETA based on distance (assuming 30 mph average speed in city)
+      const avgSpeedMph = 30;
+      const etaMinutes = Math.ceil((distMiles / avgSpeedMph) * 60);
+      setCalculatedETA(etaMinutes);
+      
+      // Center map between driver and delivery, zoom to fit both
+      const midLat = (order.driver_lat + order.delivery_lat) / 2;
+      const midLng = (order.driver_lng + order.delivery_lng) / 2;
+      setMapCenter([midLat, midLng]);
+      
+      // Adjust zoom based on distance
+      if (distMiles < 0.3) {
+        setMapZoom(16);
+      } else if (distMiles < 1) {
+        setMapZoom(14);
+      } else if (distMiles < 3) {
+        setMapZoom(13);
+      } else {
+        setMapZoom(12);
+      }
     } else if (order?.delivery_lat && order?.delivery_lng) {
       setMapCenter([order.delivery_lat, order.delivery_lng]);
+      setMapZoom(14);
     }
   }, [order?.driver_lat, order?.driver_lng, order?.delivery_lat, order?.delivery_lng]);
 
@@ -155,9 +177,10 @@ export default function CustomerOrderTracking() {
             <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
-                  <p className="font-bold text-blue-600">{order.driver_name || 'Your Driver'}</p>
-                  {order.eta_minutes && <p className="text-sm">ETA: {order.eta_minutes} min</p>}
-                  <p className="text-sm">{distance.toFixed(2)} miles away</p>
+                  <p className="font-bold text-emerald-600">🐉 {order.driver_name || 'Your Driver'}</p>
+                  <p className="text-sm font-semibold text-gray-700">📍 {distance.toFixed(2)} miles away</p>
+                  <p className="text-sm text-gray-600">⏱️ {order.eta_minutes || calculatedETA} min ETA</p>
+                  <p className="text-xs text-gray-500 mt-1">GPS: {order.driver_lat.toFixed(5)}, {order.driver_lng.toFixed(5)}</p>
                 </div>
               </Popup>
             </Marker>
@@ -206,13 +229,11 @@ export default function CustomerOrderTracking() {
                     <p className="text-sm text-blue-600 font-medium">Distance</p>
                     <p className="text-2xl font-bold text-blue-900">{distance.toFixed(2)} mi</p>
                   </div>
-                  {order.eta_minutes && (
-                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center">
-                      <Clock className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                      <p className="text-sm text-emerald-600 font-medium">ETA</p>
-                      <p className="text-2xl font-bold text-emerald-900">{order.eta_minutes} min</p>
-                    </div>
-                  )}
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center">
+                    <Clock className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                    <p className="text-sm text-emerald-600 font-medium">ETA</p>
+                    <p className="text-2xl font-bold text-emerald-900">{order.eta_minutes || calculatedETA} min</p>
+                  </div>
                 </div>
 
                 {/* Driver Info */}
