@@ -3,7 +3,9 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Phone, MessageSquare, Navigation, Package, User, MapPin, Truck, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Phone, MessageSquare, Navigation, Package, User, MapPin, Truck, Clock, Radar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -198,6 +200,15 @@ export default function InteractiveOrderCard({ order }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
+          <Link to={createPageUrl('OrderTracking') + `?id=${order.id}`} className="flex-1">
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+            >
+              <Radar className="w-3 h-3 mr-1" />
+              Track
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
