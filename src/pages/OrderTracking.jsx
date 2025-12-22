@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+
+function MapController({ center, zoom }) {
+  const map = useMap();
+  
+  React.useEffect(() => {
+    if (center) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map]);
+  
+  return null;
+}
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -272,7 +284,12 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser }) => {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id === 'details') {
+                    centerOnOrder();
+                  }
+                }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-emerald-500 text-emerald-600 bg-emerald-50'
@@ -450,6 +467,9 @@ export default function OrderTracking() {
   const [distance, setDistance] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [showPanel, setShowPanel] = useState(true);
+  const [mapCenter, setMapCenter] = useState(null);
+  const [mapZoom, setMapZoom] = useState(13);
+  const mapRef = React.useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -516,11 +536,31 @@ export default function OrderTracking() {
     );
   }
 
-  const mapCenter = order.delivery_lat && order.delivery_lng && order.driver_lat && order.driver_lng
+  const defaultMapCenter = order.delivery_lat && order.delivery_lng && order.driver_lat && order.driver_lng
     ? [(order.driver_lat + order.delivery_lat) / 2, (order.driver_lng + order.delivery_lng) / 2]
     : order.delivery_lat && order.delivery_lng
     ? [order.delivery_lat, order.delivery_lng]
     : currentLocation || [34.0522, -118.2437];
+
+  const centerOnLocation = () => {
+    if (currentLocation && mapRef.current) {
+      mapRef.current.setView(currentLocation, 15);
+    }
+  };
+
+  const centerOnOrder = () => {
+    if (!order || !mapRef.current) return;
+    
+    if (order.driver_lat && order.driver_lng && order.delivery_lat && order.delivery_lng) {
+      const bounds = [
+        [order.driver_lat, order.driver_lng],
+        [order.delivery_lat, order.delivery_lng]
+      ];
+      mapRef.current.fitBounds(bounds, { padding: [80, 80] });
+    } else if (order.delivery_lat && order.delivery_lng) {
+      mapRef.current.setView([order.delivery_lat, order.delivery_lng], 14);
+    }
+  };
 
   const isDriver = user?.email === order.driver_email;
 
@@ -529,12 +569,15 @@ export default function OrderTracking() {
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <MapContainer
-          center={mapCenter}
-          zoom={13}
+          center={mapCenter || defaultMapCenter}
+          zoom={mapZoom}
           style={{ height: '100vh', width: '100vw' }}
           zoomControl={false}
           attributionControl={false}
+          ref={mapRef}
+          whenCreated={(mapInstance) => { mapRef.current = mapInstance; }}
         >
+          <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -581,48 +624,24 @@ export default function OrderTracking() {
         </MapContainer>
       </div>
 
-      {/* Top Controls */}
-      <div className="fixed top-4 left-4 right-4 z-30 flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="icon"
-            className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
-            onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          {user?.role === 'admin' && (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => navigate(createPageUrl('AdminOrders') + '?action=create')}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Create Order
-            </Button>
-          )}
-        </div>
-
-        {distance && order.status === 'out_for_delivery' && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
-            <span className="text-sm font-bold text-emerald-600">{distance} miles</span>
-          </div>
-        )}
-
+      {/* Map Controls */}
+      <div className="fixed top-4 left-4 z-30 flex flex-col gap-2">
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
-          onClick={() => {
-            const destination = order.delivery_lat && order.delivery_lng
-              ? `${order.delivery_lat},${order.delivery_lng}`
-              : encodeURIComponent(order.delivery_address);
-            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-          }}
+          className="rounded-full shadow-lg bg-white/40 backdrop-blur-sm hover:bg-white/60 border-0"
+          onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
         >
-          <Navigation className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-emerald-900" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full shadow-lg bg-white/40 backdrop-blur-sm hover:bg-white/60 border-0"
+          onClick={centerOnLocation}
+          title="Center on my location"
+        >
+          <Navigation className="w-5 h-5 text-emerald-900" />
         </Button>
       </div>
 
