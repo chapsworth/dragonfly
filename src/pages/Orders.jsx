@@ -20,8 +20,53 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [apiKey, setApiKey] = useState(null);
   const [selectedOrders, setSelectedOrders] = useState([]);
+  const [previousOrderStatuses, setPreviousOrderStatuses] = useState({});
   
   const queryClient = useQueryClient();
+
+  // Sound player function
+  const playSound = (type) => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Different sounds for different status changes
+    const soundMap = {
+      confirmed: { freq: 523.25, duration: 0.2 }, // C5 - Short beep
+      preparing: { freq: 659.25, duration: 0.2 }, // E5 - Short beep
+      out_for_delivery: { freq: [523.25, 659.25, 783.99], duration: 0.3 }, // C-E-G chord
+      delivered: { freq: [523.25, 659.25, 783.99, 1046.50], duration: 0.5 }, // Full success chord
+      cancelled: { freq: 220, duration: 0.4 } // Low A - Warning
+    };
+    
+    const sound = soundMap[type] || { freq: 440, duration: 0.15 };
+    
+    if (Array.isArray(sound.freq)) {
+      // Play chord
+      sound.freq.forEach((freq, idx) => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + sound.duration);
+      });
+    } else {
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = type === 'delivered' ? 'sine' : 'triangle';
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    }
+  };
 
   // Check if redirected from checkout with order ID
   const urlParams = new URLSearchParams(window.location.search);
@@ -75,6 +120,44 @@ export default function Orders() {
       }
     }
   }, [orderIdFromUrl, orders]);
+
+  // Monitor order status changes and play sounds
+  React.useEffect(() => {
+    if (!orders || orders.length === 0) return;
+
+    orders.forEach(order => {
+      const previousStatus = previousOrderStatuses[order.id];
+      const currentStatus = order.status;
+
+      // If status changed (and we have a previous status)
+      if (previousStatus && previousStatus !== currentStatus) {
+        // Play sound based on new status
+        if (currentStatus === 'confirmed') {
+          playSound('confirmed');
+          toast.success('Order confirmed!', { duration: 2000 });
+        } else if (currentStatus === 'preparing') {
+          playSound('preparing');
+          toast.info('Order is being prepared', { duration: 2000 });
+        } else if (currentStatus === 'out_for_delivery') {
+          playSound('out_for_delivery');
+          toast.info('🚗 Driver is on the way!', { duration: 3000 });
+        } else if (currentStatus === 'delivered') {
+          playSound('delivered');
+          toast.success('🎉 Order delivered!', { duration: 3000 });
+        } else if (currentStatus === 'cancelled') {
+          playSound('cancelled');
+          toast.error('Order cancelled', { duration: 2000 });
+        }
+      }
+    });
+
+    // Update previous statuses
+    const newStatuses = {};
+    orders.forEach(order => {
+      newStatuses[order.id] = order.status;
+    });
+    setPreviousOrderStatuses(newStatuses);
+  }, [orders]);
 
   // Filter orders based on selected tab
   const filteredOrders = orders.filter(order => {
