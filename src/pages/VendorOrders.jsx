@@ -375,36 +375,31 @@ function VendorOrdersContent() {
                       <CardTitle className="text-emerald-900">{category}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {categoryProducts.map(product => {
-                        const buttonRef = useRef(null);
-                        return (
-                          <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{product.product_name}</p>
-                              {product.variant && (
-                                <p className="text-sm text-gray-600">{product.variant}</p>
-                              )}
-                              {product.size && (
-                                <p className="text-xs text-gray-500">{product.size}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
-                              <Button 
-                                ref={buttonRef}
-                                onClick={(e) => {
-                                  buttonRef.current = e.currentTarget;
-                                  addToCart(product, buttonRef);
-                                }} 
-                                size="sm" 
-                                className="bg-emerald-600"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </Button>
-                            </div>
+                      {categoryProducts.map(product => (
+                        <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{product.product_name}</p>
+                            {product.variant && (
+                              <p className="text-sm text-gray-600">{product.variant}</p>
+                            )}
+                            {product.size && (
+                              <p className="text-xs text-gray-500">{product.size}</p>
+                            )}
                           </div>
-                        );
-                      })}
+                          <div className="flex items-center gap-3">
+                            <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                            <Button 
+                              onClick={(e) => {
+                                addToCart(product, { current: e.currentTarget });
+                              }} 
+                              size="sm" 
+                              className="bg-emerald-600"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </CardContent>
                   </Card>
                 ))}
