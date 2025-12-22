@@ -24,6 +24,7 @@ import DeliveryNavigation from './pages/DeliveryNavigation';
 import Favorites from './pages/Favorites';
 import GlassPortal from './pages/GlassPortal';
 import Home from './pages/Home';
+import NotificationManager from './pages/NotificationManager';
 import OrderTracking from './pages/OrderTracking';
 import Orders from './pages/Orders';
 import ProductDetail from './pages/ProductDetail';
@@ -32,7 +33,6 @@ import Profile from './pages/Profile';
 import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
-import NotificationManager from './pages/NotificationManager';
 import __Layout from './Layout.jsx';
 
 
@@ -63,6 +63,7 @@ export const PAGES = {
     "Favorites": Favorites,
     "GlassPortal": GlassPortal,
     "Home": Home,
+    "NotificationManager": NotificationManager,
     "OrderTracking": OrderTracking,
     "Orders": Orders,
     "ProductDetail": ProductDetail,
@@ -71,7 +72,6 @@ export const PAGES = {
     "Rewards": Rewards,
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
-    "NotificationManager": NotificationManager,
 }
 
 export const pagesConfig = {

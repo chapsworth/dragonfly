@@ -11,6 +11,7 @@ import CategoryCarousel from '@/components/products/CategoryCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import HomeSettingsModal from '@/components/admin/HomeSettingsModal';
 import PageEditor from '@/components/editor/PageEditor';
+import OrderNotification from '@/components/admin/OrderNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -413,6 +414,9 @@ export default function Home() {
       </Helmet>
       <div className="min-h-screen bg-white">
         <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
+        {/* Admin Order Notifications */}
+        {user?.role === 'admin' && <OrderNotification />}
+        
         {/* Admin Edit Button */}
         {user?.role === 'admin' && (
           <motion.button
