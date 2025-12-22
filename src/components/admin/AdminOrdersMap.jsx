@@ -28,9 +28,29 @@ const makeIcon = (emoji, bg = '#3b82f6') =>
 const customerIcon = makeIcon('🏠', '#10b981');
 const driverIcon = makeIcon('🚗', '#3b82f6');
 
-export default function AdminOrdersMap({ orders }) {
+export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId }) {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [flashingId, setFlashingId] = useState(null);
+
+  // Update selected order when external selection changes
+  React.useEffect(() => {
+    if (selectedOrderId) {
+      const order = activeOrders.find(o => o.id === selectedOrderId);
+      if (order) {
+        setSelectedOrder(order);
+        setFlashingId(selectedOrderId);
+        setTimeout(() => setFlashingId(null), 600);
+      }
+    }
+  }, [selectedOrderId]);
+
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+    setFlashingId(order.id);
+    setTimeout(() => setFlashingId(null), 600);
+    onOrderSelect?.(order.id);
+  };
 
   // Filter orders with valid coordinates
   const activeOrders = orders.filter(o => 
@@ -82,7 +102,7 @@ export default function AdminOrdersMap({ orders }) {
                 position={[order.delivery_lat, order.delivery_lng]} 
                 icon={customerIcon}
                 eventHandlers={{
-                  click: () => setSelectedOrder(order)
+                  click: () => handleOrderClick(order)
                 }}
               >
                 <Popup>
@@ -104,7 +124,7 @@ export default function AdminOrdersMap({ orders }) {
                   position={[order.driver_lat, order.driver_lng]} 
                   icon={driverIcon}
                   eventHandlers={{
-                    click: () => setSelectedOrder(order)
+                    click: () => handleOrderClick(order)
                   }}
                 >
                   <Popup>
@@ -141,10 +161,10 @@ export default function AdminOrdersMap({ orders }) {
               {activeOrders.map((order) => (
                 <button
                   key={order.id}
-                  onClick={() => setSelectedOrder(order)}
-                  className={`w-full p-3 border-b border-gray-100 hover:bg-emerald-50 transition-colors text-left ${
+                  onClick={() => handleOrderClick(order)}
+                  className={`w-full p-3 border-b border-gray-100 hover:bg-emerald-50 transition-all text-left ${
                     selectedOrder?.id === order.id ? 'bg-emerald-50' : ''
-                  }`}
+                  } ${flashingId === order.id ? 'animate-pulse bg-emerald-100' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">

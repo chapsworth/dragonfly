@@ -34,6 +34,8 @@ export default function AdminOrders() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
+  const [mapSelectedOrderId, setMapSelectedOrderId] = useState(null);
+  const [flashingOrderId, setFlashingOrderId] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
@@ -539,38 +541,44 @@ export default function AdminOrders() {
           </div>
 
           {/* Admin Orders Map */}
-          <AdminOrdersMap orders={orders} />
+          <AdminOrdersMap 
+            orders={orders} 
+            selectedOrderId={mapSelectedOrderId}
+            onOrderSelect={(orderId) => {
+              setMapSelectedOrderId(orderId);
+              setFlashingOrderId(orderId);
+              setTimeout(() => setFlashingOrderId(null), 600);
+            }}
+          />
 
           {isLoading ? (
             <div className="flex justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {orders.map((order) => (
-                <div key={order.id} className="flex items-start gap-2">
-                  <Checkbox
-                    checked={selectedOrders.includes(order.id)}
-                    onCheckedChange={() => toggleOrderSelection(order.id)}
-                    className="mt-4"
-                  />
-                  <div className="flex-1">
-                    <InteractiveOrderCard order={order} />
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {orders.map((order) => (
-                <div key={order.id} className="flex items-start gap-2">
-                  <Checkbox
-                    checked={selectedOrders.includes(order.id)}
-                    onCheckedChange={() => toggleOrderSelection(order.id)}
-                    className="mt-4"
-                  />
-                  <div className="flex-1">
-                    <InteractiveOrderCard order={order} />
+                <div 
+                  key={order.id} 
+                  className={`transition-all ${
+                    flashingOrderId === order.id ? 'animate-pulse scale-105' : ''
+                  } ${mapSelectedOrderId === order.id ? 'ring-2 ring-emerald-500 rounded-2xl' : ''}`}
+                  onClick={() => {
+                    setMapSelectedOrderId(order.id);
+                    setFlashingOrderId(order.id);
+                    setTimeout(() => setFlashingOrderId(null), 600);
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      checked={selectedOrders.includes(order.id)}
+                      onCheckedChange={() => toggleOrderSelection(order.id)}
+                      className="mt-4"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex-1">
+                      <InteractiveOrderCard order={order} />
+                    </div>
                   </div>
                 </div>
               ))}
