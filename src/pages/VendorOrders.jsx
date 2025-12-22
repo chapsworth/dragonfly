@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -33,6 +34,7 @@ function VendorOrdersContent() {
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [addedItems, setAddedItems] = useState([]);
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState({});
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
