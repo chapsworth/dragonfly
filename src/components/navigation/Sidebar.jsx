@@ -54,8 +54,8 @@ const adminNavItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
+  const [isAdminOpen, setIsAdminOpen] = useState(true);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -107,28 +107,8 @@ export default function Sidebar({ isOpen, onClose }) {
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-4">
-            <div className="space-y-1 mb-6">
-              {navItems.map((item, i) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Link
-                    to={createPageUrl(item.page)}
-                    onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
-                  >
-                    <item.icon className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
-                    <span className="font-medium text-emerald-800">{item.name}</span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-
             {isAdmin && (
-              <Collapsible open={isAdminOpen} onOpenChange={setIsAdminOpen} className="border-t border-emerald-100/50 pt-4 mb-6">
+              <Collapsible open={isAdminOpen} onOpenChange={setIsAdminOpen} className="mb-6">
                 <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 hover:bg-emerald-50 rounded-xl transition-colors">
                   <h3 className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">
                     Admin
@@ -156,6 +136,26 @@ export default function Sidebar({ isOpen, onClose }) {
                 </CollapsibleContent>
               </Collapsible>
             )}
+
+            <div className="space-y-1 mb-6 border-t border-emerald-100/50 pt-4">
+              {navItems.map((item, i) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link
+                    to={createPageUrl(item.page)}
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors group"
+                  >
+                    <item.icon className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                    <span className="font-medium text-emerald-800">{item.name}</span>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
 
             <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen} className="border-t border-emerald-100/50 pt-4">
               <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 hover:bg-emerald-50 rounded-xl transition-colors">
