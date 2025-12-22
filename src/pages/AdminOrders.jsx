@@ -538,6 +538,9 @@ export default function AdminOrders() {
             </div>
           </div>
 
+          {/* Admin Orders Map */}
+          <AdminOrdersMap orders={orders} />
+
           {isLoading ? (
             <div className="flex justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
