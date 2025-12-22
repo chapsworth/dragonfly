@@ -56,16 +56,18 @@ const deliveryIcon = makeEmojiIcon('#10b981', '🏠');
 const driverIcon = L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
-      <div class="w-10 h-10 rounded-full shadow-lg flex items-center justify-center bg-blue-600 border-2 border-white">
-        <span class="text-white text-xl">🚗</span>
+      <div class="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center bg-white border-4 border-emerald-400">
+        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/2bd4e5c04_IMG_0305.jpeg" 
+             alt="Driver" 
+             class="w-10 h-10 object-contain" />
       </div>
-      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-blue-600 opacity-50"></div>
+      <div class="absolute inset-0 w-full h-full rounded-full animate-ping bg-emerald-400 opacity-40"></div>
     </div>
   `,
   className: 'driver-marker',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-  popupAnchor: [0, -24],
+  iconSize: [56, 56],
+  iconAnchor: [28, 28],
+  popupAnchor: [0, -28],
 });
 
 // Snap-to-Position Delivery Panel Component
@@ -460,7 +462,10 @@ export default function OrderTracking() {
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
     enabled: !!orderId,
-    refetchInterval: (data) => data?.status === 'out_for_delivery' ? 10000 : false
+    refetchInterval: (data) => {
+      const status = data?.status;
+      return ['confirmed', 'preparing', 'out_for_delivery'].includes(status) ? 5000 : false;
+    }
   });
 
   const [user, setUser] = useState(null);
@@ -668,26 +673,31 @@ export default function OrderTracking() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* Driver Location */}
-          {order.driver_lat && order.driver_lng && (
-            <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
+          {/* Delivery Location - Always shown during active delivery */}
+          {order.delivery_lat && order.delivery_lng && (
+            <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
               <Popup>
-                <div className="text-center">
-                  <p className="font-bold">{order.driver_name || 'Driver'}</p>
-                  {order.eta_minutes && <p className="text-sm">ETA: {order.eta_minutes} min</p>}
-                  {distance && <p className="text-sm">{distance} miles away</p>}
+                <div className="text-center p-2">
+                  <p className="font-bold text-emerald-600">🏠 Customer Location</p>
+                  <p className="text-sm text-gray-700">{order.customer_name}</p>
+                  <p className="text-sm text-gray-600">{order.delivery_address}</p>
+                  {order.customer_phone && (
+                    <p className="text-xs text-gray-500 mt-1">📞 {order.customer_phone}</p>
+                  )}
                 </div>
               </Popup>
             </Marker>
           )}
 
-          {/* Delivery Location */}
-          {order.delivery_lat && order.delivery_lng && (
-            <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
+          {/* Driver Location - Shown during active delivery */}
+          {order.driver_lat && order.driver_lng && (
+            <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
               <Popup>
-                <div className="text-center">
-                  <p className="font-bold">Delivery Location</p>
-                  <p className="text-sm">{order.delivery_address}</p>
+                <div className="text-center p-2">
+                  <p className="font-bold text-emerald-600">🐉 {order.driver_name || 'Driver'}</p>
+                  {distance && <p className="text-sm font-semibold text-gray-700">📍 {distance} miles away</p>}
+                  {order.eta_minutes && <p className="text-sm text-gray-600">⏱️ {order.eta_minutes} min ETA</p>}
+                  <p className="text-xs text-gray-500 mt-1">GPS: {order.driver_lat.toFixed(5)}, {order.driver_lng.toFixed(5)}</p>
                 </div>
               </Popup>
             </Marker>
