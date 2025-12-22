@@ -345,7 +345,7 @@ function VendorOrdersContent() {
         </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto pt-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
