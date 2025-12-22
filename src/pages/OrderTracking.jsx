@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
-  Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
-  ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
-  StickyNote, Upload, Trash2, GripHorizontal, FileText, User
-} from 'lucide-react';
+        Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
+        ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
+        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus
+      } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -583,14 +583,27 @@ export default function OrderTracking() {
 
       {/* Top Controls */}
       <div className="fixed top-4 left-4 right-4 z-30 flex items-center justify-between">
-        <Button
-          variant="secondary"
-          size="icon"
-          className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
-          onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm"
+            onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          {user?.role === 'admin' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => navigate(createPageUrl('AdminOrders') + '?action=create')}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Create Order
+            </Button>
+          )}
+        </div>
 
         {distance && order.status === 'out_for_delivery' && (
           <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
