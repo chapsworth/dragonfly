@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp, Route, Zap } from 'lucide-react';
 import { format } from 'date-fns';
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -32,6 +35,10 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [flashingId, setFlashingId] = useState(null);
+  const [routeMode, setRouteMode] = useState('single'); // 'single', 'multiple'
+  const [optimizedRoute, setOptimizedRoute] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [routeLines, setRouteLines] = useState([]);
 
   // Update selected order when external selection changes
   React.useEffect(() => {
@@ -50,7 +57,119 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
     setFlashingId(order.id);
     setTimeout(() => setFlashingId(null), 600);
     onOrderSelect?.(order.id);
+    
+    // If in single mode, fetch route for this order
+    if (routeMode === 'single' && order.driver_lat && order.driver_lng) {
+      fetchSingleRoute(order);
+    }
   };
+
+  // Fetch single order route
+  const fetchSingleRoute = async (order) => {
+    if (!order.driver_lat || !order.driver_lng || !order.delivery_lat || !order.delivery_lng) return;
+    
+    setIsOptimizing(true);
+    try {
+      const response = await base44.functions.invoke('getOptimizedRoute', {
+        origin: `${order.driver_lat},${order.driver_lng}`,
+        destinations: [`${order.delivery_lat},${order.delivery_lng}`]
+      });
+      
+      if (response.data?.routes?.[0]) {
+        const route = response.data.routes[0];
+        setRouteLines([{
+          coordinates: decodePolyline(route.overview_polyline),
+          color: '#3b82f6',
+          order: order
+        }]);
+      }
+    } catch (error) {
+      console.error('Route fetch error:', error);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Optimize route for multiple deliveries
+  const optimizeMultipleRoute = async () => {
+    const deliveryOrders = activeOrders.filter(o => o.driver_lat && o.driver_lng && o.delivery_lat && o.delivery_lng);
+    
+    if (deliveryOrders.length === 0) {
+      toast.error('No orders with driver locations available');
+      return;
+    }
+
+    setIsOptimizing(true);
+    try {
+      // Use first driver's location as origin
+      const origin = `${deliveryOrders[0].driver_lat},${deliveryOrders[0].driver_lng}`;
+      const destinations = deliveryOrders.map(o => `${o.delivery_lat},${o.delivery_lng}`);
+      
+      const response = await base44.functions.invoke('getOptimizedRoute', {
+        origin,
+        destinations
+      });
+      
+      if (response.data?.routes) {
+        const routes = response.data.routes.map((route, idx) => ({
+          coordinates: decodePolyline(route.overview_polyline),
+          color: `hsl(${idx * 60}, 70%, 50%)`,
+          order: deliveryOrders[idx]
+        }));
+        setRouteLines(routes);
+        setOptimizedRoute(response.data);
+        toast.success(`Optimized route for ${deliveryOrders.length} deliveries`);
+      }
+    } catch (error) {
+      console.error('Route optimization error:', error);
+      toast.error('Failed to optimize route');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Decode Google polyline
+  const decodePolyline = (encoded) => {
+    if (!encoded) return [];
+    const points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push([lat / 1e5, lng / 1e5]);
+    }
+    return points;
+  };
+
+  // Auto-fetch route when mode changes
+  useEffect(() => {
+    if (routeMode === 'single' && selectedOrder) {
+      fetchSingleRoute(selectedOrder);
+    } else if (routeMode === 'multiple') {
+      optimizeMultipleRoute();
+    } else {
+      setRouteLines([]);
+    }
+  }, [routeMode]);
 
   // Filter orders with valid coordinates
   const activeOrders = orders.filter(o => 
@@ -82,6 +201,56 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
 
   return (
     <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 overflow-hidden shadow-lg mb-6">
+      {/* Route Controls */}
+      <div className="p-4 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Route className="w-5 h-5 text-emerald-600" />
+            <span className="font-semibold text-emerald-900">Route View:</span>
+          </div>
+          <Select value={routeMode} onValueChange={setRouteMode}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Routes</SelectItem>
+              <SelectItem value="single">Single Order Route</SelectItem>
+              <SelectItem value="multiple">Multi-Delivery Optimization</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {routeMode === 'multiple' && (
+            <Button
+              onClick={optimizeMultipleRoute}
+              disabled={isOptimizing}
+              size="sm"
+              className="bg-gradient-to-r from-blue-500 to-cyan-500"
+            >
+              <Zap className="w-4 h-4 mr-1" />
+              {isOptimizing ? 'Optimizing...' : 'Re-optimize'}
+            </Button>
+          )}
+
+          {routeMode === 'single' && selectedOrder && (
+            <Button
+              onClick={() => fetchSingleRoute(selectedOrder)}
+              disabled={isOptimizing}
+              size="sm"
+              variant="outline"
+            >
+              <Navigation className="w-4 h-4 mr-1" />
+              {isOptimizing ? 'Loading...' : 'Refresh Route'}
+            </Button>
+          )}
+
+          {routeLines.length > 0 && (
+            <Badge variant="secondary" className="ml-auto">
+              {routeLines.length} route{routeLines.length > 1 ? 's' : ''} shown
+            </Badge>
+          )}
+        </div>
+      </div>
+
       {/* Map Container */}
       <div className="relative h-96">
         <MapContainer
@@ -94,6 +263,17 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
+
+          {/* Route Lines */}
+          {routeLines.map((route, idx) => (
+            <Polyline
+              key={idx}
+              positions={route.coordinates}
+              color={route.color}
+              weight={4}
+              opacity={0.7}
+            />
+          ))}
 
           {activeOrders.map((order) => (
             <React.Fragment key={order.id}>
