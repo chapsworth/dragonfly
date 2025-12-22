@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
             ` : ''}
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/AdminOrders" 
+              <a href="https://mydragonfly.club/AdminOrders" 
                  style="display: inline-block; background: linear-gradient(to right, #10b981, #059669); color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
                 📦 View Order in Dashboard
               </a>
