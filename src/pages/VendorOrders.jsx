@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import BiometricGuard from '@/components/auth/BiometricGuard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function VendorOrders() {
   return (
@@ -30,6 +31,9 @@ function VendorOrdersContent() {
   const [cart, setCart] = useState([]);
   const [notes, setNotes] = useState('');
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
+  const [addedItems, setAddedItems] = useState([]);
+  const [floatingItemAnim, setFloatingItemAnim] = useState(null);
+  const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
@@ -84,8 +88,10 @@ function VendorOrdersContent() {
     return acc;
   }, {});
 
-  const addToCart = (product) => {
+  const addToCart = (product, buttonRef) => {
     const existingItem = cart.find(item => item.product_id === product.id);
+    const quantity = existingItem ? existingItem.quantity + 1 : 1;
+    
     if (existingItem) {
       setCart(cart.map(item => 
         item.product_id === product.id 
@@ -101,7 +107,31 @@ function VendorOrdersContent() {
         price: product.price
       }]);
     }
-    toast.success('Added to order');
+
+    // Animation: Show added item toast
+    const itemId = Date.now();
+    const itemName = product.variant ? `${product.product_name} - ${product.variant}` : product.product_name;
+    setAddedItems(prev => [...prev, { id: itemId, name: itemName, quantity }]);
+    setTimeout(() => {
+      setAddedItems(prev => prev.filter(item => item.id !== itemId));
+    }, 2000);
+
+    // Flying animation to floating total
+    if (buttonRef?.current && floatingTotalRef?.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const totalRect = floatingTotalRef.current.getBoundingClientRect();
+      
+      setFloatingItemAnim({
+        id: itemId,
+        startX: buttonRect.left,
+        startY: buttonRect.top,
+        endX: totalRect.left + totalRect.width / 2,
+        endY: totalRect.top + totalRect.height / 2,
+        name: itemName
+      });
+      
+      setTimeout(() => setFloatingItemAnim(null), 800);
+    }
   };
 
   const updateQuantity = (productId, newQuantity) => {
@@ -216,6 +246,78 @@ function VendorOrdersContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 sm:p-6 lg:p-8">
+      {/* Floating Total Widget */}
+      <motion.div
+        ref={floatingTotalRef}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-4 right-4 z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px]"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Order Total</p>
+              <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+            </div>
+          </div>
+          {cart.length > 0 && (
+            <Badge className="bg-emerald-600 text-white">{cart.length}</Badge>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Flying Item Animation */}
+      <AnimatePresence>
+        {floatingItemAnim && (
+          <motion.div
+            initial={{
+              position: 'fixed',
+              left: floatingItemAnim.startX,
+              top: floatingItemAnim.startY,
+              scale: 1,
+              opacity: 1,
+              zIndex: 9999
+            }}
+            animate={{
+              left: floatingItemAnim.endX,
+              top: floatingItemAnim.endY,
+              scale: 0.3,
+              opacity: 0
+            }}
+            transition={{ duration: 0.8, ease: 'easeInOut' }}
+            className="pointer-events-none"
+          >
+            <div className="bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg font-semibold whitespace-nowrap">
+              {floatingItemAnim.name}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Added Items Toasts */}
+      <div className="fixed top-24 right-4 z-40 space-y-2">
+        <AnimatePresence>
+          {addedItems.map(item => (
+            <motion.div
+              key={item.id}
+              initial={{ x: 400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 400, opacity: 0 }}
+              className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3"
+            >
+              <Plus className="w-5 h-5" />
+              <div>
+                <p className="font-bold">Added {item.quantity}x</p>
+                <p className="text-sm opacity-90">{item.name}</p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -273,25 +375,36 @@ function VendorOrdersContent() {
                       <CardTitle className="text-emerald-900">{category}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {categoryProducts.map(product => (
-                        <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex-1">
-                            <p className="font-semibold text-gray-900">{product.product_name}</p>
-                            {product.variant && (
-                              <p className="text-sm text-gray-600">{product.variant}</p>
-                            )}
-                            {product.size && (
-                              <p className="text-xs text-gray-500">{product.size}</p>
-                            )}
+                      {categoryProducts.map(product => {
+                        const buttonRef = useRef(null);
+                        return (
+                          <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{product.product_name}</p>
+                              {product.variant && (
+                                <p className="text-sm text-gray-600">{product.variant}</p>
+                              )}
+                              {product.size && (
+                                <p className="text-xs text-gray-500">{product.size}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                              <Button 
+                                ref={buttonRef}
+                                onClick={(e) => {
+                                  buttonRef.current = e.currentTarget;
+                                  addToCart(product, buttonRef);
+                                }} 
+                                size="sm" 
+                                className="bg-emerald-600"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
-                            <Button onClick={() => addToCart(product)} size="sm" className="bg-emerald-600">
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </CardContent>
                   </Card>
                 ))}
