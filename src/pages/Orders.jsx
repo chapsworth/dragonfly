@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2, Radar } from 'lucide-react';
+import { Package, Inbox, Calendar, DollarSign, MapPin, Clock, Eye, Phone, MessageCircle, ChevronRight, Loader2, Trash2, Radar, ShoppingCart, RotateCcw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import CustomerOrderDetailModal from '@/components/orders/CustomerOrderDetailModal';
 import OrderStatusTracker from '@/components/orders/OrderStatusTracker';
+import { useCart } from '@/components/cart/CartContext';
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function Orders() {
   const [apiKey, setApiKey] = useState(null);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [previousOrderStatuses, setPreviousOrderStatuses] = useState({});
+  const { addItem } = useCart();
   
   const queryClient = useQueryClient();
 
@@ -99,11 +101,9 @@ export default function Orders() {
       if (!user?.email) return [];
       // Fetch all orders for this customer
       const allOrders = await base44.entities.Order.list('-created_date');
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-      // Filter by customer email and exclude orders older than 4 hours
+      // Filter by customer email to show all past orders
       return allOrders.filter(order => 
-        order.customer_email === user.email && 
-        new Date(order.created_date) > fourHoursAgo
+        order.customer_email === user.email
       );
     },
     enabled: !!user?.email,
@@ -225,6 +225,32 @@ export default function Orders() {
     }
   };
 
+  const handleReorder = (order) => {
+    if (!order.items || order.items.length === 0) {
+      toast.error('No items to reorder');
+      return;
+    }
+
+    // Add all items from the order to the cart
+    order.items.forEach(item => {
+      addItem({
+        id: item.product_id,
+        name: item.name,
+        price: item.price,
+        image_url: item.image_url,
+        variant: item.variant
+      }, item.quantity);
+    });
+
+    toast.success(`Added ${order.items.length} items to cart`, {
+      duration: 2000,
+      action: {
+        label: 'View Cart',
+        onClick: () => {} // Cart drawer will open automatically
+      }
+    });
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center p-4">
@@ -253,9 +279,9 @@ export default function Orders() {
             <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 text-white">
               <Package className="w-7 h-7" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-emerald-900">My Orders</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-emerald-900">Order History</h1>
           </div>
-          <p className="text-emerald-600 ml-16">Track and manage your orders</p>
+          <p className="text-emerald-600 ml-16">Track and manage all your past orders</p>
         </motion.div>
 
         {/* Filter Tabs */}
@@ -331,9 +357,15 @@ export default function Orders() {
                 : `No ${filter} orders at the moment`}
             </p>
             <Button 
+              onClick={() => navigate(createPageUrl('Shop'))}
+              className="bg-gradient-to-r from-emerald-500 to-green-500 mb-2"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Start Shopping
+            </Button>
+            <Button 
               onClick={refetch}
               variant="outline"
-              className="mb-2"
             >
               Refresh Orders
             </Button>
@@ -469,16 +501,30 @@ export default function Orders() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 mt-2">
-                        <Button
-                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`${createPageUrl('CustomerOrderTracking')}?id=${order.id}`);
-                          }}
-                        >
-                          <Radar className="w-4 h-4 mr-2" />
-                          Track Order
-                        </Button>
+                        {order.status === 'out_for_delivery' && (
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`${createPageUrl('CustomerOrderTracking')}?id=${order.id}`);
+                            }}
+                          >
+                            <Radar className="w-4 h-4 mr-2" />
+                            Track Order
+                          </Button>
+                        )}
+                        {order.status === 'delivered' && (
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReorder(order);
+                            }}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            Reorder
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           className="border-emerald-200 hover:bg-emerald-50"
@@ -487,7 +533,8 @@ export default function Orders() {
                             setSelectedOrder(order);
                           }}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Receipt
                         </Button>
                       </div>
                     </CardContent>
