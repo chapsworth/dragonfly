@@ -248,7 +248,7 @@ function VendorOrdersContent() {
   const total = calculateTotal();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 lg:p-8 pb-32 overflow-x-hidden max-w-full">
       {/* Freeze Overlay when dragging */}
       <AnimatePresence>
         {isDragging && (
@@ -261,40 +261,25 @@ function VendorOrdersContent() {
         )}
       </AnimatePresence>
 
-      {/* Floating Total Widget */}
-      <motion.div
-        ref={floatingTotalRef}
-        drag
-        dragMomentum={false}
-        dragElastic={0.1}
-        dragConstraints={{
-          top: 0,
-          left: 0,
-          right: window.innerWidth - 250,
-          bottom: window.innerHeight - 100
-        }}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={() => setIsDragging(false)}
-        initial={{ x: window.innerWidth - 270, y: 16, opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-        className="fixed z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px] cursor-grab active:cursor-grabbing"
-      >
-        <div className="flex items-center justify-between gap-3 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Order Total</p>
-              <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+      {/* Sticky Footer with Total */}
+      <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
+                <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+              </div>
+              {cart.length > 0 && (
+                <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
+              )}
             </div>
           </div>
-          {cart.length > 0 && (
-            <Badge className="bg-emerald-600 text-white">{cart.length}</Badge>
-          )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Flying Item Animation */}
       <AnimatePresence>
@@ -345,37 +330,39 @@ function VendorOrdersContent() {
         </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto pt-20">
+      <div className="max-w-7xl mx-auto pt-4 sm:pt-6 w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-emerald-900">Vendor Orders</h1>
-            <p className="text-emerald-600">Create orders for {selectedVendor}</p>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Vendor Orders</h1>
+              <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
+            </div>
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
+              <FileText className="w-4 h-4 mr-2" />
+              View Orders
+            </Button>
           </div>
-          <Button onClick={() => setIsOrdersOpen(true)} variant="outline">
-            <FileText className="w-4 h-4 mr-2" />
-            View Orders
-          </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
           {/* Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search and Filter */}
             <Card>
-              <CardContent className="p-4">
-                <div className="flex gap-3">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 text-sm"
                     />
                   </div>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -418,24 +405,27 @@ function VendorOrdersContent() {
                       <CollapsibleContent>
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-900">{product.product_name}</p>
+                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              {product.image_url && (
+                                <img src={product.image_url} alt={product.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0 pr-2">
+                                <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
                                 {product.variant && (
-                                  <p className="text-sm text-gray-600">{product.variant}</p>
+                                  <p className="text-xs text-gray-600 truncate">{product.variant}</p>
                                 )}
                                 {product.size && (
                                   <p className="text-xs text-gray-500">{product.size}</p>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3">
-                                <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
                                 <Button 
                                   onClick={(e) => {
                                     addToCart(product, { current: e.currentTarget });
                                   }} 
-                                  size="sm" 
-                                  className="bg-emerald-600"
+                                  size="icon"
+                                  className="bg-emerald-600 h-8 w-8 flex-shrink-0"
                                 >
                                   <Plus className="w-4 h-4" />
                                 </Button>
