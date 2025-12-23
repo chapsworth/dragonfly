@@ -89,6 +89,26 @@ export default function PrintifyShop() {
     }
   });
 
+  const syncProductsMutation = useMutation({
+    mutationFn: async ({ shopId, productIds }) => {
+      const response = await base44.functions.invoke('syncPrintifyProducts', {
+        shopId,
+        productIds
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Synced ${data.synced} products to shop`);
+      if (data.errors > 0) {
+        toast.error(`${data.errors} products failed to sync`);
+      }
+    },
+    onError: (error) => {
+      toast.error('Failed to sync products');
+      console.error(error);
+    }
+  });
+
   React.useEffect(() => {
     if (shops && shops.length > 0 && !selectedShop) {
       setSelectedShop(shops[0]);
@@ -152,6 +172,24 @@ export default function PrintifyShop() {
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedShop && confirm('Sync all Printify products to shop? This will create/update products in your store.')) {
+                    syncProductsMutation.mutate({ shopId: selectedShop.id });
+                  }
+                }}
+                disabled={!selectedShop || syncProductsMutation.isPending}
+                variant="outline"
+                size="sm"
+                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+              >
+                {syncProductsMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                )}
+                Sync to Shop
               </Button>
               <Button
                 onClick={() => {
@@ -272,8 +310,26 @@ export default function PrintifyShop() {
                           setSelectedProduct(product);
                           setIsProductDialogOpen(true);
                         }}
+                        title="View details"
                       >
                         <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm(`Sync "${product.title}" to shop?`)) {
+                            syncProductsMutation.mutate({ 
+                              shopId: selectedShop.id,
+                              productIds: [product.id]
+                            });
+                          }
+                        }}
+                        disabled={syncProductsMutation.isPending}
+                        className="text-emerald-600"
+                        title="Sync to shop"
+                      >
+                        <RefreshCw className="w-4 h-4" />
                       </Button>
                       {!product.is_published && (
                         <Button
@@ -281,6 +337,7 @@ export default function PrintifyShop() {
                           variant="ghost"
                           onClick={() => publishProductMutation.mutate(product.id)}
                           disabled={publishProductMutation.isPending}
+                          title="Publish on Printify"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Button>
@@ -295,6 +352,7 @@ export default function PrintifyShop() {
                         }}
                         disabled={deleteProductMutation.isPending}
                         className="text-red-500"
+                        title="Delete from Printify"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
