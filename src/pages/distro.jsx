@@ -631,6 +631,9 @@ function DistroContent() {
                                   )}
                                 </Button>
                               )}
+                              {product.image_url && (
+                                <img src={product.image_url} alt={product.product_name} className="w-12 h-12 object-cover rounded-lg" />
+                              )}
                               <div className="flex-1">
                                 <p className="font-semibold text-gray-900">{product.product_name}</p>
                                 {product.variant && (
