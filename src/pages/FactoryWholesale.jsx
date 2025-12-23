@@ -291,193 +291,92 @@ function FactoryWholesaleContent() {
   const total = calculateTotal();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 sm:p-6 lg:p-8">
-      {/* Freeze Overlay when dragging */}
-      <AnimatePresence>
-        {isDragging && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-          />
-        )}
-      </AnimatePresence>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-32 overflow-x-hidden max-w-full">
+      {/* Sticky Footer with Total and Markup */}
+      <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            {/* Order Total */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
+                <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+              </div>
+              {cart.length > 0 && (
+                <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
+              )}
+            </div>
 
-      {/* Floating Total Widget */}
-      <motion.div
-        ref={floatingTotalRef}
-        drag
-        dragMomentum={false}
-        dragElastic={0.1}
-        dragConstraints={{
-          top: 0,
-          left: 0,
-          right: window.innerWidth - 250,
-          bottom: window.innerHeight - 100
-        }}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={() => setIsDragging(false)}
-        initial={{ x: window.innerWidth - 270, y: 16, opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-        className="fixed z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px] cursor-grab active:cursor-grabbing"
-      >
-        <div className="flex items-center justify-between gap-3 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Order Total</p>
-              <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
-            </div>
+            {/* Global Markup - Admin Only */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 sm:gap-3 border-l border-gray-300 pl-2 sm:pl-4">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] sm:text-xs text-gray-600">Markup</p>
+                    <p className="text-base sm:text-xl font-bold text-blue-600">{globalMarkup}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setGlobalMarkup(Math.max(0, globalMarkup - 5))}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setGlobalMarkup(globalMarkup + 5)}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-          {cart.length > 0 && (
-            <Badge className="bg-emerald-600 text-white">{cart.length}</Badge>
-          )}
         </div>
-      </motion.div>
-
-      {/* Floating Global Markup Controller - Admin Only */}
-      {isAdmin && (
-        <motion.div
-          ref={floatingMarkupRef}
-          drag
-          dragMomentum={false}
-          dragElastic={0.1}
-          dragConstraints={{
-            top: 0,
-            left: 0,
-            right: window.innerWidth - 280,
-            bottom: window.innerHeight - 100
-          }}
-          initial={{ x: window.innerWidth - 570, y: 16, opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-          className="fixed z-50 bg-gradient-to-br from-blue-50 to-indigo-50 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-blue-200 p-4 min-w-[280px] cursor-grab active:cursor-grabbing"
-        >
-          <div className="pointer-events-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                <Percent className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Global Markup</p>
-                <p className="text-2xl font-bold text-blue-600">{globalMarkup}%</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setGlobalMarkup(Math.max(0, globalMarkup - 5))}
-                className="flex-1"
-              >
-                <Minus className="w-4 h-4 mr-1" />
-                -5%
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setGlobalMarkup(globalMarkup + 5)}
-                className="flex-1"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                +5%
-              </Button>
-            </div>
-            <Input
-              type="number"
-              value={globalMarkup}
-              onChange={(e) => setGlobalMarkup(Math.max(0, parseFloat(e.target.value) || 0))}
-              className="mt-2"
-              placeholder="Custom %"
-            />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Flying Item Animation */}
-      <AnimatePresence>
-        {floatingItemAnim && (
-          <motion.div
-            initial={{
-              position: 'fixed',
-              left: floatingItemAnim.startX,
-              top: floatingItemAnim.startY,
-              scale: 1,
-              opacity: 1,
-              zIndex: 9999
-            }}
-            animate={{
-              left: floatingItemAnim.endX,
-              top: floatingItemAnim.endY,
-              scale: 0.3,
-              opacity: 0
-            }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            className="pointer-events-none"
-          >
-            <div className="bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg font-semibold whitespace-nowrap">
-              {floatingItemAnim.name}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Added Items Toasts */}
-      <div className="fixed top-24 right-4 z-40 space-y-2">
-        <AnimatePresence>
-          {addedItems.map(item => (
-            <motion.div
-              key={item.id}
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3"
-            >
-              <Plus className="w-5 h-5" />
-              <div>
-                <p className="font-bold">Added {item.quantity}x</p>
-                <p className="text-sm opacity-90">{item.name}</p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto pt-20">
+      <div className="max-w-7xl mx-auto pt-4 sm:pt-6 w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-emerald-900">Factory Wholesale Orders</h1>
-            <p className="text-emerald-600">Create orders for {selectedVendor}</p>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Factory Wholesale Orders</h1>
+              <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
+            </div>
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
+              <FileText className="w-4 h-4 mr-2" />
+              View Orders
+            </Button>
           </div>
-          <Button onClick={() => setIsOrdersOpen(true)} variant="outline">
-            <FileText className="w-4 h-4 mr-2" />
-            View Orders
-          </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
           {/* Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search and Filter */}
             <Card>
-              <CardContent className="p-4">
-                <div className="flex gap-3">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 text-sm"
                     />
                   </div>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -520,56 +419,58 @@ function FactoryWholesaleContent() {
                       <CollapsibleContent>
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-900">{product.product_name}</p>
+                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
                                 {product.variant && (
-                                  <p className="text-sm text-gray-600">{product.variant}</p>
+                                  <p className="text-xs text-gray-600 truncate">{product.variant}</p>
                                 )}
                                 {product.size && (
                                   <p className="text-xs text-gray-500">{product.size}</p>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <div className="text-right min-w-[60px]">
                                   {isAdmin && (
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-                                      <Badge variant="outline" className="text-xs">{product.markup}%</Badge>
-                                      <div className="flex gap-1">
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          onClick={() => updateProductMutation.mutate({ 
-                                            id: product.id, 
-                                            markup: Math.max(0, product.markup - 5) 
-                                          })}
-                                          className="h-5 w-5"
-                                        >
-                                          <Minus className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          onClick={() => updateProductMutation.mutate({ 
-                                            id: product.id, 
-                                            markup: product.markup + 5 
-                                          })}
-                                          className="h-5 w-5"
-                                        >
-                                          <Plus className="w-3 h-3" />
-                                        </Button>
-                                      </div>
+                                    <div className="flex flex-col items-end gap-0.5 mb-0.5">
+                                      <span className="text-xs text-gray-500 line-through whitespace-nowrap">${product.originalPrice.toFixed(2)}</span>
+                                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{product.markup}%</Badge>
                                     </div>
                                   )}
-                                  <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                                  <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
                                 </div>
+                                {isAdmin && (
+                                  <div className="flex gap-0.5">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => updateProductMutation.mutate({ 
+                                        id: product.id, 
+                                        markup: Math.max(0, product.markup - 5) 
+                                      })}
+                                      className="h-6 w-6"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => updateProductMutation.mutate({ 
+                                        id: product.id, 
+                                        markup: product.markup + 5 
+                                      })}
+                                      className="h-6 w-6"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                )}
                                 <Button 
                                   onClick={(e) => {
                                     addToCart(product, { current: e.currentTarget });
                                   }} 
-                                  size="sm" 
-                                  className="bg-emerald-600"
+                                  size="icon"
+                                  className="bg-emerald-600 h-8 w-8 flex-shrink-0"
                                 >
                                   <Plus className="w-4 h-4" />
                                 </Button>
