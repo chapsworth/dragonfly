@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import OrderNotification from '@/components/admin/OrderNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [user, setUser] = React.useState(null);
@@ -27,8 +28,13 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
   React.useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => setUser(null));
-  }, []);
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u?.role === 'admin') {
+        navigate(createPageUrl('AdminDashboard'));
+      }
+    }).catch(() => setUser(null));
+  }, [navigate]);
 
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ['products'],

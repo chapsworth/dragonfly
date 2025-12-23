@@ -525,7 +525,7 @@ function FactoryWholesaleContent() {
                               {category}
                               <Badge variant="outline">{categoryProducts.length}</Badge>
                             </div>
-                            <ChevronDown className={`w-5 h-5 transition-transform ${expandedCategories[category] !== false ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-5 h-5 transition-transform ${expandedCategories[category] === true ? 'rotate-180' : ''}`} />
                           </CardTitle>
                         </CardHeader>
                       </CollapsibleTrigger>
