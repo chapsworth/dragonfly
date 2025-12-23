@@ -386,7 +386,7 @@ function VendorOrdersContent() {
                 {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
                   <Collapsible 
                     key={category} 
-                    open={expandedCategories[category] !== false}
+                    open={expandedCategories[category] === true}
                     onOpenChange={(isOpen) => setExpandedCategories(prev => ({ ...prev, [category]: isOpen }))}
                   >
                     <Card>
