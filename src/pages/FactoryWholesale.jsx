@@ -59,7 +59,7 @@ function FactoryWholesaleContent() {
       if (!settings) {
         settings = await base44.entities.MarkupSettings.create({
           setting_key: selectedVendor,
-          global_markup: 15,
+          global_markup: 0,
           product_markups: {}
         });
       }
@@ -67,7 +67,7 @@ function FactoryWholesaleContent() {
     }
   });
 
-  const globalMarkup = markupSettings?.global_markup || 15;
+  const globalMarkup = markupSettings?.global_markup ?? 0;
   const productMarkups = markupSettings?.product_markups || {};
 
   const updateGlobalMarkupMutation = useMutation({
