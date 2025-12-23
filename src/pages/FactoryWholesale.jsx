@@ -530,9 +530,9 @@ function FactoryWholesaleContent() {
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="space-y-1.5 p-2">
+                        <CardContent className="space-y-1.5 p-1.5 sm:p-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-1 p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div key={product.id} className="flex items-center gap-0.5 sm:gap-1 p-1 sm:p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                              {isAdmin && (
                                <Button
                                  size="icon"
@@ -544,36 +544,36 @@ function FactoryWholesaleContent() {
                                      setSelectedProducts([...selectedProducts, product.id]);
                                    }
                                  }}
-                                 className="h-5 w-5 flex-shrink-0 p-0"
+                                 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 p-0"
                                >
                                  {selectedProducts.includes(product.id) ? (
-                                   <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+                                   <CheckSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" />
                                  ) : (
-                                   <Square className="w-3.5 h-3.5" />
+                                   <Square className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                  )}
                                </Button>
                              )}
-                             <div className="flex-1 min-w-0">
-                               <p className="font-semibold text-xs text-gray-900 truncate leading-tight">{product.product_name}</p>
+                             <div className="flex-1 min-w-0 pr-1">
+                               <p className="font-semibold text-[10px] sm:text-xs text-gray-900 truncate leading-tight">{product.product_name}</p>
                                {product.variant && (
-                                 <p className="text-[10px] text-gray-600 truncate leading-tight">{product.variant}</p>
+                                 <p className="text-[9px] sm:text-[10px] text-gray-600 truncate leading-tight">{product.variant}</p>
                                )}
                                {product.size && (
-                                 <p className="text-[10px] text-gray-500 leading-tight">{product.size}</p>
+                                 <p className="text-[9px] sm:text-[10px] text-gray-500 leading-tight">{product.size}</p>
                                )}
                              </div>
                              <div className="flex items-center gap-0.5 flex-shrink-0">
-                               <div className="text-right min-w-[52px]">
+                               <div className="text-right min-w-[44px] sm:min-w-[52px]">
                                  {isAdmin && (
                                    <div className="flex flex-col items-end mb-0.5">
-                                     <span className="text-[9px] text-gray-500 line-through leading-none">${product.originalPrice.toFixed(2)}</span>
-                                     <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3 leading-none mt-0.5">{product.markup}%</Badge>
+                                     <span className="text-[8px] sm:text-[9px] text-gray-500 line-through leading-none">${product.originalPrice.toFixed(2)}</span>
+                                     <Badge variant="outline" className="text-[7px] sm:text-[8px] px-0.5 py-0 h-2.5 sm:h-3 leading-none mt-0.5">{product.markup}%</Badge>
                                    </div>
                                  )}
-                                 <p className="font-bold text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
+                                 <p className="font-bold text-[10px] sm:text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
                                </div>
                                {isAdmin && (
-                                 <div className="flex gap-0.5">
+                                 <div className="hidden sm:flex gap-0.5">
                                    <Button
                                      size="icon"
                                      variant="ghost"
