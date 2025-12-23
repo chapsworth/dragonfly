@@ -44,7 +44,7 @@ export default function Layout({ children, currentPageName }) {
     <HelmetProvider>
       <CartProvider>
         <div className="min-h-screen">
-          <Header onMenuClick={() => setIsSidebarOpen(true)} />
+          {!hideHeader && <Header onMenuClick={() => setIsSidebarOpen(true)} />}
           <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
           <CartDrawer />
           <main>
