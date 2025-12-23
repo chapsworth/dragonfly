@@ -72,7 +72,7 @@ export default function Header({ onMenuClick }) {
             </Link>
 
             <div className="flex items-center gap-1 z-10">
-              <QuickCreateMenu />
+              {isAdmin && <QuickCreateMenu />}
               <button
                 onClick={() => setIsCartOpen(true)}
                 data-cart-button
