@@ -36,8 +36,6 @@ function FactoryWholesaleContent() {
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
-  const [globalMarkup, setGlobalMarkup] = useState(15);
-  const [productMarkups, setProductMarkups] = useState({});
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -52,6 +50,51 @@ function FactoryWholesaleContent() {
   });
 
   const isAdmin = user?.role === 'admin';
+
+  const { data: markupSettings } = useQuery({
+    queryKey: ['markup-settings', selectedVendor],
+    queryFn: async () => {
+      const all = await base44.entities.MarkupSettings.list();
+      let settings = all.find(s => s.setting_key === selectedVendor);
+      if (!settings) {
+        settings = await base44.entities.MarkupSettings.create({
+          setting_key: selectedVendor,
+          global_markup: 15,
+          product_markups: {}
+        });
+      }
+      return settings;
+    }
+  });
+
+  const globalMarkup = markupSettings?.global_markup || 15;
+  const productMarkups = markupSettings?.product_markups || {};
+
+  const updateGlobalMarkupMutation = useMutation({
+    mutationFn: async (newMarkup) => {
+      if (!markupSettings) return;
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        global_markup: newMarkup
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
+      toast.success('Global markup updated');
+    }
+  });
+
+  const updateProductMarkupMutation = useMutation({
+    mutationFn: async ({ id, markup }) => {
+      if (!markupSettings) return;
+      const updatedProductMarkups = { ...productMarkups, [id]: markup };
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        product_markups: updatedProductMarkups
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
+    }
+  });
 
   const createItemMutation = useMutation({
     mutationFn: (data) => base44.entities.VendorProduct.create({
@@ -103,16 +146,9 @@ function FactoryWholesaleContent() {
     }
   });
 
-  const updateProductMutation = useMutation({
-    mutationFn: ({ id, markup }) => {
-      setProductMarkups(prev => ({ ...prev, [id]: markup }));
-      return Promise.resolve();
-    }
-  });
-
-  const calculateMarkedUpPrice = (originalPrice, productId) => {
+  const calculateMarkedUpPrice = (wholesalePrice, productId) => {
     const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
-    return Math.ceil(originalPrice * (1 + markup / 100));
+    return Math.round(wholesalePrice * (1 + markup / 100) * 100) / 100;
   };
 
   const products = jaredProducts.map(p => ({
@@ -370,7 +406,7 @@ function FactoryWholesaleContent() {
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => setGlobalMarkup(Math.max(0, globalMarkup - 5))}
+                    onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
                     className="h-7 w-7 sm:h-8 sm:w-8"
                   >
                     <Minus className="w-3 h-3" />
@@ -378,7 +414,7 @@ function FactoryWholesaleContent() {
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => setGlobalMarkup(globalMarkup + 5)}
+                    onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
                     className="h-7 w-7 sm:h-8 sm:w-8"
                   >
                     <Plus className="w-3 h-3" />
