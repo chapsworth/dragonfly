@@ -399,54 +399,7 @@ function DistroContent() {
         </div>
       </div>
 
-      {/* Flying Item Animation */}
-      <AnimatePresence>
-        {floatingItemAnim && (
-          <motion.div
-            initial={{
-              position: 'fixed',
-              left: floatingItemAnim.startX,
-              top: floatingItemAnim.startY,
-              scale: 1,
-              opacity: 1,
-              zIndex: 9999
-            }}
-            animate={{
-              left: floatingItemAnim.endX,
-              top: floatingItemAnim.endY,
-              scale: 0.3,
-              opacity: 0
-            }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            className="pointer-events-none"
-          >
-            <div className="bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg font-semibold whitespace-nowrap">
-              {floatingItemAnim.name}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Added Items Toasts */}
-      <div className="fixed top-24 right-4 z-40 space-y-2">
-        <AnimatePresence>
-          {addedItems.map(item => (
-            <motion.div
-              key={item.id}
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3"
-            >
-              <Plus className="w-5 h-5" />
-              <div>
-                <p className="font-bold">Added {item.quantity}x</p>
-                <p className="text-sm opacity-90">{item.name}</p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
 
       <div className="max-w-7xl mx-auto pt-6">
         {/* Header */}
