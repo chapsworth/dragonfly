@@ -35,14 +35,16 @@ Deno.serve(async (req) => {
     for (const printifyProduct of productsToSync) {
       try {
         // Determine category based on tags/title
-        let category = 'accessories';
+        let category = 'merch';
         const tags = printifyProduct.tags || [];
         const title = printifyProduct.title?.toLowerCase() || '';
         
-        if (tags.includes('supplements') || title.includes('supplement')) {
-          category = 'accessories'; // Using accessories for now, you can add more categories
-        } else if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie')) {
+        if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
           category = 'accessories';
+        } else if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
+          category = 'supplies';
+        } else if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie') || title.includes('mug') || title.includes('hat')) {
+          category = 'merch';
         }
 
         // Map variants
