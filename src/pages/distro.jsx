@@ -103,16 +103,11 @@ function DistroContent() {
     }
   });
 
-  const calculateMarkedUpPrice = (wholesalePrice, productId) => {
-    const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
-    return Math.ceil(wholesalePrice * (1 + markup / 100));
-  };
-
   const products = allProducts.map(p => ({
     ...p,
     originalPrice: p.price,
-    price: calculateMarkedUpPrice(p.price, p.id),
-    markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
+    price: p.price,
+    markup: 0
   }));
 
   const createProductMutation = useMutation({
@@ -365,36 +360,7 @@ function DistroContent() {
               )}
             </div>
 
-            {/* Global Markup - Admin Only */}
-            {isAdmin && (
-              <div className="flex items-center gap-1.5 sm:gap-3 border-l border-gray-300 pl-2 sm:pl-4">
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  <div>
-                    <p className="text-[10px] sm:text-xs text-gray-600">Markup</p>
-                    <p className="text-base sm:text-xl font-bold text-blue-600">{globalMarkup}%</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
@@ -542,12 +508,6 @@ function DistroContent() {
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               <div className="text-right min-w-[60px]">
-                                {isAdmin && (
-                                  <div className="flex flex-col items-end gap-0.5 mb-0.5">
-                                    <span className="text-xs text-gray-500 line-through whitespace-nowrap">${product.originalPrice.toFixed(2)}</span>
-                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{product.markup}%</Badge>
-                                  </div>
-                                )}
                                 <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
                               </div>
                               {isAdmin && (

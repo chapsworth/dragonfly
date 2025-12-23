@@ -29,6 +29,7 @@ import Home from './pages/Home';
 import NotificationManager from './pages/NotificationManager';
 import OrderTracking from './pages/OrderTracking';
 import Orders from './pages/Orders';
+import PrintifyShop from './pages/PrintifyShop';
 import ProductDetail from './pages/ProductDetail';
 import ProductLibrary from './pages/ProductLibrary';
 import Profile from './pages/Profile';
@@ -37,7 +38,6 @@ import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
 import VendorOrders from './pages/VendorOrders';
 import distro from './pages/distro';
-import PrintifyShop from './pages/PrintifyShop';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +73,7 @@ export const PAGES = {
     "NotificationManager": NotificationManager,
     "OrderTracking": OrderTracking,
     "Orders": Orders,
+    "PrintifyShop": PrintifyShop,
     "ProductDetail": ProductDetail,
     "ProductLibrary": ProductLibrary,
     "Profile": Profile,
@@ -81,7 +82,6 @@ export const PAGES = {
     "StrainLibrary": StrainLibrary,
     "VendorOrders": VendorOrders,
     "distro": distro,
-    "PrintifyShop": PrintifyShop,
 }
 
 export const pagesConfig = {
