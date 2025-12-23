@@ -346,7 +346,7 @@ function DistroContent() {
   const total = calculateTotal();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 pb-32 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 pb-32">
       {/* Sticky Footer with Total and Markup */}
       <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
