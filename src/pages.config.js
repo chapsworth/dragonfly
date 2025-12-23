@@ -37,6 +37,7 @@ import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
 import VendorOrders from './pages/VendorOrders';
 import distro from './pages/distro';
+import PrintifyShop from './pages/PrintifyShop';
 import __Layout from './Layout.jsx';
 
 
@@ -80,6 +81,7 @@ export const PAGES = {
     "StrainLibrary": StrainLibrary,
     "VendorOrders": VendorOrders,
     "distro": distro,
+    "PrintifyShop": PrintifyShop,
 }
 
 export const pagesConfig = {
