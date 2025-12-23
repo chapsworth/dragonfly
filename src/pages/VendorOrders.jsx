@@ -14,15 +14,10 @@ import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText,
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
-import BiometricGuard from '@/components/auth/BiometricGuard';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function VendorOrders() {
-  return (
-    <BiometricGuard>
-      <VendorOrdersContent />
-    </BiometricGuard>
-  );
+  return <VendorOrdersContent />;
 }
 
 function VendorOrdersContent() {
