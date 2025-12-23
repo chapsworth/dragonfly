@@ -424,21 +424,6 @@ function FactoryWholesaleContent() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
-              {isAdmin && (
-                <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600" size="sm">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Item
-                </Button>
-              )}
-              <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                Orders
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
           {/* Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search and Filter */}
