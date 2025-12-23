@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent, Edit2, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -26,7 +26,7 @@ export default function Distro() {
 }
 
 function DistroContent() {
-  const [selectedVendor, setSelectedVendor] = useState('Factory Wholesale');
+  const [selectedVendor, setSelectedVendor] = useState('Jared Cookie Factory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
@@ -36,6 +36,10 @@ function DistroContent() {
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [newItem, setNewItem] = useState({ product_name: '', category: '', variant: '', price: '', size: '' });
   const floatingTotalRef = useRef(null);
   const floatingMarkupRef = useRef(null);
   const queryClient = useQueryClient();
@@ -66,11 +70,11 @@ function DistroContent() {
   const globalMarkup = markupSettings?.global_markup || 15;
   const productMarkups = markupSettings?.product_markups || {};
 
-  const { data: jaredProducts = [], isLoading } = useQuery({
-    queryKey: ['jared-products'],
+  const { data: allProducts = [], isLoading } = useQuery({
+    queryKey: ['vendor-products', selectedVendor],
     queryFn: async () => {
       const all = await base44.entities.VendorProduct.list();
-      return all.filter(p => p.vendor_name === 'Jared Cookie Factory' && p.is_active);
+      return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
   });
 
@@ -105,12 +109,50 @@ function DistroContent() {
     return Math.ceil(wholesalePrice * (1 + markup / 100));
   };
 
-  const products = jaredProducts.map(p => ({
+  const products = allProducts.map(p => ({
     ...p,
     originalPrice: p.price,
     price: calculateMarkedUpPrice(p.price, p.id),
     markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
   }));
+
+  const createProductMutation = useMutation({
+    mutationFn: (data) => base44.entities.VendorProduct.create({ ...data, vendor_name: selectedVendor, is_active: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setIsAddItemOpen(false);
+      setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+      toast.success('Product added');
+    }
+  });
+
+  const updateProductDataMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.VendorProduct.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setEditingProduct(null);
+      toast.success('Product updated');
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id) => base44.entities.VendorProduct.update(id, { is_active: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      toast.success('Product deleted');
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids) => {
+      await Promise.all(ids.map(id => base44.entities.VendorProduct.update(id, { is_active: false })));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setSelectedProducts([]);
+      toast.success('Products deleted');
+    }
+  });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['vendor-orders', selectedVendor],
@@ -464,13 +506,35 @@ function DistroContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-emerald-900">Factory Wholesale Orders</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <Button 
+                variant={selectedVendor === 'Jared Cookie Factory' ? 'default' : 'outline'}
+                onClick={() => setSelectedVendor('Jared Cookie Factory')}
+              >
+                Factory Wholesale
+              </Button>
+              <Button 
+                variant={selectedVendor === 'Pioneer' ? 'default' : 'outline'}
+                onClick={() => setSelectedVendor('Pioneer')}
+              >
+                Pioneer
+              </Button>
+            </div>
+            <h1 className="text-3xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
             <p className="text-emerald-600">Create orders for {selectedVendor}</p>
           </div>
-          <Button onClick={() => setIsOrdersOpen(true)} variant="outline">
-            <FileText className="w-4 h-4 mr-2" />
-            View Orders
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            )}
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline">
+              <FileText className="w-4 h-4 mr-2" />
+              View Orders
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -479,7 +543,7 @@ function DistroContent() {
             {/* Search and Filter */}
             <Card>
               <CardContent className="p-4">
-                <div className="flex gap-3">
+                <div className="flex gap-3 mb-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -501,6 +565,19 @@ function DistroContent() {
                     </SelectContent>
                   </Select>
                 </div>
+                {isAdmin && selectedProducts.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{selectedProducts.length} selected</Badge>
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      onClick={() => bulkDeleteMutation.mutate(selectedProducts)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete Selected
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -534,6 +611,26 @@ function DistroContent() {
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
                             <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              {isAdmin && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    if (selectedProducts.includes(product.id)) {
+                                      setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                                    } else {
+                                      setSelectedProducts([...selectedProducts, product.id]);
+                                    }
+                                  }}
+                                  className="h-6 w-6"
+                                >
+                                  {selectedProducts.includes(product.id) ? (
+                                    <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                  ) : (
+                                    <Square className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
                               <div className="flex-1">
                                 <p className="font-semibold text-gray-900">{product.product_name}</p>
                                 {product.variant && (
@@ -577,6 +674,30 @@ function DistroContent() {
                                   )}
                                   <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
                                 </div>
+                                {isAdmin && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => setEditingProduct(product)}
+                                      className="h-7 w-7"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        if (confirm('Delete this product?')) {
+                                          deleteProductMutation.mutate(product.id);
+                                        }
+                                      }}
+                                      className="h-7 w-7 text-red-500"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                )}
                                 <Button 
                                   onClick={(e) => {
                                     addToCart(product, { current: e.currentTarget });
@@ -693,6 +814,138 @@ function DistroContent() {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Product Dialog */}
+      <Dialog open={isAddItemOpen || !!editingProduct} onOpenChange={(open) => {
+        if (!open) {
+          setIsAddItemOpen(false);
+          setEditingProduct(null);
+          setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Product Name *</Label>
+              <Input
+                value={editingProduct ? editingProduct.product_name : newItem.product_name}
+                onChange={(e) => editingProduct 
+                  ? setEditingProduct({...editingProduct, product_name: e.target.value})
+                  : setNewItem({...newItem, product_name: e.target.value})
+                }
+                placeholder="e.g., Enjoyable Gummies"
+              />
+            </div>
+            <div>
+              <Label>Category *</Label>
+              <Select 
+                value={editingProduct ? editingProduct.category : newItem.category}
+                onValueChange={(v) => editingProduct
+                  ? setEditingProduct({...editingProduct, category: v})
+                  : setNewItem({...newItem, category: v})
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="edibles">Edibles</SelectItem>
+                  <SelectItem value="vapes">Vapes</SelectItem>
+                  <SelectItem value="pre-rolls">Pre-Rolls</SelectItem>
+                  <SelectItem value="concentrates">Concentrates</SelectItem>
+                  <SelectItem value="flower">Flower</SelectItem>
+                  <SelectItem value="tinctures">Tinctures</SelectItem>
+                  <SelectItem value="topicals">Topicals</SelectItem>
+                  <SelectItem value="accessories">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Variant</Label>
+              <Input
+                value={editingProduct ? editingProduct.variant || '' : newItem.variant}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, variant: e.target.value})
+                  : setNewItem({...newItem, variant: e.target.value})
+                }
+                placeholder="e.g., Strawberry Kiwi"
+              />
+            </div>
+            <div>
+              <Label>Size</Label>
+              <Input
+                value={editingProduct ? editingProduct.size || '' : newItem.size}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, size: e.target.value})
+                  : setNewItem({...newItem, size: e.target.value})
+                }
+                placeholder="e.g., 2.5g"
+              />
+            </div>
+            <div>
+              <Label>Wholesale Price *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editingProduct ? editingProduct.price : newItem.price}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})
+                  : setNewItem({...newItem, price: e.target.value})
+                }
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  setIsAddItemOpen(false);
+                  setEditingProduct(null);
+                  setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-emerald-600"
+                onClick={() => {
+                  if (editingProduct) {
+                    updateProductDataMutation.mutate({
+                      id: editingProduct.id,
+                      data: {
+                        product_name: editingProduct.product_name,
+                        category: editingProduct.category,
+                        variant: editingProduct.variant || null,
+                        size: editingProduct.size || null,
+                        price: editingProduct.price
+                      }
+                    });
+                  } else {
+                    if (!newItem.product_name || !newItem.category || !newItem.price) {
+                      toast.error('Fill in required fields');
+                      return;
+                    }
+                    createProductMutation.mutate({
+                      product_name: newItem.product_name,
+                      category: newItem.category,
+                      variant: newItem.variant || null,
+                      size: newItem.size || null,
+                      price: parseFloat(newItem.price)
+                    });
+                  }
+                }}
+                disabled={createProductMutation.isPending || updateProductDataMutation.isPending}
+              >
+                {(createProductMutation.isPending || updateProductDataMutation.isPending) ? 'Saving...' : editingProduct ? 'Update' : 'Add Product'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Orders Dialog */}
       <Dialog open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
