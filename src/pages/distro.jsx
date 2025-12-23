@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Edit2, CheckSquare, Square } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Edit2, CheckSquare, Square, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -50,12 +50,74 @@ function DistroContent() {
 
   const isAdmin = user?.role === 'admin';
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: markupSettings } = useQuery({
+    queryKey: ['markup-settings', selectedVendor],
+    queryFn: async () => {
+      const all = await base44.entities.MarkupSettings.list();
+      let settings = all.find(s => s.setting_key === selectedVendor);
+      if (!settings) {
+        settings = await base44.entities.MarkupSettings.create({
+          setting_key: selectedVendor,
+          global_markup: 0,
+          product_markups: {}
+        });
+      }
+      return settings;
+    }
+  });
+
+  const globalMarkup = markupSettings?.global_markup ?? 0;
+  const productMarkups = markupSettings?.product_markups || {};
+
+  const updateGlobalMarkupMutation = useMutation({
+    mutationFn: async (newMarkup) => {
+      if (!markupSettings) return;
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        global_markup: newMarkup
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
+      toast.success('Global markup updated');
+    }
+  });
+
+  const updateProductMarkupMutation = useMutation({
+    mutationFn: async ({ id, markup }) => {
+      if (!markupSettings) return;
+      const updatedProductMarkups = { ...productMarkups, [id]: markup };
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        product_markups: updatedProductMarkups
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
+    }
+  });
+
+  const { data: jaredProducts = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
     queryFn: async () => {
       const all = await base44.entities.VendorProduct.list();
       return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
+  });
+
+  const calculateMarkedUpPrice = (wholesalePrice, productId) => {
+    const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
+    if (markup === 0) return wholesalePrice;
+    return Math.ceil(wholesalePrice * (1 + markup / 100));
+  };
+
+  const products = jaredProducts.map(p => {
+    const productMarkup = productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup;
+    const wholesalePrice = p.price;
+    return {
+      ...p,
+      wholesalePrice: wholesalePrice,
+      price: calculateMarkedUpPrice(wholesalePrice, p.id),
+      markup: productMarkup
+    };
   });
 
   const createProductMutation = useMutation({
@@ -205,6 +267,16 @@ function DistroContent() {
     return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
+  const calculateProfit = () => {
+    return cart.reduce((sum, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) return sum;
+      const wholesaleCost = product.wholesalePrice * item.quantity;
+      const markedUpPrice = item.price * item.quantity;
+      return sum + (markedUpPrice - wholesaleCost);
+    }, 0);
+  };
+
   const handleCreateOrder = () => {
     if (cart.length === 0) {
       toast.error('Add items to your order first');
@@ -287,6 +359,7 @@ function DistroContent() {
   };
 
   const total = calculateTotal();
+  const profit = calculateProfit();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-32 overflow-x-hidden max-w-full">
@@ -302,13 +375,45 @@ function DistroContent() {
               <div>
                 <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
                 <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                {isAdmin && cart.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-green-600 font-semibold">+${profit.toFixed(2)} profit</p>
+                )}
               </div>
               {cart.length > 0 && (
                 <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
               )}
             </div>
 
-
+            {/* Global Markup - Admin Only */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 sm:gap-3 border-l border-gray-300 pl-2 sm:pl-4">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] sm:text-xs text-gray-600">Markup</p>
+                    <p className="text-base sm:text-xl font-bold text-blue-600">{globalMarkup}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -455,8 +560,14 @@ function DistroContent() {
                               )}
                             </div>
                             <div className="flex items-center gap-0.5 flex-shrink-0">
-                              <div className="text-right min-w-[42px] sm:min-w-[52px]">
-                                <p className="font-bold text-[10px] sm:text-xs text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
+                              <div className="text-right min-w-[44px] sm:min-w-[52px]">
+                                {isAdmin && product.markup > 0 && (
+                                  <div className="flex flex-col items-end mb-0.5">
+                                    <span className="text-[8px] sm:text-[9px] text-gray-500 line-through leading-none">${product.wholesalePrice.toFixed(2)}</span>
+                                    <Badge variant="outline" className="text-[7px] sm:text-[8px] px-0.5 py-0 h-2.5 sm:h-3 leading-none mt-0.5">{product.markup}%</Badge>
+                                  </div>
+                                )}
+                                <p className="font-bold text-[10px] sm:text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
                               </div>
                               {isAdmin && (
                                 <div className="hidden sm:flex gap-0.5">
