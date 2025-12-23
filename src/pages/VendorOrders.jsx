@@ -403,31 +403,33 @@ function VendorOrdersContent() {
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-1.5 p-1.5 sm:p-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div key={product.id} className="flex items-center gap-0.5 sm:gap-1 p-1 sm:p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                               {product.image_url && (
-                                <img src={product.image_url} alt={product.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                                <img src={product.image_url} alt={product.product_name} className="w-7 h-7 sm:w-9 sm:h-9 object-cover rounded flex-shrink-0" />
                               )}
-                              <div className="flex-1 min-w-0 pr-2">
-                                <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
+                              <div className="flex-1 min-w-0 pr-1">
+                                <p className="font-semibold text-[10px] sm:text-xs text-gray-900 truncate leading-tight">{product.product_name}</p>
                                 {product.variant && (
-                                  <p className="text-xs text-gray-600 truncate">{product.variant}</p>
+                                  <p className="text-[9px] sm:text-[10px] text-gray-600 truncate leading-tight">{product.variant}</p>
                                 )}
                                 {product.size && (
-                                  <p className="text-xs text-gray-500">{product.size}</p>
+                                  <p className="text-[9px] sm:text-[10px] text-gray-500 leading-tight">{product.size}</p>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
+                              <div className="flex items-center gap-0.5 flex-shrink-0">
+                                <div className="text-right min-w-[42px] sm:min-w-[52px]">
+                                  <p className="font-bold text-[10px] sm:text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
+                                </div>
                                 <Button 
                                   onClick={(e) => {
                                     addToCart(product, { current: e.currentTarget });
                                   }} 
                                   size="icon"
-                                  className="bg-emerald-600 h-8 w-8 flex-shrink-0"
+                                  className="bg-emerald-600 h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 p-0"
                                 >
-                                  <Plus className="w-4 h-4" />
+                                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                 </Button>
                               </div>
                             </div>
