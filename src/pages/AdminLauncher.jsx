@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import AppIcon from '@/components/launcher/AppIcon';
 import AppFolder from '@/components/launcher/AppFolder';
 import { Button } from '@/components/ui/button';
@@ -16,8 +18,13 @@ import {
 } from 'lucide-react';
 
 export default function AdminLauncher() {
+  const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [background, setBackground] = useState('');
+
+  useEffect(() => {
+    navigate(createPageUrl('AdminDashboard'));
+  }, [navigate]);
 
   const { data: settings } = useQuery({
     queryKey: ['launcher-settings'],
