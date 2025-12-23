@@ -26,7 +26,7 @@ export default function FactoryWholesale() {
 }
 
 function FactoryWholesaleContent() {
-  const [selectedVendor, setSelectedVendor] = useState('Factory Wholesale');
+  const [selectedVendor, setSelectedVendor] = useState('Jared Cookie Factory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
@@ -56,11 +56,11 @@ function FactoryWholesaleContent() {
   const createItemMutation = useMutation({
     mutationFn: (data) => base44.entities.VendorProduct.create({
       ...data,
-      vendor_name: 'Jared Cookie Factory',
+      vendor_name: selectedVendor,
       is_active: true
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['jared-products']);
+      queryClient.invalidateQueries(['vendor-products']);
       setIsAddItemOpen(false);
       setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
       toast.success('Product added');
@@ -70,7 +70,7 @@ function FactoryWholesaleContent() {
   const updateProductDataMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.VendorProduct.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['jared-products']);
+      queryClient.invalidateQueries(['vendor-products']);
       setEditingProduct(null);
       toast.success('Product updated');
     }
@@ -79,7 +79,7 @@ function FactoryWholesaleContent() {
   const deleteProductMutation = useMutation({
     mutationFn: (id) => base44.entities.VendorProduct.update(id, { is_active: false }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['jared-products']);
+      queryClient.invalidateQueries(['vendor-products']);
       toast.success('Product deleted');
     }
   });
@@ -89,17 +89,17 @@ function FactoryWholesaleContent() {
       await Promise.all(ids.map(id => base44.entities.VendorProduct.update(id, { is_active: false })));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['jared-products']);
+      queryClient.invalidateQueries(['vendor-products']);
       setSelectedProducts([]);
       toast.success('Products deleted');
     }
   });
 
   const { data: jaredProducts = [], isLoading } = useQuery({
-    queryKey: ['jared-products'],
+    queryKey: ['vendor-products', selectedVendor],
     queryFn: async () => {
       const all = await base44.entities.VendorProduct.list();
-      return all.filter(p => p.vendor_name === 'Jared Cookie Factory' && p.is_active);
+      return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
   });
 
@@ -393,12 +393,37 @@ function FactoryWholesaleContent() {
       <div className="max-w-7xl mx-auto pt-4 sm:pt-6 w-full">
         {/* Header */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Factory Wholesale Orders</h1>
-              <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
-            </div>
-            <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
+            <Button 
+              variant={selectedVendor === 'Jared Cookie Factory' ? 'default' : 'outline'}
+              onClick={() => setSelectedVendor('Jared Cookie Factory')}
+              className="text-sm"
+            >
+              Factory Wholesale
+            </Button>
+            <Button 
+              variant={selectedVendor === 'Pioneer' ? 'default' : 'outline'}
+              onClick={() => setSelectedVendor('Pioneer')}
+              className="text-sm"
+            >
+              THCV Pioneer
+            </Button>
+            {isAdmin && (
+              <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600 text-sm ml-auto">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Item
+              </Button>
+            )}
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" className="text-sm">
+              <FileText className="w-4 h-4 mr-1" />
+              Orders
+            </Button>
+          </div>
+          <h1 className="text-2xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
+          <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
               {isAdmin && (
                 <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600" size="sm">
                   <Plus className="w-4 h-4 mr-1" />
