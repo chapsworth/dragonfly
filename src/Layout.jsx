@@ -6,8 +6,11 @@ import CartDrawer from '@/components/cart/CartDrawer';
 import Header from '@/components/navigation/Header';
 import Sidebar from '@/components/navigation/Sidebar';
 
-export default function Layout({ children }) {
+export default function Layout({ children, currentPageName }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Hide header on specific pages
+  const hideHeader = ['distro', 'FactoryWholesale', 'VendorOrders'].includes(currentPageName);
 
   // Check for referral code in URL
   useEffect(() => {
