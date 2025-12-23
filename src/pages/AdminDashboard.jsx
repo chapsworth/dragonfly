@@ -4,12 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft, Warehouse, Copy } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
 
@@ -272,6 +273,48 @@ export default function AdminDashboard() {
                 </Button>
               </Link>
             </div>
+
+            {/* Factory Wholesale URL Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 shadow-lg mb-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-orange-900 flex items-center gap-2">
+                  <Warehouse className="w-5 h-5" />
+                  Factory Wholesale Access
+                </h2>
+                <Link to={createPageUrl('FactoryWholesale')}>
+                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+                    Open Portal
+                  </Button>
+                </Link>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={window.location.origin + createPageUrl('FactoryWholesale')}
+                  readOnly
+                  className="flex-1 bg-transparent text-sm text-gray-700 outline-none"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.origin + createPageUrl('FactoryWholesale'));
+                    toast.success('URL copied to clipboard!');
+                  }}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-orange-700 mt-2">
+                Password: <code className="bg-orange-100 px-2 py-1 rounded">factory2024</code>
+              </p>
+            </motion.div>
 
             <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-20 lg:mb-0">
               {/* Recent Orders */}

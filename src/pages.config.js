@@ -22,6 +22,7 @@ import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
 import CustomerOrderTracking from './pages/CustomerOrderTracking';
 import DeliveryNavigation from './pages/DeliveryNavigation';
+import FactoryWholesale from './pages/FactoryWholesale';
 import Favorites from './pages/Favorites';
 import GlassPortal from './pages/GlassPortal';
 import Home from './pages/Home';
@@ -35,7 +36,6 @@ import Rewards from './pages/Rewards';
 import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
 import VendorOrders from './pages/VendorOrders';
-import FactoryWholesale from './pages/FactoryWholesale';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +64,7 @@ export const PAGES = {
     "Contact": Contact,
     "CustomerOrderTracking": CustomerOrderTracking,
     "DeliveryNavigation": DeliveryNavigation,
+    "FactoryWholesale": FactoryWholesale,
     "Favorites": Favorites,
     "GlassPortal": GlassPortal,
     "Home": Home,
@@ -77,7 +78,6 @@ export const PAGES = {
     "Shop": Shop,
     "StrainLibrary": StrainLibrary,
     "VendorOrders": VendorOrders,
-    "FactoryWholesale": FactoryWholesale,
 }
 
 export const pagesConfig = {
