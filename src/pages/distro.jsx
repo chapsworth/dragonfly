@@ -347,111 +347,58 @@ function DistroContent() {
   const total = calculateTotal();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 sm:p-6 lg:p-8">
-      <AnimatePresence>
-        {isDragging && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Floating Total Widget */}
-      <motion.div
-        ref={floatingTotalRef}
-        drag
-        dragMomentum={false}
-        dragElastic={0.1}
-        dragConstraints={{
-          top: 0,
-          left: 0,
-          right: window.innerWidth - 250,
-          bottom: window.innerHeight - 100
-        }}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={() => setIsDragging(false)}
-        initial={{ x: window.innerWidth - 270, y: 16, opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-        className="fixed z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-emerald-200 p-4 min-w-[200px] cursor-grab active:cursor-grabbing"
-      >
-        <div className="flex items-center justify-between gap-3 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Order Total</p>
-              <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
-            </div>
-          </div>
-          {cart.length > 0 && (
-            <Badge className="bg-emerald-600 text-white">{cart.length}</Badge>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Floating Global Markup Controller - Admin Only */}
-      {isAdmin && (
-        <motion.div
-          ref={floatingMarkupRef}
-          drag
-          dragMomentum={false}
-          dragElastic={0.1}
-          dragConstraints={{
-            top: 0,
-            left: 0,
-            right: window.innerWidth - 280,
-            bottom: window.innerHeight - 100
-          }}
-          initial={{ x: window.innerWidth - 570, y: 16, opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-          className="fixed z-50 bg-gradient-to-br from-blue-50 to-indigo-50 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-blue-200 p-4 min-w-[280px] cursor-grab active:cursor-grabbing"
-        >
-          <div className="pointer-events-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                <Percent className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 pb-32 overflow-x-hidden">
+      {/* Sticky Footer with Total and Markup */}
+      <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            {/* Order Total */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-gray-600">Global Markup</p>
-                <p className="text-2xl font-bold text-blue-600">{globalMarkup}%</p>
+                <p className="text-xs text-gray-600">Order Total</p>
+                <p className="text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
               </div>
+              {cart.length > 0 && (
+                <Badge className="bg-emerald-600 text-white ml-2">{cart.length}</Badge>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
-                className="flex-1"
-              >
-                <Minus className="w-4 h-4 mr-1" />
-                -5%
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
-                className="flex-1"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                +5%
-              </Button>
-            </div>
-            <Input
-              type="number"
-              value={globalMarkup}
-              onChange={(e) => updateGlobalMarkupMutation.mutate(Math.max(0, parseFloat(e.target.value) || 0))}
-              className="mt-2"
-              placeholder="Custom %"
-            />
+
+            {/* Global Markup - Admin Only */}
+            {isAdmin && (
+              <div className="flex items-center gap-3 border-l border-gray-300 pl-4">
+                <div className="flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-xs text-gray-600">Markup</p>
+                    <p className="text-xl font-bold text-blue-600">{globalMarkup}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
+                    className="h-8 w-8"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
+                    className="h-8 w-8"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        </motion.div>
-      )}
+        </div>
+      </div>
 
       {/* Flying Item Animation */}
       <AnimatePresence>
@@ -502,39 +449,37 @@ function DistroContent() {
         </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto pt-20">
+      <div className="max-w-7xl mx-auto pt-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Button 
-                variant={selectedVendor === 'Jared Cookie Factory' ? 'default' : 'outline'}
-                onClick={() => setSelectedVendor('Jared Cookie Factory')}
-              >
-                Factory Wholesale
-              </Button>
-              <Button 
-                variant={selectedVendor === 'Pioneer' ? 'default' : 'outline'}
-                onClick={() => setSelectedVendor('Pioneer')}
-              >
-                THCV Pioneer
-              </Button>
-            </div>
-            <h1 className="text-3xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
-            <p className="text-emerald-600">Create orders for {selectedVendor}</p>
-          </div>
-          <div className="flex gap-2">
+        <div className="mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <Button 
+              variant={selectedVendor === 'Jared Cookie Factory' ? 'default' : 'outline'}
+              onClick={() => setSelectedVendor('Jared Cookie Factory')}
+              className="text-sm"
+            >
+              Factory Wholesale
+            </Button>
+            <Button 
+              variant={selectedVendor === 'Pioneer' ? 'default' : 'outline'}
+              onClick={() => setSelectedVendor('Pioneer')}
+              className="text-sm"
+            >
+              THCV Pioneer
+            </Button>
             {isAdmin && (
-              <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600">
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600 text-sm ml-auto">
+                <Plus className="w-4 h-4 mr-1" />
                 Add Item
               </Button>
             )}
-            <Button onClick={() => setIsOrdersOpen(true)} variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              View Orders
+            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" className="text-sm">
+              <FileText className="w-4 h-4 mr-1" />
+              Orders
             </Button>
           </div>
+          <h1 className="text-2xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
+          <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -610,107 +555,83 @@ function DistroContent() {
                       <CollapsibleContent>
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                              {isAdmin && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    if (selectedProducts.includes(product.id)) {
-                                      setSelectedProducts(selectedProducts.filter(id => id !== product.id));
-                                    } else {
-                                      setSelectedProducts([...selectedProducts, product.id]);
-                                    }
-                                  }}
-                                  className="h-6 w-6"
-                                >
-                                  {selectedProducts.includes(product.id) ? (
-                                    <CheckSquare className="w-4 h-4 text-emerald-600" />
-                                  ) : (
-                                    <Square className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              )}
-                              {product.image_url && (
-                                <img src={product.image_url} alt={product.product_name} className="w-12 h-12 object-cover rounded-lg" />
-                              )}
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-900">{product.product_name}</p>
-                                {product.variant && (
-                                  <p className="text-sm text-gray-600">{product.variant}</p>
-                                )}
-                                {product.size && (
-                                  <p className="text-xs text-gray-500">{product.size}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  {isAdmin && (
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-                                      <Badge variant="outline" className="text-xs">{product.markup}%</Badge>
-                                      <div className="flex gap-1">
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          onClick={() => updateProductMutation.mutate({ 
-                                            id: product.id, 
-                                            markup: Math.max(0, product.markup - 5) 
-                                          })}
-                                          className="h-5 w-5"
-                                        >
-                                          <Minus className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          onClick={() => updateProductMutation.mutate({ 
-                                            id: product.id, 
-                                            markup: product.markup + 5 
-                                          })}
-                                          className="h-5 w-5"
-                                        >
-                                          <Plus className="w-3 h-3" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                  <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
-                                </div>
-                                {isAdmin && (
-                                  <div className="flex gap-1">
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => setEditingProduct(product)}
-                                      className="h-7 w-7"
-                                    >
-                                      <Edit2 className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        if (confirm('Delete this product?')) {
-                                          deleteProductMutation.mutate(product.id);
-                                        }
-                                      }}
-                                      className="h-7 w-7 text-red-500"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                )}
-                                <Button 
-                                  onClick={(e) => {
-                                    addToCart(product, { current: e.currentTarget });
-                                  }} 
-                                  size="sm" 
-                                  className="bg-emerald-600"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
-                              </div>
+                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                             {isAdmin && (
+                               <Button
+                                 size="icon"
+                                 variant="ghost"
+                                 onClick={() => {
+                                   if (selectedProducts.includes(product.id)) {
+                                     setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                                   } else {
+                                     setSelectedProducts([...selectedProducts, product.id]);
+                                   }
+                                 }}
+                                 className="h-6 w-6 flex-shrink-0"
+                               >
+                                 {selectedProducts.includes(product.id) ? (
+                                   <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                 ) : (
+                                   <Square className="w-4 h-4" />
+                                 )}
+                               </Button>
+                             )}
+                             {product.image_url && (
+                               <img src={product.image_url} alt={product.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                             )}
+                             <div className="flex-1 min-w-0">
+                               <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
+                               {product.variant && (
+                                 <p className="text-xs text-gray-600 truncate">{product.variant}</p>
+                               )}
+                               {product.size && (
+                                 <p className="text-xs text-gray-500">{product.size}</p>
+                               )}
+                             </div>
+                             <div className="flex items-center gap-2 flex-shrink-0">
+                               <div className="text-right">
+                                 {isAdmin && (
+                                   <div className="flex items-center gap-1 mb-1">
+                                     <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                                     <Badge variant="outline" className="text-xs px-1">{product.markup}%</Badge>
+                                   </div>
+                                 )}
+                                 <p className="font-bold text-sm text-emerald-600">${product.price.toFixed(2)}</p>
+                               </div>
+                               {isAdmin && (
+                                 <div className="flex gap-1">
+                                   <Button
+                                     size="icon"
+                                     variant="ghost"
+                                     onClick={() => setEditingProduct(product)}
+                                     className="h-6 w-6"
+                                   >
+                                     <Edit2 className="w-3 h-3" />
+                                   </Button>
+                                   <Button
+                                     size="icon"
+                                     variant="ghost"
+                                     onClick={() => {
+                                       if (confirm('Delete this product?')) {
+                                         deleteProductMutation.mutate(product.id);
+                                       }
+                                     }}
+                                     className="h-6 w-6 text-red-500"
+                                   >
+                                     <Trash2 className="w-3 h-3" />
+                                   </Button>
+                                 </div>
+                               )}
+                               <Button 
+                                 onClick={(e) => {
+                                   addToCart(product, { current: e.currentTarget });
+                                 }} 
+                                 size="icon"
+                                 className="bg-emerald-600 h-8 w-8"
+                               >
+                                 <Plus className="w-4 h-4" />
+                               </Button>
+                             </div>
                             </div>
                           ))}
                         </CardContent>
@@ -723,62 +644,62 @@ function DistroContent() {
           </div>
 
           {/* Order Cart */}
-          <div className="space-y-4">
+          <div className="space-y-4 pb-8">
             <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <ShoppingCart className="w-5 h-5" />
                   Current Order
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {cart.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>No items added yet</p>
+                    <p className="text-sm">No items added yet</p>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {cart.map(item => (
-                        <div key={item.product_id} className="p-3 bg-gray-50 rounded-lg">
+                        <div key={item.product_id} className="p-2 bg-gray-50 rounded-lg">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm text-gray-900 truncate">{item.product_name}</p>
+                              <p className="font-semibold text-xs text-gray-900 truncate">{item.product_name}</p>
                               {item.variant && (
-                                <p className="text-xs text-gray-600">{item.variant}</p>
+                                <p className="text-xs text-gray-600 truncate">{item.variant}</p>
                               )}
                             </div>
                             <Button
                               size="icon"
                               variant="ghost"
                               onClick={() => removeFromCart(item.product_id)}
-                              className="h-6 w-6 text-red-500"
+                              className="h-5 w-5 text-red-500"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                                className="h-7 w-7"
+                                className="h-6 w-6"
                               >
                                 <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                              <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
                               <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                className="h-7 w-7"
+                                className="h-6 w-6"
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
                             </div>
-                            <p className="font-bold text-emerald-600">
+                            <p className="font-bold text-sm text-emerald-600">
                               ${(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
@@ -786,30 +707,24 @@ function DistroContent() {
                       ))}
                     </div>
 
-                    <div className="border-t pt-4">
-                      <Label>Order Notes</Label>
+                    <div className="border-t pt-3">
+                      <Label className="text-sm">Order Notes</Label>
                       <Textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes for this order..."
-                        className="mt-2"
-                        rows={3}
+                        placeholder="Add notes..."
+                        className="mt-2 text-sm"
+                        rows={2}
                       />
                     </div>
 
-                    <div className="bg-emerald-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-bold text-emerald-900">Total</span>
-                        <span className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</span>
-                      </div>
-                      <Button
-                        onClick={handleCreateOrder}
-                        disabled={createOrderMutation.isPending}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-green-500"
-                      >
-                        {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={handleCreateOrder}
+                      disabled={createOrderMutation.isPending}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500"
+                    >
+                      {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
+                    </Button>
                   </>
                 )}
               </CardContent>
