@@ -85,7 +85,7 @@ const driverIcon = L.divIcon({
 });
 
 // Snap-to-Position Delivery Panel Component
-const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser }) => {
+const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCenterMap }) => {
   const [snapPosition, setSnapPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
@@ -302,8 +302,8 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser }) => {
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id);
-                  if (tab.id === 'details') {
-                    centerOnOrder();
+                  if (tab.id === 'details' && onCenterMap) {
+                    onCenterMap();
                   }
                 }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -891,6 +891,7 @@ export default function OrderTracking() {
           onOrderUpdate={handleOrderUpdate}
           onClose={() => setShowPanel(false)}
           currentUser={user}
+          onCenterMap={centerOnOrder}
         />
       )}
 
