@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent, DollarSign } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent, Edit2, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -38,6 +38,10 @@ function FactoryWholesaleContent() {
   const [isDragging, setIsDragging] = useState(false);
   const [globalMarkup, setGlobalMarkup] = useState(15);
   const [productMarkups, setProductMarkups] = useState({});
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [newItem, setNewItem] = useState({ product_name: '', category: '', variant: '', price: '', size: '' });
   const floatingTotalRef = useRef(null);
   const floatingMarkupRef = useRef(null);
   const queryClient = useQueryClient();
@@ -56,10 +60,38 @@ function FactoryWholesaleContent() {
       is_active: true
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['vendor-products']);
-      setShowAddItem(false);
+      queryClient.invalidateQueries(['jared-products']);
+      setIsAddItemOpen(false);
       setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
-      toast.success('Item added!');
+      toast.success('Product added');
+    }
+  });
+
+  const updateProductDataMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.VendorProduct.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['jared-products']);
+      setEditingProduct(null);
+      toast.success('Product updated');
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id) => base44.entities.VendorProduct.update(id, { is_active: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['jared-products']);
+      toast.success('Product deleted');
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids) => {
+      await Promise.all(ids.map(id => base44.entities.VendorProduct.update(id, { is_active: false })));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['jared-products']);
+      setSelectedProducts([]);
+      toast.success('Products deleted');
     }
   });
 
@@ -361,15 +393,23 @@ function FactoryWholesaleContent() {
       <div className="max-w-7xl mx-auto pt-4 sm:pt-6 w-full">
         {/* Header */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Factory Wholesale Orders</h1>
               <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
             </div>
-            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
-              <FileText className="w-4 h-4 mr-2" />
-              View Orders
-            </Button>
+            <div className="flex gap-2">
+              {isAdmin && (
+                <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600" size="sm">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Item
+                </Button>
+              )}
+              <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                Orders
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -379,7 +419,7 @@ function FactoryWholesaleContent() {
             {/* Search and Filter */}
             <Card>
               <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -401,6 +441,19 @@ function FactoryWholesaleContent() {
                     </SelectContent>
                   </Select>
                 </div>
+                {isAdmin && selectedProducts.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{selectedProducts.length} selected</Badge>
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      onClick={() => bulkDeleteMutation.mutate(selectedProducts)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete Selected
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -434,6 +487,26 @@ function FactoryWholesaleContent() {
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
                             <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              {isAdmin && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    if (selectedProducts.includes(product.id)) {
+                                      setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                                    } else {
+                                      setSelectedProducts([...selectedProducts, product.id]);
+                                    }
+                                  }}
+                                  className="h-6 w-6 flex-shrink-0"
+                                >
+                                  {selectedProducts.includes(product.id) ? (
+                                    <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                  ) : (
+                                    <Square className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
                               <div className="flex-1 min-w-0 pr-2">
                                 <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
                                 {product.variant && (
@@ -458,24 +531,22 @@ function FactoryWholesaleContent() {
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      onClick={() => updateProductMutation.mutate({ 
-                                        id: product.id, 
-                                        markup: Math.max(0, product.markup - 5) 
-                                      })}
+                                      onClick={() => setEditingProduct(product)}
                                       className="h-6 w-6"
                                     >
-                                      <Minus className="w-3 h-3" />
+                                      <Edit2 className="w-3 h-3" />
                                     </Button>
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      onClick={() => updateProductMutation.mutate({ 
-                                        id: product.id, 
-                                        markup: product.markup + 5 
-                                      })}
-                                      className="h-6 w-6"
+                                      onClick={() => {
+                                        if (confirm('Delete this product?')) {
+                                          deleteProductMutation.mutate(product.id);
+                                        }
+                                      }}
+                                      className="h-6 w-6 text-red-500"
                                     >
-                                      <Plus className="w-3 h-3" />
+                                      <Trash2 className="w-3 h-3" />
                                     </Button>
                                   </div>
                                 )}
@@ -595,6 +666,138 @@ function FactoryWholesaleContent() {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Product Dialog */}
+      <Dialog open={isAddItemOpen || !!editingProduct} onOpenChange={(open) => {
+        if (!open) {
+          setIsAddItemOpen(false);
+          setEditingProduct(null);
+          setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Product Name *</Label>
+              <Input
+                value={editingProduct ? editingProduct.product_name : newItem.product_name}
+                onChange={(e) => editingProduct 
+                  ? setEditingProduct({...editingProduct, product_name: e.target.value})
+                  : setNewItem({...newItem, product_name: e.target.value})
+                }
+                placeholder="e.g., Enjoyable Gummies"
+              />
+            </div>
+            <div>
+              <Label>Category *</Label>
+              <Select 
+                value={editingProduct ? editingProduct.category : newItem.category}
+                onValueChange={(v) => editingProduct
+                  ? setEditingProduct({...editingProduct, category: v})
+                  : setNewItem({...newItem, category: v})
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="edibles">Edibles</SelectItem>
+                  <SelectItem value="vapes">Vapes</SelectItem>
+                  <SelectItem value="pre-rolls">Pre-Rolls</SelectItem>
+                  <SelectItem value="concentrates">Concentrates</SelectItem>
+                  <SelectItem value="flower">Flower</SelectItem>
+                  <SelectItem value="tinctures">Tinctures</SelectItem>
+                  <SelectItem value="topicals">Topicals</SelectItem>
+                  <SelectItem value="accessories">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Variant</Label>
+              <Input
+                value={editingProduct ? editingProduct.variant || '' : newItem.variant}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, variant: e.target.value})
+                  : setNewItem({...newItem, variant: e.target.value})
+                }
+                placeholder="e.g., Strawberry Kiwi"
+              />
+            </div>
+            <div>
+              <Label>Size</Label>
+              <Input
+                value={editingProduct ? editingProduct.size || '' : newItem.size}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, size: e.target.value})
+                  : setNewItem({...newItem, size: e.target.value})
+                }
+                placeholder="e.g., 2.5g"
+              />
+            </div>
+            <div>
+              <Label>Wholesale Price *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editingProduct ? editingProduct.price : newItem.price}
+                onChange={(e) => editingProduct
+                  ? setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})
+                  : setNewItem({...newItem, price: e.target.value})
+                }
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  setIsAddItemOpen(false);
+                  setEditingProduct(null);
+                  setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-emerald-600"
+                onClick={() => {
+                  if (editingProduct) {
+                    updateProductDataMutation.mutate({
+                      id: editingProduct.id,
+                      data: {
+                        product_name: editingProduct.product_name,
+                        category: editingProduct.category,
+                        variant: editingProduct.variant || null,
+                        size: editingProduct.size || null,
+                        price: editingProduct.price
+                      }
+                    });
+                  } else {
+                    if (!newItem.product_name || !newItem.category || !newItem.price) {
+                      toast.error('Fill in required fields');
+                      return;
+                    }
+                    createItemMutation.mutate({
+                      product_name: newItem.product_name,
+                      category: newItem.category,
+                      variant: newItem.variant || null,
+                      size: newItem.size || null,
+                      price: parseFloat(newItem.price)
+                    });
+                  }
+                }}
+                disabled={createItemMutation.isPending || updateProductDataMutation.isPending}
+              >
+                {(createItemMutation.isPending || updateProductDataMutation.isPending) ? 'Saving...' : editingProduct ? 'Update' : 'Add Product'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Orders Dialog */}
       <Dialog open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
