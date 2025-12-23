@@ -149,7 +149,7 @@ function FactoryWholesaleContent() {
   const calculateMarkedUpPrice = (wholesalePrice, productId) => {
     const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
     if (markup === 0) return wholesalePrice;
-    return Math.round(wholesalePrice * (1 + markup / 100) * 100) / 100;
+    return Math.ceil(wholesalePrice * (1 + markup / 100));
   };
 
   const products = jaredProducts.map(p => {
