@@ -148,15 +148,20 @@ function FactoryWholesaleContent() {
 
   const calculateMarkedUpPrice = (wholesalePrice, productId) => {
     const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
+    if (markup === 0) return wholesalePrice;
     return Math.round(wholesalePrice * (1 + markup / 100) * 100) / 100;
   };
 
-  const products = jaredProducts.map(p => ({
-    ...p,
-    originalPrice: p.price,
-    price: calculateMarkedUpPrice(p.price, p.id),
-    markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
-  }));
+  const products = jaredProducts.map(p => {
+    const productMarkup = productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup;
+    const wholesalePrice = p.price;
+    return {
+      ...p,
+      wholesalePrice: wholesalePrice,
+      price: calculateMarkedUpPrice(wholesalePrice, p.id),
+      markup: productMarkup
+    };
+  });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['vendor-orders', selectedVendor],
@@ -273,7 +278,7 @@ function FactoryWholesaleContent() {
     return cart.reduce((sum, item) => {
       const product = products.find(p => p.id === item.product_id);
       if (!product) return sum;
-      const wholesaleCost = product.originalPrice * item.quantity;
+      const wholesaleCost = product.wholesalePrice * item.quantity;
       const markedUpPrice = item.price * item.quantity;
       return sum + (markedUpPrice - wholesaleCost);
     }, 0);
@@ -564,9 +569,9 @@ function FactoryWholesaleContent() {
                              </div>
                              <div className="flex items-center gap-0.5 flex-shrink-0">
                                <div className="text-right min-w-[44px] sm:min-w-[52px]">
-                                 {isAdmin && (
+                                 {isAdmin && product.markup > 0 && (
                                    <div className="flex flex-col items-end mb-0.5">
-                                     <span className="text-[8px] sm:text-[9px] text-gray-500 line-through leading-none">${product.originalPrice.toFixed(2)}</span>
+                                     <span className="text-[8px] sm:text-[9px] text-gray-500 line-through leading-none">${product.wholesalePrice.toFixed(2)}</span>
                                      <Badge variant="outline" className="text-[7px] sm:text-[8px] px-0.5 py-0 h-2.5 sm:h-3 leading-none mt-0.5">{product.markup}%</Badge>
                                    </div>
                                  )}
