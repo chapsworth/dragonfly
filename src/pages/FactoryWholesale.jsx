@@ -365,7 +365,7 @@ function FactoryWholesaleContent() {
   const profit = calculateProfit();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-96 overflow-x-hidden max-w-full">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-1 sm:p-4 pb-96 overflow-x-hidden w-full">
       {/* Sticky Footer with Total and Markup */}
       <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl pb-6">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
@@ -454,7 +454,7 @@ function FactoryWholesaleContent() {
           <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
+        <div className="grid lg:grid-cols-3 gap-2 sm:gap-6">
           {/* Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search and Filter */}
