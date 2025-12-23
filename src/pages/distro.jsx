@@ -507,84 +507,84 @@ function DistroContent() {
                       <CollapsibleContent>
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                             {isAdmin && (
-                               <Button
-                                 size="icon"
-                                 variant="ghost"
-                                 onClick={() => {
-                                   if (selectedProducts.includes(product.id)) {
-                                     setSelectedProducts(selectedProducts.filter(id => id !== product.id));
-                                   } else {
-                                     setSelectedProducts([...selectedProducts, product.id]);
-                                   }
-                                 }}
-                                 className="h-6 w-6 flex-shrink-0"
-                               >
-                                 {selectedProducts.includes(product.id) ? (
-                                   <CheckSquare className="w-4 h-4 text-emerald-600" />
-                                 ) : (
-                                   <Square className="w-4 h-4" />
-                                 )}
-                               </Button>
-                             )}
-                             {product.image_url && (
-                               <img src={product.image_url} alt={product.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
-                             )}
-                             <div className="flex-1 min-w-0">
-                               <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
-                               {product.variant && (
-                                 <p className="text-xs text-gray-600 truncate">{product.variant}</p>
-                               )}
-                               {product.size && (
-                                 <p className="text-xs text-gray-500">{product.size}</p>
-                               )}
-                             </div>
-                             <div className="flex items-center gap-2 flex-shrink-0">
-                               <div className="text-right">
-                                 {isAdmin && (
-                                   <div className="flex items-center gap-1 mb-1">
-                                     <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-                                     <Badge variant="outline" className="text-xs px-1">{product.markup}%</Badge>
-                                   </div>
-                                 )}
-                                 <p className="font-bold text-sm text-emerald-600">${product.price.toFixed(2)}</p>
-                               </div>
-                               {isAdmin && (
-                                 <div className="flex gap-1">
-                                   <Button
-                                     size="icon"
-                                     variant="ghost"
-                                     onClick={() => setEditingProduct(product)}
-                                     className="h-6 w-6"
-                                   >
-                                     <Edit2 className="w-3 h-3" />
-                                   </Button>
-                                   <Button
-                                     size="icon"
-                                     variant="ghost"
-                                     onClick={() => {
-                                       if (confirm('Delete this product?')) {
-                                         deleteProductMutation.mutate(product.id);
-                                       }
-                                     }}
-                                     className="h-6 w-6 text-red-500"
-                                   >
-                                     <Trash2 className="w-3 h-3" />
-                                   </Button>
-                                 </div>
-                               )}
-                               <Button 
-                                 onClick={(e) => {
-                                   addToCart(product, { current: e.currentTarget });
-                                 }} 
-                                 size="icon"
-                                 className="bg-emerald-600 h-8 w-8"
-                               >
-                                 <Plus className="w-4 h-4" />
-                               </Button>
-                             </div>
+                           <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            {isAdmin && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (selectedProducts.includes(product.id)) {
+                                    setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                                  } else {
+                                    setSelectedProducts([...selectedProducts, product.id]);
+                                  }
+                                }}
+                                className="h-6 w-6 flex-shrink-0"
+                              >
+                                {selectedProducts.includes(product.id) ? (
+                                  <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                ) : (
+                                  <Square className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                            {product.image_url && (
+                              <img src={product.image_url} alt={product.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0 pr-2">
+                              <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
+                              {product.variant && (
+                                <p className="text-xs text-gray-600 truncate">{product.variant}</p>
+                              )}
+                              {product.size && (
+                                <p className="text-xs text-gray-500">{product.size}</p>
+                              )}
                             </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <div className="text-right min-w-[60px]">
+                                {isAdmin && (
+                                  <div className="flex flex-col items-end gap-0.5 mb-0.5">
+                                    <span className="text-xs text-gray-500 line-through whitespace-nowrap">${product.originalPrice.toFixed(2)}</span>
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{product.markup}%</Badge>
+                                  </div>
+                                )}
+                                <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
+                              </div>
+                              {isAdmin && (
+                                <div className="flex gap-0.5">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => setEditingProduct(product)}
+                                    className="h-6 w-6"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      if (confirm('Delete this product?')) {
+                                        deleteProductMutation.mutate(product.id);
+                                      }
+                                    }}
+                                    className="h-6 w-6 text-red-500"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
+                              <Button 
+                                onClick={(e) => {
+                                  addToCart(product, { current: e.currentTarget });
+                                }} 
+                                size="icon"
+                                className="bg-emerald-600 h-8 w-8 flex-shrink-0"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                           </div>
                           ))}
                         </CardContent>
                       </CollapsibleContent>
