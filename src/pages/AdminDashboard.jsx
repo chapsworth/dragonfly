@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AdminNav from '@/components/admin/AdminNav';
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft, Warehouse, Copy } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight, LayoutDashboard, ArrowLeft, Warehouse, Copy, Shirt } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -270,6 +270,12 @@ export default function AdminDashboard() {
                 <Button className="w-full h-20 bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex-col gap-2">
                   <Package className="w-5 h-5" />
                   <span className="text-xs">Glass Portal</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl('PrintifyShop')}>
+                <Button className="w-full h-20 bg-gradient-to-br from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 flex-col gap-2">
+                  <Shirt className="w-5 h-5" />
+                  <span className="text-xs">Printify Shop</span>
                 </Button>
               </Link>
             </div>
