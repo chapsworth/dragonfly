@@ -460,8 +460,8 @@ function FactoryWholesaleContent() {
               Orders
             </Button>
           </div>
-          <h1 className="text-2xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
-          <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
+          <h1 className="text-2xl font-bold text-emerald-900">Factory Wholesale</h1>
+          <p className="text-sm text-emerald-600">Browse and order products</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-2 sm:gap-6">
