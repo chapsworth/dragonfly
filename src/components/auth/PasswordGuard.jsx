@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, Lock } from 'lucide-react';
 
-const CORRECT_PASSWORD = "factory2024"; // Change this to your desired password
+const CORRECT_PASSWORD = "Dragonbreath777"; // Change this to your desired password
 
 export default function PasswordGuard({ children }) {
   const [password, setPassword] = useState('');

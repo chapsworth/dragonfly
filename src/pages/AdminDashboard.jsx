@@ -295,7 +295,7 @@ export default function AdminDashboard() {
               <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 flex items-center gap-2">
                 <input
                   type="text"
-                  value={window.location.origin + createPageUrl('FactoryWholesale')}
+                  value="https://mydragonfly.club/distro"
                   readOnly
                   className="flex-1 bg-transparent text-sm text-gray-700 outline-none"
                 />
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.origin + createPageUrl('FactoryWholesale'));
+                    navigator.clipboard.writeText('https://mydragonfly.club/distro');
                     toast.success('URL copied to clipboard!');
                   }}
                   className="border-orange-300 text-orange-700 hover:bg-orange-100"
@@ -312,7 +312,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               <p className="text-xs text-orange-700 mt-2">
-                Password: <code className="bg-orange-100 px-2 py-1 rounded">factory2024</code>
+                Password: <code className="bg-orange-100 px-2 py-1 rounded">Dragonbreath777</code>
               </p>
             </motion.div>
 
