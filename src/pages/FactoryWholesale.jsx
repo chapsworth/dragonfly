@@ -39,6 +39,27 @@ function FactoryWholesaleContent() {
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const isAdmin = user?.role === 'admin';
+
+  const createItemMutation = useMutation({
+    mutationFn: (data) => base44.entities.VendorProduct.create({
+      ...data,
+      vendor_name: 'Jared Cookie Factory',
+      is_active: true
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['vendor-products']);
+      setShowAddItem(false);
+      setNewItem({ product_name: '', category: '', variant: '', price: '', size: '' });
+      toast.success('Item added!');
+    }
+  });
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
     queryFn: async () => {
