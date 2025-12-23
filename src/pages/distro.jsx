@@ -15,7 +15,6 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import PasswordGuard from '@/components/auth/PasswordGuard';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Distro() {
   return (
