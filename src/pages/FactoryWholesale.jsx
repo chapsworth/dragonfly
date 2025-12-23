@@ -201,6 +201,16 @@ function FactoryWholesaleContent() {
     return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
+  const calculateProfit = () => {
+    return cart.reduce((sum, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) return sum;
+      const wholesaleCost = product.originalPrice * item.quantity;
+      const markedUpPrice = item.price * item.quantity;
+      return sum + (markedUpPrice - wholesaleCost);
+    }, 0);
+  };
+
   const handleCreateOrder = () => {
     if (cart.length === 0) {
       toast.error('Add items to your order first');
@@ -289,6 +299,7 @@ function FactoryWholesaleContent() {
   };
 
   const total = calculateTotal();
+  const profit = calculateProfit();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-32 overflow-x-hidden max-w-full">
@@ -304,6 +315,9 @@ function FactoryWholesaleContent() {
               <div>
                 <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
                 <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                {isAdmin && cart.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-green-600 font-semibold">+${profit.toFixed(2)} profit</p>
+                )}
               </div>
               {cart.length > 0 && (
                 <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
