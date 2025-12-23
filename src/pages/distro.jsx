@@ -105,16 +105,12 @@ function DistroContent() {
     return Math.ceil(wholesalePrice * (1 + markup / 100));
   };
 
-  const products = jaredProducts.map(p => {
-    // Reverse calculate wholesale price (current prices are already marked up by 15%)
-    const wholesalePrice = Math.round((p.price / 1.15) * 100) / 100;
-    return {
-      ...p,
-      originalPrice: wholesalePrice,
-      price: calculateMarkedUpPrice(wholesalePrice, p.id),
-      markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
-    };
-  });
+  const products = jaredProducts.map(p => ({
+    ...p,
+    originalPrice: p.price,
+    price: calculateMarkedUpPrice(p.price, p.id),
+    markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
+  }));
 
   const { data: orders = [] } = useQuery({
     queryKey: ['vendor-orders', selectedVendor],
