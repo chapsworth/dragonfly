@@ -265,7 +265,13 @@ function FactoryWholesaleContent() {
   };
 
   const calculateProfit = () => {
-    return 0;
+    return cart.reduce((sum, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) return sum;
+      const wholesaleCost = product.originalPrice * item.quantity;
+      const markedUpPrice = item.price * item.quantity;
+      return sum + (markedUpPrice - wholesaleCost);
+    }, 0);
   };
 
   const handleCreateOrder = () => {
@@ -361,8 +367,8 @@ function FactoryWholesaleContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-96 overflow-x-hidden max-w-full">
       {/* Sticky Footer with Total and Markup */}
-      <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+      <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl pb-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Order Total */}
             <div className="flex items-center gap-2 sm:gap-3">
@@ -372,14 +378,45 @@ function FactoryWholesaleContent() {
               <div>
                 <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
                 <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
-
+                {isAdmin && cart.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-green-600 font-semibold">+${profit.toFixed(2)} profit</p>
+                )}
               </div>
               {cart.length > 0 && (
                 <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
               )}
             </div>
 
-
+            {/* Global Markup - Admin Only */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 sm:gap-3 border-l border-gray-300 pl-2 sm:pl-4">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] sm:text-xs text-gray-600">Markup</p>
+                    <p className="text-base sm:text-xl font-bold text-blue-600">{globalMarkup}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
+                    className="h-7 w-7 sm:h-8 sm:w-8"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -490,74 +527,80 @@ function FactoryWholesaleContent() {
                       <CollapsibleContent>
                         <CardContent className="space-y-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                              {isAdmin && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    if (selectedProducts.includes(product.id)) {
-                                      setSelectedProducts(selectedProducts.filter(id => id !== product.id));
-                                    } else {
-                                      setSelectedProducts([...selectedProducts, product.id]);
-                                    }
-                                  }}
-                                  className="h-6 w-6 flex-shrink-0"
-                                >
-                                  {selectedProducts.includes(product.id) ? (
-                                    <CheckSquare className="w-4 h-4 text-emerald-600" />
-                                  ) : (
-                                    <Square className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              )}
-                              <div className="flex-1 min-w-0 pr-2">
-                                <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
-                                {product.variant && (
-                                  <p className="text-xs text-gray-600 truncate">{product.variant}</p>
-                                )}
-                                {product.size && (
-                                  <p className="text-xs text-gray-500">{product.size}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <div className="text-right min-w-[60px]">
-                                  <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
-                                </div>
-                                {isAdmin && (
-                                  <div className="flex gap-0.5">
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => setEditingProduct(product)}
-                                      className="h-6 w-6"
-                                    >
-                                      <Edit2 className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        if (confirm('Delete this product?')) {
-                                          deleteProductMutation.mutate(product.id);
-                                        }
-                                      }}
-                                      className="h-6 w-6 text-red-500"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                )}
-                                <Button 
-                                  onClick={(e) => {
-                                    addToCart(product, { current: e.currentTarget });
-                                  }} 
-                                  size="icon"
-                                  className="bg-emerald-600 h-8 w-8 flex-shrink-0"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
-                              </div>
+                            <div key={product.id} className="flex items-center gap-1.5 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                             {isAdmin && (
+                               <Button
+                                 size="icon"
+                                 variant="ghost"
+                                 onClick={() => {
+                                   if (selectedProducts.includes(product.id)) {
+                                     setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                                   } else {
+                                     setSelectedProducts([...selectedProducts, product.id]);
+                                   }
+                                 }}
+                                 className="h-6 w-6 flex-shrink-0"
+                               >
+                                 {selectedProducts.includes(product.id) ? (
+                                   <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                 ) : (
+                                   <Square className="w-4 h-4" />
+                                 )}
+                               </Button>
+                             )}
+                             <div className="flex-1 min-w-0">
+                               <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
+                               {product.variant && (
+                                 <p className="text-xs text-gray-600 truncate">{product.variant}</p>
+                               )}
+                               {product.size && (
+                                 <p className="text-xs text-gray-500">{product.size}</p>
+                               )}
+                             </div>
+                             <div className="flex items-center gap-1 flex-shrink-0">
+                               <div className="text-right">
+                                 {isAdmin && (
+                                   <div className="flex flex-col items-end gap-0.5 mb-0.5">
+                                     <span className="text-[10px] text-gray-500 line-through whitespace-nowrap">${product.originalPrice.toFixed(2)}</span>
+                                     <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{product.markup}%</Badge>
+                                   </div>
+                                 )}
+                                 <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
+                               </div>
+                               {isAdmin && (
+                                 <div className="flex gap-0.5">
+                                   <Button
+                                     size="icon"
+                                     variant="ghost"
+                                     onClick={() => setEditingProduct(product)}
+                                     className="h-6 w-6"
+                                   >
+                                     <Edit2 className="w-3 h-3" />
+                                   </Button>
+                                   <Button
+                                     size="icon"
+                                     variant="ghost"
+                                     onClick={() => {
+                                       if (confirm('Delete this product?')) {
+                                         deleteProductMutation.mutate(product.id);
+                                       }
+                                     }}
+                                     className="h-6 w-6 text-red-500"
+                                   >
+                                     <Trash2 className="w-3 h-3" />
+                                   </Button>
+                                 </div>
+                               )}
+                               <Button 
+                                 onClick={(e) => {
+                                   addToCart(product, { current: e.currentTarget });
+                                 }} 
+                                 size="icon"
+                                 className="bg-emerald-600 h-7 w-7 flex-shrink-0"
+                               >
+                                 <Plus className="w-3.5 h-3.5" />
+                               </Button>
+                             </div>
                             </div>
                           ))}
                         </CardContent>
