@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -36,7 +36,10 @@ function FactoryWholesaleContent() {
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
+  const [globalMarkup, setGlobalMarkup] = useState(15);
+  const [productMarkups, setProductMarkups] = useState({});
   const floatingTotalRef = useRef(null);
+  const floatingMarkupRef = useRef(null);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -60,13 +63,32 @@ function FactoryWholesaleContent() {
     }
   });
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ['vendor-products', selectedVendor],
+  const { data: jaredProducts = [], isLoading } = useQuery({
+    queryKey: ['jared-products'],
     queryFn: async () => {
       const all = await base44.entities.VendorProduct.list();
-      return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
+      return all.filter(p => p.vendor_name === 'Jared Cookie Factory' && p.is_active);
     }
   });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, markup }) => {
+      setProductMarkups(prev => ({ ...prev, [id]: markup }));
+      return Promise.resolve();
+    }
+  });
+
+  const calculateMarkedUpPrice = (originalPrice, productId) => {
+    const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
+    return Math.ceil(originalPrice * (1 + markup / 100));
+  };
+
+  const products = jaredProducts.map(p => ({
+    ...p,
+    originalPrice: p.price,
+    price: calculateMarkedUpPrice(p.price, p.id),
+    markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
+  }));
 
   const { data: orders = [] } = useQuery({
     queryKey: ['vendor-orders', selectedVendor],
@@ -317,6 +339,65 @@ function FactoryWholesaleContent() {
         </div>
       </motion.div>
 
+      {/* Floating Global Markup Controller - Admin Only */}
+      {isAdmin && (
+        <motion.div
+          ref={floatingMarkupRef}
+          drag
+          dragMomentum={false}
+          dragElastic={0.1}
+          dragConstraints={{
+            top: 0,
+            left: 0,
+            right: window.innerWidth - 280,
+            bottom: window.innerHeight - 100
+          }}
+          initial={{ x: window.innerWidth - 570, y: 16, opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+          className="fixed z-50 bg-gradient-to-br from-blue-50 to-indigo-50 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-blue-200 p-4 min-w-[280px] cursor-grab active:cursor-grabbing"
+        >
+          <div className="pointer-events-auto">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                <Percent className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Global Markup</p>
+                <p className="text-2xl font-bold text-blue-600">{globalMarkup}%</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setGlobalMarkup(Math.max(0, globalMarkup - 5))}
+                className="flex-1"
+              >
+                <Minus className="w-4 h-4 mr-1" />
+                -5%
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setGlobalMarkup(globalMarkup + 5)}
+                className="flex-1"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                +5%
+              </Button>
+            </div>
+            <Input
+              type="number"
+              value={globalMarkup}
+              onChange={(e) => setGlobalMarkup(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="mt-2"
+              placeholder="Custom %"
+            />
+          </div>
+        </motion.div>
+      )}
+
       {/* Flying Item Animation */}
       <AnimatePresence>
         {floatingItemAnim && (
@@ -450,7 +531,39 @@ function FactoryWholesaleContent() {
                                 )}
                               </div>
                               <div className="flex items-center gap-3">
-                                <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                                <div className="text-right">
+                                  {isAdmin && (
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                                      <Badge variant="outline" className="text-xs">{product.markup}%</Badge>
+                                      <div className="flex gap-1">
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          onClick={() => updateProductMutation.mutate({ 
+                                            id: product.id, 
+                                            markup: Math.max(0, product.markup - 5) 
+                                          })}
+                                          className="h-5 w-5"
+                                        >
+                                          <Minus className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          onClick={() => updateProductMutation.mutate({ 
+                                            id: product.id, 
+                                            markup: product.markup + 5 
+                                          })}
+                                          className="h-5 w-5"
+                                        >
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <p className="font-bold text-emerald-600">${product.price.toFixed(2)}</p>
+                                </div>
                                 <Button 
                                   onClick={(e) => {
                                     addToCart(product, { current: e.currentTarget });
