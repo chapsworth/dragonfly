@@ -146,11 +146,16 @@ function FactoryWholesaleContent() {
     }
   });
 
+  const calculateMarkedUpPrice = (wholesalePrice, productId) => {
+    const markup = productMarkups[productId] !== undefined ? productMarkups[productId] : globalMarkup;
+    return Math.round(wholesalePrice * (1 + markup / 100) * 100) / 100;
+  };
+
   const products = jaredProducts.map(p => ({
     ...p,
     originalPrice: p.price,
-    price: p.price,
-    markup: 0
+    price: calculateMarkedUpPrice(p.price, p.id),
+    markup: productMarkups[p.id] !== undefined ? productMarkups[p.id] : globalMarkup
   }));
 
   const { data: orders = [] } = useQuery({
@@ -525,9 +530,9 @@ function FactoryWholesaleContent() {
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-1.5 p-2">
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-1.5 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div key={product.id} className="flex items-center gap-1 p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                              {isAdmin && (
                                <Button
                                  size="icon"
@@ -539,33 +544,33 @@ function FactoryWholesaleContent() {
                                      setSelectedProducts([...selectedProducts, product.id]);
                                    }
                                  }}
-                                 className="h-6 w-6 flex-shrink-0"
+                                 className="h-5 w-5 flex-shrink-0 p-0"
                                >
                                  {selectedProducts.includes(product.id) ? (
-                                   <CheckSquare className="w-4 h-4 text-emerald-600" />
+                                   <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
                                  ) : (
-                                   <Square className="w-4 h-4" />
+                                   <Square className="w-3.5 h-3.5" />
                                  )}
                                </Button>
                              )}
                              <div className="flex-1 min-w-0">
-                               <p className="font-semibold text-sm text-gray-900 truncate">{product.product_name}</p>
+                               <p className="font-semibold text-xs text-gray-900 truncate leading-tight">{product.product_name}</p>
                                {product.variant && (
-                                 <p className="text-xs text-gray-600 truncate">{product.variant}</p>
+                                 <p className="text-[10px] text-gray-600 truncate leading-tight">{product.variant}</p>
                                )}
                                {product.size && (
-                                 <p className="text-xs text-gray-500">{product.size}</p>
+                                 <p className="text-[10px] text-gray-500 leading-tight">{product.size}</p>
                                )}
                              </div>
-                             <div className="flex items-center gap-1 flex-shrink-0">
-                               <div className="text-right">
+                             <div className="flex items-center gap-0.5 flex-shrink-0">
+                               <div className="text-right min-w-[52px]">
                                  {isAdmin && (
-                                   <div className="flex flex-col items-end gap-0.5 mb-0.5">
-                                     <span className="text-[10px] text-gray-500 line-through whitespace-nowrap">${product.originalPrice.toFixed(2)}</span>
-                                     <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{product.markup}%</Badge>
+                                   <div className="flex flex-col items-end mb-0.5">
+                                     <span className="text-[9px] text-gray-500 line-through leading-none">${product.originalPrice.toFixed(2)}</span>
+                                     <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3 leading-none mt-0.5">{product.markup}%</Badge>
                                    </div>
                                  )}
-                                 <p className="font-bold text-sm text-emerald-600 whitespace-nowrap">${product.price.toFixed(2)}</p>
+                                 <p className="font-bold text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
                                </div>
                                {isAdmin && (
                                  <div className="flex gap-0.5">
@@ -573,9 +578,9 @@ function FactoryWholesaleContent() {
                                      size="icon"
                                      variant="ghost"
                                      onClick={() => setEditingProduct(product)}
-                                     className="h-6 w-6"
+                                     className="h-5 w-5 p-0"
                                    >
-                                     <Edit2 className="w-3 h-3" />
+                                     <Edit2 className="w-2.5 h-2.5" />
                                    </Button>
                                    <Button
                                      size="icon"
@@ -585,9 +590,9 @@ function FactoryWholesaleContent() {
                                          deleteProductMutation.mutate(product.id);
                                        }
                                      }}
-                                     className="h-6 w-6 text-red-500"
+                                     className="h-5 w-5 p-0 text-red-500"
                                    >
-                                     <Trash2 className="w-3 h-3" />
+                                     <Trash2 className="w-2.5 h-2.5" />
                                    </Button>
                                  </div>
                                )}
@@ -596,9 +601,9 @@ function FactoryWholesaleContent() {
                                    addToCart(product, { current: e.currentTarget });
                                  }} 
                                  size="icon"
-                                 className="bg-emerald-600 h-7 w-7 flex-shrink-0"
+                                 className="bg-emerald-600 h-6 w-6 flex-shrink-0 p-0"
                                >
-                                 <Plus className="w-3.5 h-3.5" />
+                                 <Plus className="w-3 h-3" />
                                </Button>
                              </div>
                             </div>
