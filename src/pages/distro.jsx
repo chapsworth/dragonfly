@@ -517,7 +517,7 @@ function DistroContent() {
                 variant={selectedVendor === 'Pioneer' ? 'default' : 'outline'}
                 onClick={() => setSelectedVendor('Pioneer')}
               >
-                Pioneer
+                THCV Pioneer
               </Button>
             </div>
             <h1 className="text-3xl font-bold text-emerald-900">{selectedVendor} Orders</h1>
