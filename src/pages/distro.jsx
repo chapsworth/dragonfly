@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Percent, Edit2, CheckSquare, Square } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, Edit2, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -50,65 +50,13 @@ function DistroContent() {
 
   const isAdmin = user?.role === 'admin';
 
-  const { data: markupSettings } = useQuery({
-    queryKey: ['markup-settings'],
-    queryFn: async () => {
-      const all = await base44.entities.MarkupSettings.list();
-      let settings = all.find(s => s.setting_key === 'factory_wholesale');
-      if (!settings) {
-        settings = await base44.entities.MarkupSettings.create({
-          setting_key: 'factory_wholesale',
-          global_markup: 15,
-          product_markups: {}
-        });
-      }
-      return settings;
-    }
-  });
-
-  const globalMarkup = markupSettings?.global_markup || 15;
-  const productMarkups = markupSettings?.product_markups || {};
-
-  const { data: allProducts = [], isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
     queryFn: async () => {
       const all = await base44.entities.VendorProduct.list();
       return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
   });
-
-  const updateGlobalMarkupMutation = useMutation({
-    mutationFn: async (newMarkup) => {
-      if (!markupSettings) return;
-      return await base44.entities.MarkupSettings.update(markupSettings.id, {
-        global_markup: newMarkup
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
-      toast.success('Global markup updated');
-    }
-  });
-
-  const updateProductMutation = useMutation({
-    mutationFn: async ({ id, markup }) => {
-      if (!markupSettings) return;
-      const updatedProductMarkups = { ...productMarkups, [id]: markup };
-      return await base44.entities.MarkupSettings.update(markupSettings.id, {
-        product_markups: updatedProductMarkups
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
-    }
-  });
-
-  const products = allProducts.map(p => ({
-    ...p,
-    originalPrice: p.price,
-    price: p.price,
-    markup: 0
-  }));
 
   const createProductMutation = useMutation({
     mutationFn: (data) => base44.entities.VendorProduct.create({ ...data, vendor_name: selectedVendor, is_active: true }),
