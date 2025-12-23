@@ -346,41 +346,41 @@ function DistroContent() {
   const total = calculateTotal();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-4 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 pb-32 overflow-x-hidden max-w-full">
       {/* Sticky Footer with Total and Markup */}
       <div ref={floatingTotalRef} className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t-2 border-emerald-200 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Order Total */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
-                <ShoppingCart className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-gray-600">Order Total</p>
-                <p className="text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Order Total</p>
+                <p className="text-base sm:text-xl font-bold text-emerald-600">${total.toFixed(2)}</p>
               </div>
               {cart.length > 0 && (
-                <Badge className="bg-emerald-600 text-white ml-2">{cart.length}</Badge>
+                <Badge className="bg-emerald-600 text-white text-xs">{cart.length}</Badge>
               )}
             </div>
 
             {/* Global Markup - Admin Only */}
             {isAdmin && (
-              <div className="flex items-center gap-3 border-l border-gray-300 pl-4">
-                <div className="flex items-center gap-2">
-                  <Percent className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center gap-1.5 sm:gap-3 border-l border-gray-300 pl-2 sm:pl-4">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   <div>
-                    <p className="text-xs text-gray-600">Markup</p>
-                    <p className="text-xl font-bold text-blue-600">{globalMarkup}%</p>
+                    <p className="text-[10px] sm:text-xs text-gray-600">Markup</p>
+                    <p className="text-base sm:text-xl font-bold text-blue-600">{globalMarkup}%</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-1">
                   <Button
                     size="icon"
                     variant="outline"
                     onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8"
                   >
                     <Minus className="w-3 h-3" />
                   </Button>
@@ -388,7 +388,7 @@ function DistroContent() {
                     size="icon"
                     variant="outline"
                     onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8"
                   >
                     <Plus className="w-3 h-3" />
                   </Button>
@@ -401,10 +401,10 @@ function DistroContent() {
 
 
 
-      <div className="max-w-7xl mx-auto pt-6">
+      <div className="max-w-7xl mx-auto pt-6 w-full">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
             <Button 
               variant={selectedVendor === 'Jared Cookie Factory' ? 'default' : 'outline'}
               onClick={() => setSelectedVendor('Jared Cookie Factory')}
@@ -434,24 +434,24 @@ function DistroContent() {
           <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
           {/* Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search and Filter */}
             <Card>
-              <CardContent className="p-4">
-                <div className="flex gap-3 mb-3">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 text-sm"
                     />
                   </div>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
