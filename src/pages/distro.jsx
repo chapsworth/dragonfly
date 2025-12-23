@@ -36,8 +36,6 @@ function DistroContent() {
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
-  const [globalMarkup, setGlobalMarkup] = useState(15);
-  const [productMarkups, setProductMarkups] = useState({});
   const floatingTotalRef = useRef(null);
   const floatingMarkupRef = useRef(null);
   const queryClient = useQueryClient();
@@ -49,6 +47,25 @@ function DistroContent() {
 
   const isAdmin = user?.role === 'admin';
 
+  const { data: markupSettings } = useQuery({
+    queryKey: ['markup-settings'],
+    queryFn: async () => {
+      const all = await base44.entities.MarkupSettings.list();
+      let settings = all.find(s => s.setting_key === 'factory_wholesale');
+      if (!settings) {
+        settings = await base44.entities.MarkupSettings.create({
+          setting_key: 'factory_wholesale',
+          global_markup: 15,
+          product_markups: {}
+        });
+      }
+      return settings;
+    }
+  });
+
+  const globalMarkup = markupSettings?.global_markup || 15;
+  const productMarkups = markupSettings?.product_markups || {};
+
   const { data: jaredProducts = [], isLoading } = useQuery({
     queryKey: ['jared-products'],
     queryFn: async () => {
@@ -57,10 +74,29 @@ function DistroContent() {
     }
   });
 
+  const updateGlobalMarkupMutation = useMutation({
+    mutationFn: async (newMarkup) => {
+      if (!markupSettings) return;
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        global_markup: newMarkup
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
+      toast.success('Global markup updated');
+    }
+  });
+
   const updateProductMutation = useMutation({
-    mutationFn: ({ id, markup }) => {
-      setProductMarkups(prev => ({ ...prev, [id]: markup }));
-      return Promise.resolve();
+    mutationFn: async ({ id, markup }) => {
+      if (!markupSettings) return;
+      const updatedProductMarkups = { ...productMarkups, [id]: markup };
+      return await base44.entities.MarkupSettings.update(markupSettings.id, {
+        product_markups: updatedProductMarkups
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markup-settings'] });
     }
   });
 
@@ -348,7 +384,7 @@ function DistroContent() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setGlobalMarkup(Math.max(0, globalMarkup - 5))}
+                onClick={() => updateGlobalMarkupMutation.mutate(Math.max(0, globalMarkup - 5))}
                 className="flex-1"
               >
                 <Minus className="w-4 h-4 mr-1" />
@@ -357,7 +393,7 @@ function DistroContent() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setGlobalMarkup(globalMarkup + 5)}
+                onClick={() => updateGlobalMarkupMutation.mutate(globalMarkup + 5)}
                 className="flex-1"
               >
                 <Plus className="w-4 h-4 mr-1" />
@@ -367,7 +403,7 @@ function DistroContent() {
             <Input
               type="number"
               value={globalMarkup}
-              onChange={(e) => setGlobalMarkup(Math.max(0, parseFloat(e.target.value) || 0))}
+              onChange={(e) => updateGlobalMarkupMutation.mutate(Math.max(0, parseFloat(e.target.value) || 0))}
               className="mt-2"
               placeholder="Custom %"
             />
