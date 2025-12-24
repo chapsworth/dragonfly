@@ -286,7 +286,13 @@ function DistroContent() {
     const orderData = {
       vendor_name: selectedVendor,
       order_date: new Date().toISOString().split('T')[0],
-      items: cart,
+      items: cart.map(item => {
+        const product = products.find(p => p.id === item.product_id);
+        return {
+          ...item,
+          wholesale_price: product?.wholesalePrice || item.price
+        };
+      }),
       subtotal: calculateTotal(),
       total: calculateTotal(),
       notes,
@@ -320,6 +326,8 @@ function DistroContent() {
     
     doc.setFont(undefined, 'normal');
     let y = 78;
+    let totalProfit = 0;
+    
     order.items.forEach((item) => {
       if (y > 270) {
         doc.addPage();
@@ -334,6 +342,13 @@ function DistroContent() {
       doc.text(item.quantity.toString(), 120, y);
       doc.text(`$${item.price.toFixed(2)}`, 145, y);
       doc.text(`$${(item.price * item.quantity).toFixed(2)}`, 170, y);
+      
+      // Calculate profit if admin and item has wholesale data
+      if (isAdmin && item.wholesale_price) {
+        const profit = (item.price - item.wholesale_price) * item.quantity;
+        totalProfit += profit;
+      }
+      
       y += 7;
     });
     
@@ -343,6 +358,15 @@ function DistroContent() {
     doc.setFont(undefined, 'bold');
     doc.setFontSize(14);
     doc.text(`Total: $${order.total.toFixed(2)}`, 145, y);
+    
+    // Show profit for admin
+    if (isAdmin && totalProfit > 0) {
+      y += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(34, 197, 94); // Green color
+      doc.text(`Profit Potential: $${totalProfit.toFixed(2)}`, 145, y);
+      doc.setTextColor(0, 0, 0); // Reset to black
+    }
     
     if (order.notes) {
       y += 15;
@@ -356,6 +380,23 @@ function DistroContent() {
     
     doc.save(`vendor-order-${order.id.slice(0, 8)}.pdf`);
     toast.success('PDF downloaded');
+  };
+
+  const loadOrderToCart = (order) => {
+    const orderItems = order.items.map(item => {
+      const product = products.find(p => p.product_name === item.product_name && p.variant === item.variant);
+      return {
+        product_id: item.product_id || product?.id,
+        product_name: item.product_name,
+        variant: item.variant,
+        quantity: item.quantity,
+        price: product ? product.price : item.price
+      };
+    });
+    setCart(orderItems);
+    setNotes(order.notes || '');
+    setIsOrdersOpen(false);
+    toast.success('Order loaded to cart');
   };
 
   const total = calculateTotal();
@@ -863,6 +904,14 @@ function DistroContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge>{order.status}</Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => loadOrderToCart(order)}
+                          className="bg-emerald-600"
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
                         <Button
                           size="sm"
                           onClick={() => exportToPDF(order)}
