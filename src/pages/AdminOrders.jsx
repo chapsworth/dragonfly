@@ -23,7 +23,7 @@ import OrderDetailModal from '@/components/orders/OrderDetailModal';
 import InteractiveOrderCard from '@/components/orders/InteractiveOrderCard';
 import OrderNotification from '@/components/admin/OrderNotification';
 import AdminOrdersMap from '@/components/admin/AdminOrdersMap';
-import BiometricGuard from '@/components/auth/BiometricGuard';
+
 
 const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -1002,9 +1002,5 @@ function AdminOrdersContent() {
 }
 
 export default function AdminOrders() {
-  return (
-    <BiometricGuard>
-      <AdminOrdersContent />
-    </BiometricGuard>
-  );
+  return <AdminOrdersContent />;
 }
