@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Sparkles, Loader2, Plus, Trash2, Leaf } from 'lucide-react';
+import { Upload, Search, Sparkles, Loader2, Plus, Trash2, Leaf, GripVertical } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 export default function AddProductToCarousel({ isOpen, onClose, category }) {
-  const [mode, setMode] = useState('select'); // 'select' or 'create'
+  const [mode, setMode] = useState('select'); // 'select', 'create', or 'manage'
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -235,6 +236,33 @@ export default function AddProductToCarousel({ isOpen, onClose, category }) {
   const categoryProducts = products.filter(p => p.category === category);
   const existingSetting = carouselSettings.find(c => c.category === category);
   const featuredIds = existingSetting?.featured_product_ids || [];
+  
+  const featuredProducts = featuredIds
+    .map(id => products.find(p => p.id === id))
+    .filter(Boolean);
+
+  const handleReorder = (result) => {
+    if (!result.destination || !existingSetting) return;
+    
+    const items = Array.from(featuredIds);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    updateCarouselMutation.mutate({
+      id: existingSetting.id,
+      data: { featured_product_ids: items }
+    });
+  };
+
+  const handleRemoveFromCarousel = (productId) => {
+    if (!existingSetting) return;
+    
+    const newIds = featuredIds.filter(id => id !== productId);
+    updateCarouselMutation.mutate({
+      id: existingSetting.id,
+      data: { featured_product_ids: newIds }
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -246,10 +274,95 @@ export default function AddProductToCarousel({ isOpen, onClose, category }) {
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={setMode} className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="select">Select Existing</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="select">Add Items</TabsTrigger>
+            <TabsTrigger value="manage">Manage Carousel</TabsTrigger>
             <TabsTrigger value="create">Create New</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="manage" className="space-y-4 mt-4">
+            {featuredProducts.length === 0 ? (
+              <div className="text-center py-12 text-emerald-600">
+                <p className="text-lg mb-2">No items in carousel yet</p>
+                <p className="text-sm text-gray-500">Switch to "Add Items" tab to add products</p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-900 font-semibold">💡 Drag & Drop to Reorder</p>
+                  <p className="text-xs text-blue-700">Drag items to change their order in the carousel</p>
+                </div>
+                
+                <DragDropContext onDragEnd={handleReorder}>
+                  <Droppable droppableId="carousel-items">
+                    {(provided) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className="space-y-2"
+                      >
+                        {featuredProducts.map((product, index) => (
+                          <Draggable
+                            key={product.id}
+                            draggableId={product.id}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={`flex items-center gap-3 p-3 bg-white rounded-lg border-2 transition-all ${
+                                  snapshot.isDragging
+                                    ? 'border-emerald-500 shadow-lg'
+                                    : 'border-emerald-200'
+                                }`}
+                              >
+                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                  <GripVertical className="w-5 h-5 text-gray-400" />
+                                </div>
+                                
+                                <div className="flex items-center gap-3 flex-1">
+                                  <img
+                                    src={product.image_url || 'https://via.placeholder.com/150'}
+                                    alt={product.name}
+                                    className="w-16 h-16 object-cover rounded-lg"
+                                  />
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-emerald-900">{product.name}</p>
+                                    <p className="text-sm text-emerald-600">${product.price}</p>
+                                  </div>
+                                  <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">
+                                    #{index + 1}
+                                  </div>
+                                </div>
+                                
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => handleRemoveFromCarousel(product.id)}
+                                  className="text-red-500 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+                
+                <div className="pt-4 border-t flex justify-between items-center">
+                  <p className="text-sm text-emerald-600">
+                    {featuredProducts.length} item{featuredProducts.length !== 1 ? 's' : ''} in carousel
+                  </p>
+                  <Button variant="outline" onClick={onClose}>Done</Button>
+                </div>
+              </>
+            )}
+          </TabsContent>
 
           <TabsContent value="select" className="space-y-4 mt-4">
             {categoryProducts.length === 0 ? (
