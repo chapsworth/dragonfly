@@ -34,19 +34,25 @@ export default function OrderNotification() {
     }
   };
 
-  const showBrowserNotification = (title, body, type, id) => {
-    if (permissionGranted && document.hidden) {
+  const showBrowserNotification = (title, body, type, id, actions = []) => {
+    if (permissionGranted) {
       const notification = new Notification(title, {
         body,
         icon: '/favicon.ico',
         badge: '/favicon.ico',
-        tag: type,
-        requireInteraction: false
+        tag: type + (id || ''),
+        requireInteraction: type === 'order',
+        silent: false,
+        vibrate: [200, 100, 200]
       });
 
       notification.onclick = () => {
         window.focus();
-        navigate(createPageUrl('AdminOrders') + (id ? '?order=' + id : ''));
+        if (type === 'order' && id) {
+          navigate(createPageUrl('AdminOrders') + '?order=' + id);
+        } else {
+          navigate(createPageUrl('AdminOrders'));
+        }
         notification.close();
       };
     }
