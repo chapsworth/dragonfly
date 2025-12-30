@@ -5,6 +5,7 @@ import { CartProvider } from '@/components/cart/CartContext';
 import CartDrawer from '@/components/cart/CartDrawer';
 import Header from '@/components/navigation/Header';
 import Sidebar from '@/components/navigation/Sidebar';
+import CapacitorPushNotifications from '@/components/push/CapacitorPushNotifications';
 
 export default function Layout({ children, currentPageName }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,6 +44,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <HelmetProvider>
       <CartProvider>
+        <CapacitorPushNotifications />
         <div className="min-h-screen">
           {!hideHeader && <Header onMenuClick={() => setIsSidebarOpen(true)} />}
           <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
