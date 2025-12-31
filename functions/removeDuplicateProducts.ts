@@ -45,20 +45,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Delete duplicates in batches to avoid rate limit
+    // Delete duplicates one by one with delay to avoid rate limit
     let deleted = 0;
-    const batchSize = 5;
-    for (let i = 0; i < toDelete.length; i += batchSize) {
-      const batch = toDelete.slice(i, i + batchSize);
-      await Promise.all(
-        batch.map(id => base44.asServiceRole.entities.VendorProduct.update(id, { is_active: false }))
-      );
-      deleted += batch.length;
+    for (const id of toDelete) {
+      await base44.asServiceRole.entities.VendorProduct.update(id, { is_active: false });
+      deleted++;
       
-      // Wait a bit between batches
-      if (i + batchSize < toDelete.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      // Wait between each delete to avoid rate limit
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     return Response.json({
