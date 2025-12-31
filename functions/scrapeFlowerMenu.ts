@@ -37,14 +37,23 @@ Deno.serve(async (req) => {
       // Try to extract image
       let imageUrl = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
       
-      // Try to extract price
-      let priceText = $el.find('.price, .woocommerce-Price-amount, .amount').first().text().trim();
+      // Try to extract price - multiple strategies
       let price = default_price || 0;
       
+      // Strategy 1: Look for price in standard elements
+      let priceText = $el.find('.price, .woocommerce-Price-amount, .amount, bdi, .product-price, ins .amount').first().text().trim();
+      
+      // Strategy 2: Look in the entire element text
+      if (!priceText || !priceText.match(/\$/)) {
+        priceText = $el.text();
+      }
+      
+      // Extract price from text
       if (priceText) {
-        const priceMatch = priceText.match(/[\d,.]+/);
+        // Look for price patterns like $100, $1,000, $99.99
+        const priceMatch = priceText.match(/\$\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/);
         if (priceMatch) {
-          price = parseFloat(priceMatch[0].replace(',', ''));
+          price = parseFloat(priceMatch[1].replace(',', ''));
         }
       }
 
