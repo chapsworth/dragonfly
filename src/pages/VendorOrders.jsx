@@ -60,7 +60,8 @@ function VendorOrdersContent() {
   const defaultVendors = [
     { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
-    { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
+    { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 },
+    { name: 'LA BULK', type: 'flower', url: 'https://labulkflower.com/shop/', defaultPrice: 200 }
   ];
 
   const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name))];
