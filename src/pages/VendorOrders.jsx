@@ -496,6 +496,36 @@ function VendorOrdersContent() {
                 <DollarSign className="w-4 h-4 mr-2" />
                 Global Price Edit
               </Button>
+              <Button 
+                onClick={async () => {
+                  if (!confirm('Remove all duplicate products and categories? This cannot be undone.')) return;
+                  
+                  const seen = new Map();
+                  const toDelete = [];
+                  
+                  for (const product of products) {
+                    const key = `${product.product_name}-${product.variant || ''}-${product.category}`;
+                    if (seen.has(key)) {
+                      toDelete.push(product.id);
+                    } else {
+                      seen.set(key, product);
+                    }
+                  }
+                  
+                  for (const id of toDelete) {
+                    await base44.entities.VendorProduct.update(id, { is_active: false });
+                  }
+                  
+                  queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+                  toast.success(`Removed ${toDelete.length} duplicates`);
+                }} 
+                variant="outline" 
+                size="sm"
+                className="text-red-600 border-red-300"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove Duplicates
+              </Button>
               <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
                 <FileText className="w-4 h-4 mr-2" />
                 View Orders
