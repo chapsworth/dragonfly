@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
 
     // Import products to database
     const imported = [];
+    const updated = [];
     for (const product of products) {
       try {
         // Check if product already exists
@@ -119,6 +120,22 @@ Deno.serve(async (req) => {
         if (existing.length === 0) {
           const created = await base44.asServiceRole.entities.VendorProduct.create(product);
           imported.push(created);
+        } else {
+          // Update existing product with new image and price if available
+          const existingProduct = existing[0];
+          const updateData = {};
+          
+          if (product.image_url && !existingProduct.image_url) {
+            updateData.image_url = product.image_url;
+          }
+          if (product.price && product.price !== existingProduct.price) {
+            updateData.price = product.price;
+          }
+          
+          if (Object.keys(updateData).length > 0) {
+            await base44.asServiceRole.entities.VendorProduct.update(existingProduct.id, updateData);
+            updated.push({ ...existingProduct, ...updateData });
+          }
         }
       } catch (error) {
         console.error('Error importing product:', error);
@@ -129,7 +146,9 @@ Deno.serve(async (req) => {
       success: true,
       scraped: products.length,
       imported: imported.length,
-      products: imported
+      updated: updated.length,
+      products: imported,
+      updatedProducts: updated
     });
 
   } catch (error) {
