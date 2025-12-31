@@ -505,13 +505,15 @@ function VendorOrdersContent() {
 
           {/* Vendor Tabs */}
           <Tabs value={selectedVendor} onValueChange={setSelectedVendor} className="w-full">
-            <TabsList className="grid w-full gap-1" style={{ gridTemplateColumns: `repeat(${vendors.length}, minmax(0, 1fr))` }}>
-              {vendors.map(vendor => (
-                <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm">
-                  {vendor.name.includes('LA Bulk') ? vendor.name.replace('LA Bulk - ', '') : vendor.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="w-full overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-auto gap-1 flex-nowrap">
+                {vendors.map(vendor => (
+                  <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm whitespace-nowrap">
+                    {vendor.name.includes('LA Bulk') ? vendor.name.replace('LA Bulk - ', '') : vendor.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </Tabs>
         </div>
 
