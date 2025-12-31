@@ -58,7 +58,7 @@ function VendorOrdersContent() {
   });
 
   const defaultVendors = [
-    { name: 'LA Bulk', type: 'flower', url: 'https://labulkflower.com/', defaultPrice: 100 },
+    { name: 'LA Bulk', type: 'flower', url: 'https://labulkflower.com/shop/', defaultPrice: 100 },
     { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
