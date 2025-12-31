@@ -61,21 +61,6 @@ export default function PageEditor({ sections, onSectionsChange, children }) {
 
   return (
     <div className="relative">
-      {/* Edit Mode Toggle */}
-      <motion.button
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => setIsEditMode(!isEditMode)}
-        className={cn(
-          "fixed top-24 right-4 z-50 p-3 rounded-full shadow-lg transition-all",
-          isEditMode 
-            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white" 
-            : "bg-white text-slate-700 hover:bg-slate-50"
-        )}
-      >
-        <Settings className="w-5 h-5" />
-      </motion.button>
-
       {/* Content with Edit Controls */}
       <div className="relative">
         <AnimatePresence>
