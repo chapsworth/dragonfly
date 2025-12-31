@@ -23,47 +23,71 @@ Deno.serve(async (req) => {
 
     const products = [];
 
-    // Look for product items - adjust selectors based on actual HTML structure
-    $('.product, .product-item, .woocommerce-loop-product__title, li.product').each((i, element) => {
+    // Strategy 1: Look for strain variation buttons (like on LA Bulk Flower)
+    $('button, .variation-option, input[type="radio"], label').each((i, element) => {
       const $el = $(element);
+      const text = $el.text().trim();
       
-      // Try to extract product name
-      let productName = $el.find('h2, h3, .product-title, .woocommerce-loop-product__title, a.woocommerce-LoopProduct-link').first().text().trim();
-      
-      if (!productName) {
-        productName = $el.find('a').first().text().trim();
-      }
-
-      // Try to extract image
-      let imageUrl = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
-      
-      // Try to extract price
-      let priceText = $el.find('.price, .woocommerce-Price-amount, .amount').first().text().trim();
-      let price = default_price || 0;
-      
-      if (priceText) {
-        const priceMatch = priceText.match(/[\d,.]+/);
-        if (priceMatch) {
-          price = parseFloat(priceMatch[0].replace(',', ''));
+      // Match patterns like "ALPINE WHITE 1 LB", "GAS MASK 1 LB", etc.
+      if (text.match(/1\s*LB/i) && text.length > 5 && text.length < 100) {
+        // Clean up the name (remove "1 LB" suffix)
+        const cleanName = text.replace(/\s*1\s*LB/i, '').trim();
+        
+        if (cleanName) {
+          products.push({
+            product_name: cleanName,
+            category: category || 'flower',
+            vendor_name,
+            price: default_price || 0,
+            image_url: null,
+            is_active: true
+          });
         }
-      }
-
-      // Only add if we found a product name
-      if (productName && productName.length > 2) {
-        products.push({
-          product_name: productName,
-          category: category || 'flower',
-          vendor_name,
-          price: price,
-          image_url: imageUrl || null,
-          is_active: true
-        });
       }
     });
 
-    // If no products found with above selectors, try alternative parsing
+    // Strategy 2: Look for standard product items if no strains found
     if (products.length === 0) {
-      // Try to find any h2/h3 elements with product-like text
+      $('.product, .product-item, .woocommerce-loop-product__title, li.product').each((i, element) => {
+        const $el = $(element);
+        
+        // Try to extract product name
+        let productName = $el.find('h2, h3, .product-title, .woocommerce-loop-product__title, a.woocommerce-LoopProduct-link').first().text().trim();
+        
+        if (!productName) {
+          productName = $el.find('a').first().text().trim();
+        }
+
+        // Try to extract image
+        let imageUrl = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
+        
+        // Try to extract price
+        let priceText = $el.find('.price, .woocommerce-Price-amount, .amount').first().text().trim();
+        let price = default_price || 0;
+        
+        if (priceText) {
+          const priceMatch = priceText.match(/[\d,.]+/);
+          if (priceMatch) {
+            price = parseFloat(priceMatch[0].replace(',', ''));
+          }
+        }
+
+        // Only add if we found a product name
+        if (productName && productName.length > 2) {
+          products.push({
+            product_name: productName,
+            category: category || 'flower',
+            vendor_name,
+            price: price,
+            image_url: imageUrl || null,
+            is_active: true
+          });
+        }
+      });
+    }
+
+    // Strategy 3: Try h2/h3 elements as last resort
+    if (products.length === 0) {
       $('h2, h3').each((i, element) => {
         const text = $(element).text().trim();
         if (text && text.length > 3 && text.length < 200) {
