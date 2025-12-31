@@ -860,11 +860,54 @@ function VendorOrdersContent() {
             </div>
             <div>
               <Label>Category *</Label>
-              <Input
-                value={productForm.category || ''}
-                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                placeholder="e.g., flower, edibles"
-              />
+              <div className="flex gap-2">
+                <Select
+                  value={productForm.category || ''}
+                  onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="flower">Flower</SelectItem>
+                    <SelectItem value="edibles">Edibles</SelectItem>
+                    <SelectItem value="vapes">Vapes</SelectItem>
+                    <SelectItem value="pre-rolls">Pre-Rolls</SelectItem>
+                    <SelectItem value="concentrates">Concentrates</SelectItem>
+                    <SelectItem value="tinctures">Tinctures</SelectItem>
+                    <SelectItem value="topicals">Topicals</SelectItem>
+                    <SelectItem value="accessories">Accessories</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    if (!productForm.product_name) {
+                      toast.error('Enter product name first');
+                      return;
+                    }
+                    try {
+                      const result = await base44.integrations.Core.InvokeLLM({
+                        prompt: `Categorize this cannabis product into ONE category: "${productForm.product_name}". Categories: flower, edibles, vapes, pre-rolls, concentrates, tinctures, topicals, accessories. Return ONLY the category name, nothing else.`,
+                        response_json_schema: {
+                          type: "object",
+                          properties: {
+                            category: { type: "string" }
+                          }
+                        }
+                      });
+                      setProductForm({ ...productForm, category: result.category });
+                      toast.success('Category suggested');
+                    } catch (error) {
+                      toast.error('AI categorization failed');
+                    }
+                  }}
+                  className="px-3"
+                >
+                  AI
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Price *</Label>
