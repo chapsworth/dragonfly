@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw, Grid3x3, List, Edit, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -33,15 +34,37 @@ function VendorOrdersContent() {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
+  const [viewMode, setViewMode] = useState('list');
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [isGlobalEditOpen, setIsGlobalEditOpen] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [productForm, setProductForm] = useState({});
+  const [vendorForm, setVendorForm] = useState({ name: '', type: 'flower', url: '', defaultPrice: 0 });
+  const [bulkPriceChange, setBulkPriceChange] = useState({ type: 'set', value: 0 });
+  const [globalPriceChange, setGlobalPriceChange] = useState({ type: 'set', value: 0 });
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
-  const vendors = [
+  const { data: vendorsData = [] } = useQuery({
+    queryKey: ['vendors-list'],
+    queryFn: async () => {
+      const saved = await base44.entities.VendorProduct.list();
+      const uniqueVendors = [...new Set(saved.map(p => p.vendor_name))];
+      return uniqueVendors.map(name => ({ name, type: 'custom' }));
+    }
+  });
+
+  const defaultVendors = [
     { name: 'Jared Cookie Factory', type: 'factory' },
     { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
   ];
+
+  const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name))];
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
@@ -97,6 +120,84 @@ function VendorOrdersContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendor-orders'] });
       toast.success('Order deleted');
+    }
+  });
+
+  const createProductMutation = useMutation({
+    mutationFn: (data) => base44.entities.VendorProduct.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setIsAddProductOpen(false);
+      setProductForm({});
+      toast.success('Product added');
+    }
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.VendorProduct.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setEditingProduct(null);
+      setProductForm({});
+      toast.success('Product updated');
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id) => base44.entities.VendorProduct.update(id, { is_active: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      toast.success('Product deleted');
+    }
+  });
+
+  const bulkUpdatePricesMutation = useMutation({
+    mutationFn: async ({ productIds, changeType, value }) => {
+      for (const id of productIds) {
+        const product = products.find(p => p.id === id);
+        if (product) {
+          let newPrice = product.price;
+          if (changeType === 'set') {
+            newPrice = parseFloat(value);
+          } else if (changeType === 'increase') {
+            newPrice = product.price + parseFloat(value);
+          } else if (changeType === 'decrease') {
+            newPrice = Math.max(0, product.price - parseFloat(value));
+          } else if (changeType === 'percent') {
+            newPrice = product.price * (1 + parseFloat(value) / 100);
+          }
+          await base44.entities.VendorProduct.update(id, { price: newPrice });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setSelectedProducts([]);
+      setIsBulkEditOpen(false);
+      toast.success('Prices updated');
+    }
+  });
+
+  const globalUpdatePricesMutation = useMutation({
+    mutationFn: async ({ changeType, value }) => {
+      for (const product of filteredProducts) {
+        let newPrice = product.price;
+        if (changeType === 'set') {
+          newPrice = parseFloat(value);
+        } else if (changeType === 'increase') {
+          newPrice = product.price + parseFloat(value);
+        } else if (changeType === 'decrease') {
+          newPrice = Math.max(0, product.price - parseFloat(value));
+        } else if (changeType === 'percent') {
+          newPrice = product.price * (1 + parseFloat(value) / 100);
+        }
+        await base44.entities.VendorProduct.update(product.id, { price: newPrice });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setIsGlobalEditOpen(false);
+      toast.success('All prices updated');
     }
   });
 
@@ -365,7 +466,7 @@ function VendorOrdersContent() {
               <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Vendor Orders</h1>
               <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {vendors.find(v => v.name === selectedVendor)?.url && (
                 <Button 
                   onClick={() => handleScrapeMenu(vendors.find(v => v.name === selectedVendor))} 
@@ -377,6 +478,24 @@ function VendorOrdersContent() {
                   {isScraping ? 'Scraping...' : 'Refresh Menu'}
                 </Button>
               )}
+              <Button onClick={() => setIsAddProductOpen(true)} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+              <Button onClick={() => setIsAddVendorOpen(true)} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Vendor
+              </Button>
+              {selectedProducts.length > 0 && (
+                <Button onClick={() => setIsBulkEditOpen(true)} variant="outline" size="sm">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Edit {selectedProducts.length} Prices
+                </Button>
+              )}
+              <Button onClick={() => setIsGlobalEditOpen(true)} variant="outline" size="sm">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Global Price Edit
+              </Button>
               <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
                 <FileText className="w-4 h-4 mr-2" />
                 View Orders
@@ -386,7 +505,7 @@ function VendorOrdersContent() {
 
           {/* Vendor Tabs */}
           <Tabs value={selectedVendor} onValueChange={setSelectedVendor} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+            <TabsList className="grid w-full gap-1" style={{ gridTemplateColumns: `repeat(${vendors.length}, minmax(0, 1fr))` }}>
               {vendors.map(vendor => (
                 <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm">
                   {vendor.name.includes('LA Bulk') ? vendor.name.replace('LA Bulk - ', '') : vendor.name}
@@ -423,6 +542,24 @@ function VendorOrdersContent() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('list')}
+                      className="h-8 px-3"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('grid')}
+                      className="h-8 px-3"
+                    >
+                      <Grid3x3 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -454,36 +591,111 @@ function VendorOrdersContent() {
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="space-y-1.5 p-1.5 sm:p-2">
+                        <CardContent className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 gap-3 p-3' : 'space-y-2 p-3'}>
                           {categoryProducts.map(product => (
-                            <div key={product.id} className="flex items-center gap-0.5 sm:gap-1 p-1 sm:p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                              {product.image_url && (
-                                <img src={product.image_url} alt={product.product_name} className="w-7 h-7 sm:w-9 sm:h-9 object-cover rounded flex-shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0 pr-1">
-                                <p className="font-semibold text-[10px] sm:text-xs text-gray-900 truncate leading-tight">{product.product_name}</p>
-                                {product.variant && (
-                                  <p className="text-[9px] sm:text-[10px] text-gray-600 truncate leading-tight">{product.variant}</p>
+                            viewMode === 'list' ? (
+                              <div key={product.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <Checkbox
+                                  checked={selectedProducts.includes(product.id)}
+                                  onCheckedChange={(checked) => {
+                                    setSelectedProducts(checked 
+                                      ? [...selectedProducts, product.id]
+                                      : selectedProducts.filter(id => id !== product.id)
+                                    );
+                                  }}
+                                />
+                                {product.image_url && (
+                                  <img src={product.image_url} alt={product.product_name} className="w-16 h-16 object-cover rounded flex-shrink-0" />
                                 )}
-                                {product.size && (
-                                  <p className="text-[9px] sm:text-[10px] text-gray-500 leading-tight">{product.size}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-0.5 flex-shrink-0">
-                                <div className="text-right min-w-[42px] sm:min-w-[52px]">
-                                  <p className="font-bold text-[10px] sm:text-xs text-emerald-600 whitespace-nowrap leading-none">${product.price.toFixed(2)}</p>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm text-gray-900">{product.product_name}</p>
+                                  {product.variant && (
+                                    <p className="text-xs text-gray-600">{product.variant}</p>
+                                  )}
+                                  {product.size && (
+                                    <p className="text-xs text-gray-500">{product.size}</p>
+                                  )}
                                 </div>
-                                <Button 
-                                  onClick={(e) => {
-                                    addToCart(product, { current: e.currentTarget });
-                                  }} 
-                                  size="icon"
-                                  className="bg-emerald-600 h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 p-0"
-                                >
-                                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                                </Button>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <div className="text-right">
+                                    <p className="font-bold text-lg text-emerald-600">${product.price.toFixed(2)}</p>
+                                  </div>
+                                  <Button 
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setEditingProduct(product);
+                                      setProductForm(product);
+                                    }}
+                                    className="h-9 w-9"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    onClick={(e) => {
+                                      addToCart(product, { current: e.currentTarget });
+                                    }} 
+                                    size="icon"
+                                    className="bg-emerald-600 h-9 w-9"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                <div className="relative">
+                                  <Checkbox
+                                    checked={selectedProducts.includes(product.id)}
+                                    onCheckedChange={(checked) => {
+                                      setSelectedProducts(checked 
+                                        ? [...selectedProducts, product.id]
+                                        : selectedProducts.filter(id => id !== product.id)
+                                      );
+                                    }}
+                                    className="absolute top-2 left-2 z-10 bg-white"
+                                  />
+                                  {product.image_url ? (
+                                    <img src={product.image_url} alt={product.product_name} className="w-full h-32 object-cover" />
+                                  ) : (
+                                    <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
+                                      <Package className="w-12 h-12 text-gray-400" />
+                                    </div>
+                                  )}
+                                </div>
+                                <CardContent className="p-3">
+                                  <p className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">{product.product_name}</p>
+                                  {product.variant && (
+                                    <p className="text-xs text-gray-600 mb-2">{product.variant}</p>
+                                  )}
+                                  <div className="flex items-center justify-between">
+                                    <p className="font-bold text-lg text-emerald-600">${product.price.toFixed(2)}</p>
+                                    <div className="flex gap-1">
+                                      <Button 
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setEditingProduct(product);
+                                          setProductForm(product);
+                                        }}
+                                        className="h-8 w-8"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        onClick={(e) => {
+                                          addToCart(product, { current: e.currentTarget });
+                                        }} 
+                                        size="icon"
+                                        className="bg-emerald-600 h-8 w-8"
+                                      >
+                                        <Plus className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )
                           ))}
                         </CardContent>
                       </CollapsibleContent>
@@ -589,6 +801,309 @@ function VendorOrdersContent() {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Product Dialog */}
+      <Dialog open={isAddProductOpen || !!editingProduct} onOpenChange={(open) => {
+        if (!open) {
+          setIsAddProductOpen(false);
+          setEditingProduct(null);
+          setProductForm({});
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Product Name *</Label>
+              <Input
+                value={productForm.product_name || ''}
+                onChange={(e) => setProductForm({ ...productForm, product_name: e.target.value })}
+                placeholder="Enter product name"
+              />
+            </div>
+            <div>
+              <Label>Category *</Label>
+              <Input
+                value={productForm.category || ''}
+                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                placeholder="e.g., flower, edibles"
+              />
+            </div>
+            <div>
+              <Label>Price *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={productForm.price || ''}
+                onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label>Variant</Label>
+              <Input
+                value={productForm.variant || ''}
+                onChange={(e) => setProductForm({ ...productForm, variant: e.target.value })}
+                placeholder="Optional variant"
+              />
+            </div>
+            <div>
+              <Label>Size</Label>
+              <Input
+                value={productForm.size || ''}
+                onChange={(e) => setProductForm({ ...productForm, size: e.target.value })}
+                placeholder="Optional size"
+              />
+            </div>
+            <div>
+              <Label>Image URL</Label>
+              <Input
+                value={productForm.image_url || ''}
+                onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="flex gap-2">
+              {editingProduct && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirm('Delete this product?')) {
+                      deleteProductMutation.mutate(editingProduct.id);
+                      setEditingProduct(null);
+                      setProductForm({});
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddProductOpen(false);
+                  setEditingProduct(null);
+                  setProductForm({});
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!productForm.product_name || !productForm.category || !productForm.price) {
+                    toast.error('Please fill required fields');
+                    return;
+                  }
+                  if (editingProduct) {
+                    updateProductMutation.mutate({
+                      id: editingProduct.id,
+                      data: productForm
+                    });
+                  } else {
+                    createProductMutation.mutate({
+                      ...productForm,
+                      vendor_name: selectedVendor,
+                      is_active: true
+                    });
+                  }
+                }}
+                disabled={createProductMutation.isPending || updateProductMutation.isPending}
+                className="flex-1 bg-emerald-600"
+              >
+                {editingProduct ? 'Update' : 'Add'} Product
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Vendor Dialog */}
+      <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Vendor Tab</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Vendor Name *</Label>
+              <Input
+                value={vendorForm.name}
+                onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })}
+                placeholder="Enter vendor name"
+              />
+            </div>
+            <div>
+              <Label>Type</Label>
+              <Select value={vendorForm.type} onValueChange={(v) => setVendorForm({ ...vendorForm, type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="flower">Flower</SelectItem>
+                  <SelectItem value="edibles">Edibles</SelectItem>
+                  <SelectItem value="concentrates">Concentrates</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Menu URL (Optional)</Label>
+              <Input
+                value={vendorForm.url}
+                onChange={(e) => setVendorForm({ ...vendorForm, url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label>Default Price (Optional)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={vendorForm.defaultPrice}
+                onChange={(e) => setVendorForm({ ...vendorForm, defaultPrice: parseFloat(e.target.value) })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsAddVendorOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!vendorForm.name) {
+                    toast.error('Please enter vendor name');
+                    return;
+                  }
+                  setSelectedVendor(vendorForm.name);
+                  setIsAddVendorOpen(false);
+                  setVendorForm({ name: '', type: 'flower', url: '', defaultPrice: 0 });
+                  toast.success('Vendor tab added - now add products to it');
+                }}
+                className="flex-1 bg-emerald-600"
+              >
+                Add Vendor
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Price Edit Dialog */}
+      <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit {selectedProducts.length} Product Prices</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Change Type</Label>
+              <Select value={bulkPriceChange.type} onValueChange={(v) => setBulkPriceChange({ ...bulkPriceChange, type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="set">Set to specific price</SelectItem>
+                  <SelectItem value="increase">Increase by amount</SelectItem>
+                  <SelectItem value="decrease">Decrease by amount</SelectItem>
+                  <SelectItem value="percent">Adjust by percentage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>
+                {bulkPriceChange.type === 'percent' ? 'Percentage (%)' : 'Amount ($)'}
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={bulkPriceChange.value}
+                onChange={(e) => setBulkPriceChange({ ...bulkPriceChange, value: parseFloat(e.target.value) })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsBulkEditOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  bulkUpdatePricesMutation.mutate({
+                    productIds: selectedProducts,
+                    changeType: bulkPriceChange.type,
+                    value: bulkPriceChange.value
+                  });
+                }}
+                disabled={bulkUpdatePricesMutation.isPending}
+                className="flex-1 bg-emerald-600"
+              >
+                Update Prices
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Global Price Edit Dialog */}
+      <Dialog open={isGlobalEditOpen} onOpenChange={setIsGlobalEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Global Price Edit - {selectedVendor}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-gray-600">
+              This will update ALL {filteredProducts.length} products in the current view
+            </p>
+            <div>
+              <Label>Change Type</Label>
+              <Select value={globalPriceChange.type} onValueChange={(v) => setGlobalPriceChange({ ...globalPriceChange, type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="set">Set to specific price</SelectItem>
+                  <SelectItem value="increase">Increase by amount</SelectItem>
+                  <SelectItem value="decrease">Decrease by amount</SelectItem>
+                  <SelectItem value="percent">Adjust by percentage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>
+                {globalPriceChange.type === 'percent' ? 'Percentage (%)' : 'Amount ($)'}
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={globalPriceChange.value}
+                onChange={(e) => setGlobalPriceChange({ ...globalPriceChange, value: parseFloat(e.target.value) })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsGlobalEditOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (confirm(`Update ALL ${filteredProducts.length} product prices?`)) {
+                    globalUpdatePricesMutation.mutate({
+                      changeType: globalPriceChange.type,
+                      value: globalPriceChange.value
+                    });
+                  }
+                }}
+                disabled={globalUpdatePricesMutation.isPending}
+                className="flex-1 bg-emerald-600"
+              >
+                Update All Prices
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Orders Dialog */}
       <Dialog open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
