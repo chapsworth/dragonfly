@@ -500,11 +500,12 @@ function VendorOrdersContent() {
                 if (!confirm('Remove all duplicate products? This will keep only one copy of each product.')) return;
                 try {
                   const all = await base44.entities.VendorProduct.list();
+                  const vendorProducts = all.filter(p => p.vendor_name === selectedVendor);
                   const seen = new Map();
                   const duplicates = [];
                   
-                  all.forEach(product => {
-                    const key = `${product.vendor_name}-${product.product_name}-${product.variant || ''}-${product.category}`;
+                  vendorProducts.forEach(product => {
+                    const key = `${product.product_name}-${product.variant || ''}-${product.category}-${product.size || ''}`;
                     if (seen.has(key)) {
                       duplicates.push(product.id);
                     } else {
@@ -513,12 +514,12 @@ function VendorOrdersContent() {
                   });
                   
                   if (duplicates.length === 0) {
-                    toast.info('No duplicates found');
+                    toast.info('No duplicates found for this vendor');
                     return;
                   }
                   
                   for (const id of duplicates) {
-                    await base44.entities.VendorProduct.delete(id);
+                    await base44.entities.VendorProduct.update(id, { is_active: false });
                   }
                   
                   queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
