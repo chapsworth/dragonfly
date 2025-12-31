@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, X, MessageCircle, Bell } from 'lucide-react';
+import { ShoppingBag, X, MessageCircle, Bell, MapPin, Eye, List, Navigation, Phone, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function OrderNotification() {
   const [notifications, setNotifications] = useState([]);
@@ -12,6 +13,8 @@ export default function OrderNotification() {
   const [lastMessageId, setLastMessageId] = useState(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
+  const [detailedOrder, setDetailedOrder] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const audioRef = useRef(null);
   const navigate = useNavigate();
 
@@ -78,8 +81,13 @@ export default function OrderNotification() {
               type: 'order',
               customer: latestOrder.customer_name,
               total: latestOrder.total,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              order: latestOrder
             };
+            
+            // Show detailed modal
+            setDetailedOrder(latestOrder);
+            setShowDetailModal(true);
             
             showBrowserNotification(
               '🛍️ New Order Received!',
@@ -150,9 +158,14 @@ export default function OrderNotification() {
     return () => clearInterval(interval);
   }, [lastOrderId, lastMessageId, permissionGranted, navigate]);
 
-  const handleNotificationClick = (orderId) => {
-    navigate(createPageUrl('AdminOrders') + '?order=' + orderId);
-    setNotifications(prev => prev.filter(n => n.id !== orderId));
+  const handleNotificationClick = (notification) => {
+    if (notification.type === 'order' && notification.order) {
+      setDetailedOrder(notification.order);
+      setShowDetailModal(true);
+    } else if (notification.type === 'order') {
+      navigate(createPageUrl('AdminOrders') + '?order=' + notification.id);
+    }
+    setNotifications(prev => prev.filter(n => n.id !== notification.id));
   };
 
   const handleDismiss = (orderId, e) => {
@@ -160,8 +173,130 @@ export default function OrderNotification() {
     setNotifications(prev => prev.filter(n => n.id !== orderId));
   };
 
+  const handleViewTracker = () => {
+    if (detailedOrder) {
+      navigate(`${createPageUrl('CustomerOrderTracking')}?id=${detailedOrder.id}`);
+      setShowDetailModal(false);
+    }
+  };
+
+  const handleViewOrders = () => {
+    navigate(createPageUrl('AdminOrders'));
+    setShowDetailModal(false);
+  };
+
+  const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    confirmed: 'bg-blue-100 text-blue-800 border-blue-300',
+    preparing: 'bg-purple-100 text-purple-800 border-purple-300',
+    out_for_delivery: 'bg-orange-100 text-orange-800 border-orange-300',
+    delivered: 'bg-green-100 text-green-800 border-green-300',
+    cancelled: 'bg-red-100 text-red-800 border-red-300'
+  };
+
   return (
     <>
+      {/* Detailed Order Modal */}
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <ShoppingBag className="w-6 h-6 text-emerald-600" />
+              New Order Received!
+            </DialogTitle>
+          </DialogHeader>
+          
+          {detailedOrder && (
+            <div className="space-y-4">
+              {/* Status Badge */}
+              <div className="flex items-center justify-between">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${statusColors[detailedOrder.status]}`}>
+                  {detailedOrder.status.replace(/_/g, ' ').toUpperCase()}
+                </span>
+                <span className="text-2xl font-bold text-emerald-600">
+                  ${detailedOrder.total.toFixed(2)}
+                </span>
+              </div>
+
+              {/* Customer Info */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-gray-600" />
+                  <span className="font-semibold text-gray-900">
+                    {detailedOrder.customer_name || 'Customer'}
+                  </span>
+                </div>
+                {detailedOrder.customer_phone && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Phone className="w-4 h-4" />
+                    <a href={`tel:${detailedOrder.customer_phone}`} className="hover:text-emerald-600">
+                      {detailedOrder.customer_phone}
+                    </a>
+                  </div>
+                )}
+                {detailedOrder.delivery_address && (
+                  <div className="flex items-start gap-2 text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>{detailedOrder.delivery_address}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Items */}
+              <div className="border rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <List className="w-4 h-4" />
+                  Order Items ({detailedOrder.items?.length || 0})
+                </h4>
+                <div className="space-y-2">
+                  {detailedOrder.items?.slice(0, 3).map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-600">
+                        {item.quantity}× {item.name}
+                      </span>
+                      <span className="font-medium text-gray-900">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                  {detailedOrder.items?.length > 3 && (
+                    <p className="text-xs text-gray-500 text-center pt-2">
+                      +{detailedOrder.items.length - 3} more items
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <Button
+                  onClick={handleViewTracker}
+                  className="bg-blue-600 hover:bg-blue-700 gap-2"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Track Order
+                </Button>
+                <Button
+                  onClick={handleViewOrders}
+                  className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View in Orders
+                </Button>
+              </div>
+
+              <Button
+                onClick={() => setShowDetailModal(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Dismiss
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Permission Prompt */}
       <AnimatePresence>
         {showPermissionPrompt && (
@@ -210,7 +345,7 @@ export default function OrderNotification() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 100, scale: 0.8 }}
               transition={{ type: 'spring', damping: 20 }}
-              onClick={() => handleNotificationClick(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
               className={`text-white p-4 rounded-xl shadow-2xl cursor-pointer hover:shadow-3xl transition-shadow min-w-[320px] max-w-[400px] ${
                 notification.type === 'order' 
                   ? 'bg-gradient-to-r from-emerald-500 to-green-500' 
