@@ -496,33 +496,37 @@ function VendorOrdersContent() {
                 <DollarSign className="w-4 h-4 mr-2" />
                 Global Price Edit
               </Button>
-              <Button 
-                onClick={async () => {
-                  if (!confirm('Remove all duplicate products and categories? This cannot be undone.')) return;
-                  
+              <Button onClick={async () => {
+                if (!confirm('Remove all duplicate products? This will keep only one copy of each product.')) return;
+                try {
+                  const all = await base44.entities.VendorProduct.list();
                   const seen = new Map();
-                  const toDelete = [];
+                  const duplicates = [];
                   
-                  for (const product of products) {
-                    const key = `${product.product_name}-${product.variant || ''}-${product.category}`;
+                  all.forEach(product => {
+                    const key = `${product.vendor_name}-${product.product_name}-${product.variant || ''}-${product.category}`;
                     if (seen.has(key)) {
-                      toDelete.push(product.id);
+                      duplicates.push(product.id);
                     } else {
                       seen.set(key, product);
                     }
+                  });
+                  
+                  if (duplicates.length === 0) {
+                    toast.info('No duplicates found');
+                    return;
                   }
                   
-                  for (const id of toDelete) {
-                    await base44.entities.VendorProduct.update(id, { is_active: false });
+                  for (const id of duplicates) {
+                    await base44.entities.VendorProduct.delete(id);
                   }
                   
                   queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
-                  toast.success(`Removed ${toDelete.length} duplicates`);
-                }} 
-                variant="outline" 
-                size="sm"
-                className="text-red-600 border-red-300"
-              >
+                  toast.success(`Removed ${duplicates.length} duplicate products`);
+                } catch (error) {
+                  toast.error('Failed to remove duplicates: ' + error.message);
+                }
+              }} variant="outline" size="sm">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Remove Duplicates
               </Button>
