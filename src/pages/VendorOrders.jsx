@@ -505,9 +505,9 @@ function VendorOrdersContent() {
 
           {/* Vendor Tabs */}
           <Tabs value={selectedVendor} onValueChange={setSelectedVendor} className="w-full">
-            <TabsList className="flex flex-col w-full gap-1 h-auto">
+            <TabsList className="grid grid-cols-3 w-full gap-1 h-auto">
               {vendors.map(vendor => (
-                <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm w-full justify-start">
+                <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm">
                   {vendor.name.includes('LA Bulk') ? vendor.name.replace('LA Bulk - ', '') : vendor.name}
                 </TabsTrigger>
               ))}
