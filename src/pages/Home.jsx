@@ -416,18 +416,6 @@ export default function Home() {
         <PageEditor sections={pageSections} onSectionsChange={setPageSections}>
         {/* Admin Order Notifications */}
         {user?.role === 'admin' && <OrderNotification />}
-        
-        {/* Admin Edit Button */}
-        {user?.role === 'admin' && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={() => setIsEditModalOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
-          >
-            <Settings className="w-6 h-6 text-white" />
-          </motion.button>
-        )}
 
         {/* Render sections in order */}
         {sectionOrder.filter(key => sections[key]).map(sectionKey => sections[sectionKey])}
