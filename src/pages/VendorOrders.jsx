@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
@@ -31,8 +32,16 @@ function VendorOrdersContent() {
   const [floatingItemAnim, setFloatingItemAnim] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isDragging, setIsDragging] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
+
+  const vendors = [
+    { name: 'Jared Cookie Factory', type: 'factory' },
+    { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
+    { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
+    { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
+  ];
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
@@ -41,6 +50,29 @@ function VendorOrdersContent() {
       return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
   });
+
+  const handleScrapeMenu = async (vendor) => {
+    if (!vendor.url) return;
+    
+    setIsScraping(true);
+    try {
+      const response = await base44.functions.invoke('scrapeFlowerMenu', {
+        url: vendor.url,
+        vendor_name: vendor.name,
+        category: 'flower',
+        default_price: vendor.defaultPrice / 4 // Convert QP price to per unit
+      });
+
+      if (response.data.success) {
+        queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+        toast.success(`Scraped ${response.data.scraped} products, imported ${response.data.imported} new items`);
+      }
+    } catch (error) {
+      toast.error('Failed to scrape menu: ' + error.message);
+    } finally {
+      setIsScraping(false);
+    }
+  };
 
   const { data: orders = [] } = useQuery({
     queryKey: ['vendor-orders', selectedVendor],
@@ -333,11 +365,35 @@ function VendorOrdersContent() {
               <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900">Vendor Orders</h1>
               <p className="text-sm text-emerald-600">Create orders for {selectedVendor}</p>
             </div>
-            <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
-              <FileText className="w-4 h-4 mr-2" />
-              View Orders
-            </Button>
+            <div className="flex gap-2">
+              {vendors.find(v => v.name === selectedVendor)?.url && (
+                <Button 
+                  onClick={() => handleScrapeMenu(vendors.find(v => v.name === selectedVendor))} 
+                  disabled={isScraping}
+                  variant="outline" 
+                  size="sm"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isScraping ? 'animate-spin' : ''}`} />
+                  {isScraping ? 'Scraping...' : 'Refresh Menu'}
+                </Button>
+              )}
+              <Button onClick={() => setIsOrdersOpen(true)} variant="outline" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                View Orders
+              </Button>
+            </div>
           </div>
+
+          {/* Vendor Tabs */}
+          <Tabs value={selectedVendor} onValueChange={setSelectedVendor} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+              {vendors.map(vendor => (
+                <TabsTrigger key={vendor.name} value={vendor.name} className="text-xs sm:text-sm">
+                  {vendor.name.includes('LA Bulk') ? vendor.name.replace('LA Bulk - ', '') : vendor.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
