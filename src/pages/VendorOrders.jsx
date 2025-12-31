@@ -52,7 +52,8 @@ function VendorOrdersContent() {
     queryKey: ['vendors-list'],
     queryFn: async () => {
       const saved = await base44.entities.VendorProduct.list();
-      const uniqueVendors = [...new Set(saved.map(p => p.vendor_name))];
+      const activeProducts = saved.filter(p => p.is_active !== false);
+      const uniqueVendors = [...new Set(activeProducts.map(p => p.vendor_name))];
       return uniqueVendors.map(name => ({ name, type: 'custom' }));
     }
   });
