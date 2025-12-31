@@ -23,7 +23,7 @@ export default function VendorOrders() {
 }
 
 function VendorOrdersContent() {
-  const [selectedVendor, setSelectedVendor] = useState('LA Bulk - Sungrown (A)');
+  const [selectedVendor, setSelectedVendor] = useState('LA Bulk');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
@@ -58,6 +58,7 @@ function VendorOrdersContent() {
   });
 
   const defaultVendors = [
+    { name: 'LA Bulk', type: 'flower', url: 'https://labulkflower.com/', defaultPrice: 100 },
     { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
