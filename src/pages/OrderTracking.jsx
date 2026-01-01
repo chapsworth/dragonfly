@@ -472,19 +472,7 @@ export default function OrderTracking() {
   const orderId = urlParams.get('id');
   const queryClient = useQueryClient();
 
-  const { data: allOrders = [], isLoading: isLoadingAll } = useQuery({
-    queryKey: ['active-orders'],
-    queryFn: async () => {
-      const orders = await base44.entities.Order.list('-created_date');
-      return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
-    },
-    refetchInterval: 5000
-  });
-
   const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
-  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
-  const isLoading = isLoadingAll;
-
   const [user, setUser] = useState(null);
   const [distance, setDistance] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -494,6 +482,18 @@ export default function OrderTracking() {
   const mapRef = React.useRef(null);
   const [routePolyline, setRoutePolyline] = useState(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
+  const { data: allOrders = [], isLoading: isLoadingAll } = useQuery({
+    queryKey: ['active-orders'],
+    queryFn: async () => {
+      const orders = await base44.entities.Order.list('-created_date');
+      return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
+    },
+    refetchInterval: 5000
+  });
+
+  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
+  const isLoading = isLoadingAll;
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
