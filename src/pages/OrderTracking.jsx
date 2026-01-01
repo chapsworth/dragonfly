@@ -765,13 +765,26 @@ export default function OrderTracking() {
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [createOrderData, setCreateOrderData] = useState({});
 
+  // Fetch specific order if ID provided
+  const { data: specificOrder, isLoading: isLoadingSpecific } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: async () => {
+      if (!orderId) return null;
+      const orders = await base44.entities.Order.list();
+      return orders.find(o => o.id === orderId) || null;
+    },
+    enabled: !!orderId,
+    refetchInterval: 5000
+  });
+
   const { data: allOrders = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['active-orders'],
     queryFn: async () => {
       const orders = await base44.entities.Order.list('-created_date');
       return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
     },
-    refetchInterval: 5000
+    refetchInterval: 5000,
+    enabled: !orderId
   });
 
   const { data: contacts = [] } = useQuery({
@@ -822,8 +835,8 @@ export default function OrderTracking() {
     }
   });
 
-  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
-  const isLoading = isLoadingAll;
+  const order = orderId ? specificOrder : allOrders[currentOrderIndex] || null;
+  const isLoading = orderId ? isLoadingSpecific : isLoadingAll;
 
   const defaultMapCenter = React.useMemo(() => {
     const locations = [];
@@ -932,7 +945,7 @@ export default function OrderTracking() {
     );
   }
 
-  if (!order && allOrders.length === 0) {
+  if (!order && !orderId && allOrders.length === 0) {
     return (
       <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -941,6 +954,21 @@ export default function OrderTracking() {
           <p className="text-emerald-600 mb-4">There are no orders currently in delivery.</p>
           <Button onClick={() => navigate(createPageUrl('AdminOrders'))} className="bg-emerald-600">
             View All Orders
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order && orderId) {
+    return (
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h1>
+          <p className="text-gray-600 mb-4">This order could not be found.</p>
+          <Button onClick={() => navigate(createPageUrl('AdminOrders'))} className="bg-emerald-600">
+            Back to Orders
           </Button>
         </div>
       </div>
