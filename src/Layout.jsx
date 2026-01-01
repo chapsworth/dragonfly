@@ -11,7 +11,7 @@ export default function Layout({ children, currentPageName }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Hide header on specific pages
-  const hideHeader = ['distro', 'FactoryWholesale', 'VendorOrders'].includes(currentPageName);
+  const hideHeader = ['distro', 'FactoryWholesale', 'VendorOrders', 'OrderTracking'].includes(currentPageName);
 
   // Check for referral code in URL
   useEffect(() => {
