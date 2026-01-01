@@ -515,13 +515,13 @@ function AdminOrdersContent() {
         
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-24 lg:pt-6 pb-20 lg:pb-8">
           <div className="flex flex-col gap-4 mb-6 lg:mb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col items-start gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-900 mb-1 sm:mb-2">Orders</h1>
                 <p className="text-sm sm:text-base text-emerald-600">Manage customer orders</p>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-500 to-green-500">
+              <div className="flex flex-wrap gap-2 w-full">
+                <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-500 to-green-500 flex-shrink-0">
                   <Plus className="w-5 h-5 mr-2" />
                   Create Order
                 </Button>
@@ -531,10 +531,11 @@ function AdminOrdersContent() {
                       onClick={() => testAdminEmailMutation.mutate(orders[0].id)} 
                       disabled={testAdminEmailMutation.isPending}
                       variant="outline"
-                      className="gap-2"
+                      size="sm"
+                      className="gap-2 flex-shrink-0"
                     >
                       <TestTube className="w-4 h-4" />
-                      {testAdminEmailMutation.isPending ? 'Testing...' : 'Test Admin Email'}
+                      <span className="hidden sm:inline">{testAdminEmailMutation.isPending ? 'Testing...' : 'Test'}</span>
                     </Button>
                     <Button 
                       onClick={async () => {
@@ -550,10 +551,11 @@ function AdminOrdersContent() {
                         }
                       }}
                       variant="outline"
-                      className="gap-2"
+                      size="sm"
+                      className="gap-2 flex-shrink-0"
                     >
                       <MapPin className="w-4 h-4" />
-                      Geocode Orders
+                      <span className="hidden sm:inline">Geocode</span>
                     </Button>
                   </>
                 )}
@@ -594,16 +596,16 @@ function AdminOrdersContent() {
             </div>
 
             {/* View Toggle */}
-            <div className="flex flex-wrap gap-3 items-center">
-              <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center w-full">
+              <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl flex-shrink-0">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
                   className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
                 >
-                  <Grid3x3 className="w-4 h-4 mr-2" />
-                  Grid
+                  <Grid3x3 className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Grid</span>
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -611,13 +613,13 @@ function AdminOrdersContent() {
                   onClick={() => setViewMode('list')}
                   className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
                 >
-                  <List className="w-4 h-4 mr-2" />
-                  List
+                  <List className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">List</span>
                 </Button>
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48 bg-white/60 backdrop-blur-xl">
+                <SelectTrigger className="w-full sm:w-48 bg-white/60 backdrop-blur-xl">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -632,7 +634,7 @@ function AdminOrdersContent() {
               </Select>
 
               <Select value={cityFilter} onValueChange={setCityFilter}>
-                <SelectTrigger className="w-48 bg-white/60 backdrop-blur-xl">
+                <SelectTrigger className="w-full sm:w-48 bg-white/60 backdrop-blur-xl">
                   <SelectValue placeholder="Filter by city" />
                 </SelectTrigger>
                 <SelectContent>
