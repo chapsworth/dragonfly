@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye, Copy, RefreshCw, Link as LinkIcon, Code } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye, Copy, RefreshCw, Link as LinkIcon, Code, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import PageSelector from '@/components/export/PageSelector';
 
 export default function ExportToVC() {
   const [user, setUser] = useState(null);
@@ -229,6 +230,10 @@ export default function ExportToVC() {
     toast.success('Copied to clipboard');
   };
 
+  const handleCreateFromPage = (blueprintData) => {
+    createMutation.mutate(blueprintData);
+  };
+
   const categories = ['Navigation', 'Content', 'E-commerce', 'Forms', 'Media', 'Data Display', 'Layout', 'Social'];
 
   const filteredBlueprints = blueprints.filter(bp => {
@@ -362,9 +367,13 @@ const data = await response.json();`}
 
           {/* Tabs for Blueprints and Raw Data */}
           <Tabs defaultValue="blueprints" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="blueprints">Blueprints ({filteredBlueprints.length})</TabsTrigger>
-              <TabsTrigger value="raw">Raw Export Data</TabsTrigger>
+              <TabsTrigger value="create">
+                <Sparkles className="w-4 h-4 mr-2" />
+                From Pages
+              </TabsTrigger>
+              <TabsTrigger value="raw">Raw Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="blueprints" className="space-y-4 mt-4">
@@ -496,6 +505,10 @@ const data = await response.json();`}
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="create" className="mt-4">
+              <PageSelector onCreateBlueprint={handleCreateFromPage} />
             </TabsContent>
 
             <TabsContent value="raw" className="mt-4">
