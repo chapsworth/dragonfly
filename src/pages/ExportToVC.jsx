@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye, Copy, RefreshCw, Link as LinkIcon, Code } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ExportToVC() {
@@ -21,6 +22,8 @@ export default function ExportToVC() {
   const [editingBlueprint, setEditingBlueprint] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewingBlueprint, setViewingBlueprint] = useState(null);
+  const [apiResponse, setApiResponse] = useState(null);
+  const [isTestingApi, setIsTestingApi] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: '',
@@ -202,6 +205,30 @@ export default function ExportToVC() {
     toast.success(`Exported ${exportData.length} blueprints`);
   };
 
+  const handleTestApi = async () => {
+    setIsTestingApi(true);
+    try {
+      const response = await base44.functions.invoke('exportToVC');
+      setApiResponse(response.data);
+      toast.success('API test successful');
+    } catch (error) {
+      setApiResponse({ error: error.message });
+      toast.error('API test failed: ' + error.message);
+    } finally {
+      setIsTestingApi(false);
+    }
+  };
+
+  const getApiEndpoint = () => {
+    const currentUrl = window.location.origin;
+    return `${currentUrl}/api/functions/exportToVC`;
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
   const categories = ['Navigation', 'Content', 'E-commerce', 'Forms', 'Media', 'Data Display', 'Layout', 'Social'];
 
   const filteredBlueprints = blueprints.filter(bp => {
@@ -255,53 +282,138 @@ export default function ExportToVC() {
             </div>
           </div>
 
-          {/* Search and Filter */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          {/* API Endpoint Card */}
+          <Card className="mb-4 border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <LinkIcon className="w-5 h-5" />
+                API Endpoint
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-xs text-gray-600 mb-2 block">Export API Endpoint</Label>
+                <div className="flex gap-2">
                   <Input
-                    placeholder="Search blueprints..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    value={getApiEndpoint()}
+                    readOnly
+                    className="font-mono text-sm bg-white"
                   />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(getApiEndpoint())}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleTestApi}
+                    disabled={isTestingApi}
+                    className="bg-blue-600"
+                  >
+                    {isTestingApi ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Test API'}
+                  </Button>
                 </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Blueprints Grid */}
-        {loadingBlueprints ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto" />
-          </div>
-        ) : filteredBlueprints.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-600">No component blueprints found</p>
-              <Button onClick={() => setIsCreateOpen(true)} className="mt-4">
-                Create your first blueprint
-              </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block">Authentication</Label>
+                  <p className="text-sm">User session OR Bearer token with <code className="bg-white px-1 py-0.5 rounded text-xs">INCOMING_API_SECRET</code></p>
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block">Total Blueprints</Label>
+                  <Badge className="bg-blue-600 text-white">{blueprints.length}</Badge>
+                </div>
+              </div>
+
+              {apiResponse && (
+                <div>
+                  <Label className="text-xs text-gray-600 mb-2 block">API Response</Label>
+                  <pre className="bg-white p-4 rounded border text-xs overflow-x-auto max-h-64 overflow-y-auto">
+                    {JSON.stringify(apiResponse, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              <details className="text-sm">
+                <summary className="cursor-pointer text-blue-600 font-semibold mb-2">Usage Instructions</summary>
+                <div className="bg-white p-4 rounded border space-y-2 mt-2">
+                  <p className="font-semibold">cURL Example:</p>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+{`curl -X POST ${getApiEndpoint()} \\
+  -H "Authorization: Bearer YOUR_SECRET_KEY"`}
+                  </pre>
+                  <p className="font-semibold mt-3">JavaScript Example:</p>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+{`const response = await fetch('${getApiEndpoint()}', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_SECRET_KEY'
+  }
+});
+const data = await response.json();`}
+                  </pre>
+                </div>
+              </details>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBlueprints.map(blueprint => (
+
+          {/* Tabs for Blueprints and Raw Data */}
+          <Tabs defaultValue="blueprints" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="blueprints">Blueprints ({filteredBlueprints.length})</TabsTrigger>
+              <TabsTrigger value="raw">Raw Export Data</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="blueprints" className="space-y-4 mt-4">
+              {/* Search and Filter */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        placeholder="Search blueprints..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Blueprints Grid */}
+              {loadingBlueprints ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto" />
+                </div>
+              ) : filteredBlueprints.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-600">No component blueprints found</p>
+                    <Button onClick={() => setIsCreateOpen(true)} className="mt-4">
+                      Create your first blueprint
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredBlueprints.map(blueprint => (
               <Card key={blueprint.id} className="hover:shadow-lg transition-shadow">
                 {blueprint.preview_image_url && (
                   <img 
@@ -381,9 +493,57 @@ export default function ExportToVC() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="raw" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Code className="w-5 h-5" />
+                      Raw Export Data
+                    </CardTitle>
+                    <Button
+                      size="sm"
+                      onClick={() => copyToClipboard(JSON.stringify(blueprints.map(bp => ({
+                        name: bp.name,
+                        type: bp.type,
+                        description: bp.description,
+                        category: bp.category,
+                        default_props: bp.default_props,
+                        editable_fields_schema: bp.editable_fields_schema,
+                        version: bp.version,
+                        preview_image_url: bp.preview_image_url,
+                        tags: bp.tags
+                      })), null, 2))}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy JSON
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto max-h-[600px] overflow-y-auto">
+                    {JSON.stringify(blueprints.map(bp => ({
+                      name: bp.name,
+                      type: bp.type,
+                      description: bp.description,
+                      category: bp.category,
+                      default_props: bp.default_props,
+                      editable_fields_schema: bp.editable_fields_schema,
+                      version: bp.version,
+                      preview_image_url: bp.preview_image_url,
+                      tags: bp.tags
+                    })), null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       {/* Create/Edit Dialog */}
