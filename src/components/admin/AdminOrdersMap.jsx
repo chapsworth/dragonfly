@@ -28,8 +28,9 @@ const makeIcon = (emoji, bg = '#3b82f6') =>
     popupAnchor: [0, -28],
   });
 
-const customerIcon = makeIcon('🏠', '#10b981');
+const deliveryIcon = makeIcon('🏠', '#10b981');
 const driverIcon = makeIcon('🚗', '#3b82f6');
+const customerIcon = makeIcon('📱', '#8b5cf6');
 
 export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId }) {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -40,6 +41,9 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [routeLines, setRouteLines] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showDrivers, setShowDrivers] = useState(true);
+  const [showCustomers, setShowCustomers] = useState(true);
+  const [showDeliveryLocations, setShowDeliveryLocations] = useState(true);
 
   // Update selected order when external selection changes
   React.useEffect(() => {
@@ -249,24 +253,55 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
             </Badge>
           )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="ml-auto gap-2"
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className="w-4 h-4" />
-                Exit Fullscreen
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-4 h-4" />
-                Fullscreen
-              </>
-            )}
-          </Button>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex gap-2 bg-white/80 rounded-lg px-3 py-1 border">
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showDeliveryLocations}
+                  onChange={(e) => setShowDeliveryLocations(e.target.checked)}
+                  className="rounded text-emerald-600"
+                />
+                <span className="text-sm">🏠 Delivery</span>
+              </label>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showDrivers}
+                  onChange={(e) => setShowDrivers(e.target.checked)}
+                  className="rounded text-blue-600"
+                />
+                <span className="text-sm">🚗 Drivers</span>
+              </label>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showCustomers}
+                  onChange={(e) => setShowCustomers(e.target.checked)}
+                  className="rounded text-purple-600"
+                />
+                <span className="text-sm">📱 Customers</span>
+              </label>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="gap-2"
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-4 h-4" />
+                  Exit Fullscreen
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4" />
+                  Fullscreen
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -296,29 +331,32 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
 
           {activeOrders.map((order) => (
             <React.Fragment key={order.id}>
-              {/* Customer/Delivery Location */}
-              <Marker 
-                position={[order.delivery_lat, order.delivery_lng]} 
-                icon={customerIcon}
-                eventHandlers={{
-                  click: () => handleOrderClick(order)
-                }}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <p className="font-bold text-emerald-900 mb-1">
-                      Order #{order.id.slice(0, 8)}
-                    </p>
-                    <p className="text-sm text-gray-700 mb-2">{order.customer_name}</p>
-                    <Badge className={statusColors[order.status]}>
-                      {order.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </Popup>
-              </Marker>
+              {/* Delivery Location */}
+              {showDeliveryLocations && (
+                <Marker 
+                  position={[order.delivery_lat, order.delivery_lng]} 
+                  icon={deliveryIcon}
+                  eventHandlers={{
+                    click: () => handleOrderClick(order)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      <p className="font-bold text-emerald-900 mb-1">
+                        🏠 Delivery Location
+                      </p>
+                      <p className="text-sm text-gray-700 mb-1">Order #{order.id.slice(0, 8)}</p>
+                      <p className="text-sm text-gray-700 mb-2">{order.customer_name}</p>
+                      <Badge className={statusColors[order.status]}>
+                        {order.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
 
               {/* Driver Location (if available) */}
-              {order.driver_lat && order.driver_lng && (
+              {showDrivers && order.driver_lat && order.driver_lng && (
                 <Marker 
                   position={[order.driver_lat, order.driver_lng]} 
                   icon={driverIcon}
@@ -329,7 +367,7 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
                   <Popup>
                     <div className="p-2 min-w-[200px]">
                       <p className="font-bold text-blue-900 mb-1">
-                        {order.driver_name || 'Driver'}
+                        🚗 {order.driver_name || 'Driver'}
                       </p>
                       <p className="text-sm text-gray-700 mb-2">
                         Delivering to {order.customer_name}
@@ -337,6 +375,29 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
                       {order.eta_minutes && (
                         <p className="text-xs text-gray-600">ETA: {order.eta_minutes} min</p>
                       )}
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+
+              {/* Customer Real-time Location (if available) */}
+              {showCustomers && order.customer_lat && order.customer_lng && (
+                <Marker 
+                  position={[order.customer_lat, order.customer_lng]} 
+                  icon={customerIcon}
+                  eventHandlers={{
+                    click: () => handleOrderClick(order)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      <p className="font-bold text-purple-900 mb-1">
+                        📱 {order.customer_name}
+                      </p>
+                      <p className="text-sm text-gray-700 mb-2">Customer Location (Live)</p>
+                      <Badge className={statusColors[order.status]}>
+                        {order.status.replace('_', ' ')}
+                      </Badge>
                     </div>
                   </Popup>
                 </Marker>

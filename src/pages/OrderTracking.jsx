@@ -56,6 +56,7 @@ const makeEmojiIcon = (bg = '#3b82f6', emoji = '📍') =>
   });
 
 const deliveryIcon = makeEmojiIcon('#10b981', '🏠');
+const customerLocationIcon = makeEmojiIcon('#8b5cf6', '📱');
 const customerIcon = L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
@@ -764,6 +765,9 @@ export default function OrderTracking() {
   const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [createOrderData, setCreateOrderData] = useState({});
+  const [showDrivers, setShowDrivers] = useState(true);
+  const [showCustomers, setShowCustomers] = useState(true);
+  const [showDeliveryLocations, setShowDeliveryLocations] = useState(true);
 
   // Fetch specific order if ID provided
   const { data: specificOrder, isLoading: isLoadingSpecific } = useQuery({
@@ -1214,8 +1218,8 @@ export default function OrderTracking() {
           {allOrders.map((activeOrder, idx) => {
             const isCurrentOrder = activeOrder.id === order.id;
             const orderIcon = isCurrentOrder ? deliveryIcon : makeEmojiIcon('#64748b', `${idx + 1}`);
-            
-            return activeOrder.delivery_lat && activeOrder.delivery_lng && (
+
+            return activeOrder.delivery_lat && activeOrder.delivery_lng && showDeliveryLocations && (
               <Marker 
                 key={activeOrder.id} 
                 position={[activeOrder.delivery_lat, activeOrder.delivery_lng]} 
@@ -1247,7 +1251,7 @@ export default function OrderTracking() {
           })}
 
           {/* Driver Location - Shown if different from current user */}
-          {order.driver_lat && order.driver_lng && (!currentLocation || (order.driver_lat !== currentLocation[0] || order.driver_lng !== currentLocation[1])) && (
+          {showDrivers && order.driver_lat && order.driver_lng && (!currentLocation || (order.driver_lat !== currentLocation[0] || order.driver_lng !== currentLocation[1])) && (
             <Marker position={[order.driver_lat, order.driver_lng]} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
@@ -1255,6 +1259,19 @@ export default function OrderTracking() {
                   {distance && <p className="text-sm font-semibold text-gray-700">📍 {distance} miles away</p>}
                   {order.eta_minutes && <p className="text-sm text-gray-600">⏱️ {order.eta_minutes} min ETA</p>}
                   <p className="text-xs text-gray-500 mt-1">GPS: {order.driver_lat.toFixed(5)}, {order.driver_lng.toFixed(5)}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Customer Real-time Location */}
+          {showCustomers && order.customer_lat && order.customer_lng && (
+            <Marker position={[order.customer_lat, order.customer_lng]} icon={customerLocationIcon}>
+              <Popup>
+                <div className="text-center p-2">
+                  <p className="font-bold text-purple-600">📱 {order.customer_name}</p>
+                  <p className="text-sm text-gray-700">Customer Location (Live)</p>
+                  <p className="text-xs text-gray-500 mt-1">GPS: {order.customer_lat.toFixed(5)}, {order.customer_lng.toFixed(5)}</p>
                 </div>
               </Popup>
             </Marker>
@@ -1364,6 +1381,36 @@ export default function OrderTracking() {
             <Route className="w-5 h-5 text-emerald-900" />
           )}
         </Button>
+
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex flex-col gap-1">
+          <label className="flex items-center gap-1 cursor-pointer text-xs">
+            <input
+              type="checkbox"
+              checked={showDeliveryLocations}
+              onChange={(e) => setShowDeliveryLocations(e.target.checked)}
+              className="rounded text-emerald-600"
+            />
+            <span>🏠</span>
+          </label>
+          <label className="flex items-center gap-1 cursor-pointer text-xs">
+            <input
+              type="checkbox"
+              checked={showDrivers}
+              onChange={(e) => setShowDrivers(e.target.checked)}
+              className="rounded text-blue-600"
+            />
+            <span>🚗</span>
+          </label>
+          <label className="flex items-center gap-1 cursor-pointer text-xs">
+            <input
+              type="checkbox"
+              checked={showCustomers}
+              onChange={(e) => setShowCustomers(e.target.checked)}
+              className="rounded text-purple-600"
+            />
+            <span>📱</span>
+          </label>
+        </div>
       </div>
 
       {/* Delivery Panel */}
