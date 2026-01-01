@@ -245,8 +245,33 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
 
   const saveOrder = async () => {
     try {
-      await base44.entities.Order.update(order.id, editData);
-      onOrderUpdate?.({ ...order, ...editData });
+      let updateData = { ...editData };
+
+      // Auto-geocode address if coordinates not set
+      if (editData.delivery_address && (!editData.delivery_lat || !editData.delivery_lng)) {
+        try {
+          const response = await base44.functions.invoke('googlePlacesAutocomplete', {
+            input: editData.delivery_address,
+            types: 'address'
+          });
+
+          if (response.data.status === 'success' && response.data.predictions?.[0]) {
+            const detailsResponse = await base44.functions.invoke('googlePlaceDetails', {
+              place_id: response.data.predictions[0].place_id
+            });
+
+            if (detailsResponse.data.status === 'success') {
+              updateData.delivery_lat = detailsResponse.data.details.lat;
+              updateData.delivery_lng = detailsResponse.data.details.lng;
+            }
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+        }
+      }
+
+      await base44.entities.Order.update(order.id, updateData);
+      onOrderUpdate?.({ ...order, ...updateData });
       queryClient.invalidateQueries({ queryKey: ['active-orders'] });
       toast.success('Order updated successfully');
       setIsEditing(false);
@@ -1193,7 +1218,7 @@ export default function OrderTracking() {
     setCreateOrderData({ ...createOrderData, items: newItems, subtotal, total });
   };
 
-  const handleSubmitNewOrder = () => {
+  const handleSubmitNewOrder = async () => {
     if (createOrderData.customer_selection === 'new' && !createOrderData.new_customer_name) {
       toast.error('Please enter customer name');
       return;
@@ -1206,11 +1231,37 @@ export default function OrderTracking() {
       toast.error('Please add at least one product');
       return;
     }
-    
+
     const selectedContact = createOrderData.customer_selection === 'existing' 
       ? contacts.find(c => c.id === createOrderData.customer_id) 
       : null;
-    
+
+    let delivery_lat = createOrderData.delivery_lat;
+    let delivery_lng = createOrderData.delivery_lng;
+
+    // Auto-geocode address if coordinates not set
+    if (createOrderData.delivery_address && (!delivery_lat || !delivery_lng)) {
+      try {
+        const response = await base44.functions.invoke('googlePlacesAutocomplete', {
+          input: createOrderData.delivery_address,
+          types: 'address'
+        });
+
+        if (response.data.status === 'success' && response.data.predictions?.[0]) {
+          const detailsResponse = await base44.functions.invoke('googlePlaceDetails', {
+            place_id: response.data.predictions[0].place_id
+          });
+
+          if (detailsResponse.data.status === 'success') {
+            delivery_lat = detailsResponse.data.details.lat;
+            delivery_lng = detailsResponse.data.details.lng;
+          }
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+      }
+    }
+
     const orderData = {
       items: createOrderData.items,
       subtotal: createOrderData.subtotal,
@@ -1219,8 +1270,8 @@ export default function OrderTracking() {
       total: createOrderData.total,
       status: createOrderData.status,
       delivery_address: createOrderData.delivery_address,
-      delivery_lat: createOrderData.delivery_lat,
-      delivery_lng: createOrderData.delivery_lng,
+      delivery_lat: delivery_lat,
+      delivery_lng: delivery_lng,
       customer_name: createOrderData.customer_selection === 'existing' 
         ? selectedContact?.full_name 
         : createOrderData.new_customer_name,
@@ -1246,7 +1297,7 @@ export default function OrderTracking() {
       orderData.driver_phone = createOrderData.driver_phone;
       orderData.driver_email = createOrderData.driver_email;
     }
-    
+
     createOrderMutation.mutate(orderData);
   };
 
