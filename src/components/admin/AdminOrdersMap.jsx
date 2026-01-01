@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp, Route, Zap, X } from 'lucide-react';
+import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp, Route, Zap, X, Maximize2, Minimize2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -39,6 +39,7 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
   const [optimizedRoute, setOptimizedRoute] = useState(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [routeLines, setRouteLines] = useState([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Update selected order when external selection changes
   React.useEffect(() => {
@@ -199,7 +200,7 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
   };
 
   return (
-    <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 overflow-hidden shadow-lg mb-6">
+    <div className={`bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 overflow-hidden shadow-lg mb-6 ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
       {/* Route Controls */}
       <div className="p-4 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
         <div className="flex items-center gap-3 flex-wrap">
@@ -243,15 +244,34 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
           )}
 
           {routeLines.length > 0 && (
-            <Badge variant="secondary" className="ml-auto">
+            <Badge variant="secondary">
               {routeLines.length} route{routeLines.length > 1 ? 's' : ''} shown
             </Badge>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="ml-auto gap-2"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-4 h-4" />
+                Exit Fullscreen
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-4 h-4" />
+                Fullscreen
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
       {/* Map Container */}
-      <div className="relative h-96">
+      <div className={`relative ${isFullscreen ? 'h-[calc(100vh-73px)]' : 'h-[600px]'}`}>
         <MapContainer
           center={[avgLat, avgLng]}
           zoom={12}
