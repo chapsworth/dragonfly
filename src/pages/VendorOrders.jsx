@@ -64,8 +64,7 @@ function VendorOrdersContent() {
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 }
   ];
 
-  const excludedVendors = ['Jared Cookie Factory', 'Pioneer', 'Factory Wholesale'];
-  const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name) && !excludedVendors.includes(v.name))];
+  const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name))];
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['vendor-products', selectedVendor],
