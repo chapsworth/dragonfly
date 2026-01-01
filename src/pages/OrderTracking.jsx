@@ -850,6 +850,7 @@ export default function OrderTracking() {
   const [showCustomers, setShowCustomers] = useState(true);
   const [showDeliveryLocations, setShowDeliveryLocations] = useState(true);
   const [orderFilter, setOrderFilter] = useState('active');
+  const [isOnDuty, setIsOnDuty] = useState(false);
 
   // Fetch specific order if ID provided
   const { data: specificOrder, isLoading: isLoadingSpecific } = useQuery({
@@ -948,12 +949,15 @@ export default function OrderTracking() {
   }, [currentLocation, order?.driver_lat, order?.driver_lng, order?.customer_lat, order?.customer_lng, order?.delivery_lat, order?.delivery_lng]);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      setIsOnDuty(u?.is_on_duty || false);
+    }).catch(() => {});
   }, []);
 
-  // Track location continuously
+  // Track location continuously when on duty
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isOnDuty) return;
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -976,7 +980,7 @@ export default function OrderTracking() {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [user, order?.id, order?.driver_email]);
+  }, [user, isOnDuty, order?.id, order?.driver_email]);
 
   // Calculate distance
   useEffect(() => {
@@ -1497,6 +1501,37 @@ export default function OrderTracking() {
         >
           <Plus className="w-5 h-5" />
         </Button>
+
+        {/* On/Off Duty Switch */}
+        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-4 py-2">
+          <Truck className={`w-4 h-4 ${isOnDuty ? 'text-emerald-600' : 'text-gray-400'}`} />
+          <button
+            onClick={async () => {
+              const newStatus = !isOnDuty;
+              setIsOnDuty(newStatus);
+              try {
+                await base44.auth.updateMe({ is_on_duty: newStatus });
+                toast.success(newStatus ? '🐉 On Duty' : 'Off Duty');
+              } catch (error) {
+                console.error('Failed to update duty status:', error);
+                setIsOnDuty(!newStatus);
+                toast.error('Failed to update status');
+              }
+            }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isOnDuty ? 'bg-emerald-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isOnDuty ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={`text-sm font-medium ${isOnDuty ? 'text-emerald-900' : 'text-gray-600'}`}>
+            {isOnDuty ? 'On Duty' : 'Off Duty'}
+          </span>
+        </div>
 
         {filteredOrders.length > 1 && (
           <div className="flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-4 py-2">
