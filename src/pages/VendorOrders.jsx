@@ -69,96 +69,216 @@ function VendorOrdersContent() {
 
   // Smashed vendor products
   const smashedProducts = [
-    // Pre-Rolls
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Indica', size: '1g Single', price: 5 },
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Hybrid', size: '1g Single', price: 5 },
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Sativa', size: '1g Single', price: 5 },
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Indica', size: '3g', price: 15 },
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Hybrid', size: '3g', price: 15 },
-    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Sativa', size: '3g', price: 15 },
-    { category: 'pre-rolls', product_name: 'Super Doobie', size: '1.4g', price: 6 },
+    // Pre-Rolls - Liquid Diamond Mini Doobies 1g
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'King Louis (Indica)', size: '1g Single', price: 5 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Watermelon Whirl (Indica)', size: '1g Single', price: 5 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Strawberry Cough (Sativa)', size: '1g Single', price: 5 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Grape Galaxy (Sativa)', size: '1g Single', price: 5 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Wedding Crasher (Hybrid)', size: '1g Single', price: 5 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies', variant: 'Peachy Keen (Hybrid)', size: '1g Single', price: 5 },
     
-    // Syrups
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Raspberry', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Blueberry', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Strawberry', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Grape', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Cherry', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Apple', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Watermelon', size: '1000mg / 170ml', price: 8 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Raspberry', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Blueberry', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Strawberry', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Grape', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Cherry', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Apple', size: '5000mg / 250ml', price: 20 },
-    { category: 'edibles', product_name: 'THC Syrup', variant: 'Watermelon', size: '5000mg / 250ml', price: 20 },
+    // Pre-Rolls - Liquid Diamond Mini Doobies 3g Jar
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'King Louis (Indica)', size: '3g', price: 15 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'Churro Ice Cream (Indica)', size: '3g', price: 15 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'Crescendo (Sativa)', size: '3g', price: 15 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'Maui Wowie (Sativa)', size: '3g', price: 15 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'Wedding Crasher (Hybrid)', size: '3g', price: 15 },
+    { category: 'pre-rolls', product_name: 'Liquid Diamond Mini Doobies Jar', variant: 'Peach Rings (Hybrid)', size: '3g', price: 15 },
     
-    // Concentrates
-    { category: 'concentrates', product_name: 'Badder', variant: 'Indica', size: '1g', price: 10 },
-    { category: 'concentrates', product_name: 'Badder', variant: 'Hybrid', size: '1g', price: 10 },
-    { category: 'concentrates', product_name: 'Badder', variant: 'Sativa', size: '1g', price: 10 },
-    { category: 'concentrates', product_name: 'Crumble', variant: 'Indica', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Crumble', variant: 'Hybrid', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Crumble', variant: 'Sativa', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Hash', variant: 'Indica', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Hash', variant: 'Hybrid', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Hash', variant: 'Sativa', size: '1g', price: 12 },
-    { category: 'concentrates', product_name: 'Diamonds', variant: 'Indica', size: '1g', price: 10 },
-    { category: 'concentrates', product_name: 'Diamonds', variant: 'Hybrid', size: '1g', price: 10 },
-    { category: 'concentrates', product_name: 'Diamonds', variant: 'Sativa', size: '1g', price: 10 },
+    // Pre-Rolls - Super Doobie
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Blueberry Bliss (Indica)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Apple Delight (Indica)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Bubble Gum (Indica)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Watermelon Sunset (Sativa)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Strawberry Cough (Sativa)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Grape Fusion (Sativa)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Peach Rings (Hybrid)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Wildberry Whirl (Hybrid)', size: '1.4g', price: 6 },
+    { category: 'pre-rolls', product_name: 'Super Doobie', variant: 'Pineapple Paradise (Hybrid)', size: '1.4g', price: 6 },
     
-    // Edibles - Chocolate
-    { category: 'edibles', product_name: 'Chocolate Bar', size: '500mg', price: 9 },
-    { category: 'edibles', product_name: 'Chocolate Bar', size: '1000mg', price: 13 },
-    { category: 'edibles', product_name: 'Chocolate Bar', size: '5000mg', price: 23 },
+    // Tincture Syrups
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Raspberry', size: '1000mg / 170ml', price: 8 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Blueberry', size: '1000mg / 170ml', price: 8 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Strawberry', size: '1000mg / 170ml', price: 8 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Grape', size: '1000mg / 170ml', price: 8 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Cherry', size: '1000mg / 170ml', price: 8 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Blueberry', size: '5000mg / 250ml', price: 20 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Strawberry', size: '5000mg / 250ml', price: 20 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Grape', size: '5000mg / 250ml', price: 20 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Apple', size: '5000mg / 250ml', price: 20 },
+    { category: 'tinctures', product_name: 'THC Syrup', variant: 'Watermelon', size: '5000mg / 250ml', price: 20 },
     
-    // Edibles - Gummies
+    // Concentrates - Badder
+    { category: 'concentrates', product_name: 'Badder', variant: 'Purple Haze (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'Papaya Punch (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'El Charro (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'Guava Kush (Sativa)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'Area 51 (Sativa)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'Red Bullz (Hybrid)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Badder', variant: 'Apple Fritter (Hybrid)', size: '1g', price: 10 },
+    
+    // Concentrates - Crumble
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Cherry Pie (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Runtz (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'El Charro (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Blue Dream (Sativa)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Area 51 (Sativa)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Gorilla Glue (Hybrid)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Crumble', variant: 'Apple Fritter (Hybrid)', size: '1g', price: 12 },
+    
+    // Concentrates - Diamonds
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Peanut Butter Cookies (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Papaya Punch (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'El Charro (Indica)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Guava Kush (Sativa)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Blue Dream (Sativa)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Red Bullz (Hybrid)', size: '1g', price: 10 },
+    { category: 'concentrates', product_name: 'Diamonds', variant: 'Gorilla Glue (Hybrid)', size: '1g', price: 10 },
+    
+    // Concentrates - Hash
+    { category: 'concentrates', product_name: 'Hash', variant: 'King Louis (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Hash', variant: 'Granddaddy Purple (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Hash', variant: 'Master Kush (Indica)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Hash', variant: 'Northern Light (Hybrid)', size: '1g', price: 12 },
+    { category: 'concentrates', product_name: 'Hash', variant: 'La Confidential (Hybrid)', size: '1g', price: 12 },
+    
+    // Edibles - Chocolate Bars
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Amazin', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Dinosaurs', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Mint Chip', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'G-Way', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Astronauts', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Milky Way', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Willy Wonka', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Kings of Buds', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Blue Whale', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Twinkids', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Volcano', size: '500mg', price: 9 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Amazin', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Dinosaurs', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Mint Chip', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'G-Way', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Milky Way', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Willy Wonka', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Kings of Buds', size: '1000mg', price: 13 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Amazin', size: '5000mg', price: 23 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Mint Chip', size: '5000mg', price: 23 },
+    { category: 'edibles', product_name: 'Chocolate Bar', variant: 'Willy Wonka', size: '5000mg', price: 23 },
+    
+    // Edibles - Cannabis Gummies 500mg
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Belts', size: '500mg', price: 7 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '500mg', price: 7 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Rings', size: '500mg', price: 7 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Worms', size: '500mg', price: 7 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Drops', size: '500mg', price: 7 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Slices', size: '500mg', price: 7 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Green Apple', size: '500mg', price: 7 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Blue Raspberry', size: '500mg', price: 7 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Strawberry', size: '500mg', price: 7 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Unicorn', size: '500mg', price: 7 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Neon', size: '500mg', price: 7 },
+    
+    // Edibles - Cannabis Gummies 1000mg
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Belts', size: '1000mg', price: 12 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '1000mg', price: 12 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Rings', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '1000mg', price: 12 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Worms', size: '1000mg', price: 12 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Drops', size: '1000mg', price: 12 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Slices', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Neon', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Chandy', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Green Apple', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Blue Raspberry', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Unicorn', size: '1000mg', price: 12 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Watermelon', size: '1000mg', price: 12 },
+    
+    // Edibles - Cannabis Gummies 5000mg
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Belts', size: '5000mg', price: 25 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '5000mg', price: 25 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Rings', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '5000mg', price: 25 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Worms', size: '5000mg', price: 25 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Drops', size: '5000mg', price: 25 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Slices', size: '5000mg', price: 25 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Belts', size: '10000mg', price: 33 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '10000mg', price: 33 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Rings', size: '10000mg', price: 33 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Worms', size: '10000mg', price: 33 },
-    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Drops', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Neon', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Chammy', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Green Apple', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Peach', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Blue Raspberry', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Strawberry', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Unicorn', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Watermelon', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Tropical Mix', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Sour Patch Kids', size: '5000mg', price: 25 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Watermelon Slices', size: '5000mg', price: 25 },
+    
+    // Edibles - Cannabis Gummies 10,000mg
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Slices', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Watermelon', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Bears', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Neon', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Drops', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Peach', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Rings', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Tropical Mix', size: '10000mg', price: 33 },
+    { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Sour Patch Kids', size: '10000mg', price: 33 },
     
-    // Liquid Diamond Gummies
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Indica', size: '500mg', price: 5 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Hybrid', size: '500mg', price: 5 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Sativa', size: '500mg', price: 5 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Indica', size: '3000mg', price: 11 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Hybrid', size: '3000mg', price: 11 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Sativa', size: '3000mg', price: 11 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Indica', size: '5000mg', price: 16 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Hybrid', size: '5000mg', price: 16 },
-    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Sativa', size: '5000mg', price: 16 },
+    // Liquid Diamond Gummies (Nano) 500mg
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Peach Paradise', size: '500mg', price: 5 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Strawberry Splash', size: '500mg', price: 5 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Blueberry Blast', size: '500mg', price: 5 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Watermelon Gusher', size: '500mg', price: 5 },
     
-    // Vapes - Cartridges
-    { category: 'vapes', product_name: 'Cartridge', variant: 'Standard', size: '1g', price: 12 },
-    { category: 'vapes', product_name: 'Cartridge', variant: 'New Line', size: '1g', price: 16 },
+    // Liquid Diamond Gummies (Nano) 3000mg
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Tropical', size: '3000mg', price: 11 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Peach Paradise', size: '3000mg', price: 11 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Strawberry Splash', size: '3000mg', price: 11 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Blueberry Blast', size: '3000mg', price: 11 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Watermelon Gusher', size: '3000mg', price: 11 },
     
-    // Vapes - Disposables
-    { category: 'vapes', product_name: 'Disposable Vape', variant: 'Hash Oil x Liquid Diamonds', size: '1g', price: 14 },
+    // Liquid Diamond Gummies (Nano) 5000mg
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Tropical', size: '5000mg', price: 16 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Peach Paradise', size: '5000mg', price: 16 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Strawberry Splash', size: '5000mg', price: 16 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Blueberry Blast', size: '5000mg', price: 16 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Watermelon Gusher', size: '5000mg', price: 16 },
+    { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Pink Lemonade', size: '5000mg', price: 16 },
     
-    // Vapes - Eighth
-    { category: 'vapes', product_name: 'Eighth Vape', variant: 'Live Resin x Liquid Diamond', size: '3.5g', price: 20 }
+    // Vapes - Standard Cartridges 1g
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Banana OG (Indica)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'King Louis (Indica)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Kush Breath (Indica)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Apple Express (Sativa)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Strawberry Cough (Sativa)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Super Lemon Haze (Sativa)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Orange Creamsicle (Hybrid)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Watermelon Zkittlez (Hybrid)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Blue Dream (Hybrid)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Space Cake (Hybrid)', size: '1g', price: 12 },
+    { category: 'vapes', product_name: 'Cartridge (Standard)', variant: 'Wham Si India (Hybrid)', size: '1g', price: 12 },
+    
+    // Vapes - Live Resin Cartridges 1g
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'OG Kush Breath (Indica)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: '24K (Indica)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Lights Out (Indica)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Blueberry AK (Sativa)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Sunrise Sherbet (Sativa)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Blue Dream (Sativa)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Gelato Doiz (Hybrid)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Strawberry Champagne (Hybrid)', size: '1g', price: 16 },
+    { category: 'vapes', product_name: 'Live Resin Cartridge', variant: 'Cherry Pie (Hybrid)', size: '1g', price: 16 },
+    
+    // Vapes - Disposables (Hash Oil x Liquid Diamonds) 1g
+    { category: 'vapes', product_name: 'Disposable Vape (Hash Oil x Liquid Diamonds)', variant: 'Lemon Cherry Gelato (Sativa)', size: '1g', price: 14 },
+    { category: 'vapes', product_name: 'Disposable Vape (Hash Oil x Liquid Diamonds)', variant: 'Blue Dream (Sativa)', size: '1g', price: 14 },
+    { category: 'vapes', product_name: 'Disposable Vape (Hash Oil x Liquid Diamonds)', variant: 'Cereal Milk (Sativa)', size: '1g', price: 14 },
+    { category: 'vapes', product_name: 'Disposable Vape (Hash Oil x Liquid Diamonds)', variant: 'Tangerine Dream (Hybrid)', size: '1g', price: 14 },
+    
+    // Vapes - Eighth Vapes (Live Resin x Liquid Diamond) 3.5g
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: "S'mores (Sativa)", size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Strawberry Lemonade (Sativa)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Blueberry Pancakes (Hybrid)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Watermelon Gusher (Hybrid)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Peach Fuzz (Hybrid)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Apple Fritter (Hybrid)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Diamond OG (Indica)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Sour Smashers (Indica)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Strawberry OG (Indica)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Deep Fried Smashers (Indica)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Baja Blast (Indica)', size: '3.5g', price: 20 },
+    { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Unicorn Breath (Indica)', size: '3.5g', price: 20 }
   ];
 
   const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name))];
