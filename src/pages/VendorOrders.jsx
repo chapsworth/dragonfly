@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw, Grid3x3, List, Edit, DollarSign } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw, Grid3x3, List, Edit, DollarSign, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import VendorOrderMap from '@/components/vendor/VendorOrderMap';
 
 export default function VendorOrders() {
   return <VendorOrdersContent />;
@@ -45,6 +46,7 @@ function VendorOrdersContent() {
   const [vendorForm, setVendorForm] = useState({ name: '', type: 'flower', url: '', defaultPrice: 0 });
   const [bulkPriceChange, setBulkPriceChange] = useState({ type: 'set', value: 0 });
   const [globalPriceChange, setGlobalPriceChange] = useState({ type: 'set', value: 0 });
+  const [trackingOrder, setTrackingOrder] = useState(null);
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -1187,6 +1189,14 @@ function VendorOrdersContent() {
         </DialogContent>
       </Dialog>
 
+      {/* Tracking Map Modal */}
+      {trackingOrder && (
+        <VendorOrderMap
+          order={trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+        />
+      )}
+
       {/* Orders Dialog */}
       <Dialog open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -1212,8 +1222,16 @@ function VendorOrdersContent() {
                           {format(new Date(order.order_date), 'MMM d, yyyy')}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge>{order.status}</Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => setTrackingOrder(order)}
+                          className="bg-emerald-600"
+                        >
+                          <MapPin className="w-4 h-4 mr-1" />
+                          Track
+                        </Button>
                         <Button
                           size="sm"
                           onClick={() => exportToPDF(order)}
