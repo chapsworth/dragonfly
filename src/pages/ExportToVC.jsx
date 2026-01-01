@@ -10,9 +10,153 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye, Copy, RefreshCw, Link as LinkIcon, Code, Sparkles } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Edit, Trash2, Search, Package, Upload, Download, Eye, Copy, RefreshCw, Link as LinkIcon, Code, Sparkles, ChevronDown, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { toast } from 'sonner';
 import PageSelector from '@/components/export/PageSelector';
+
+function BlueprintCard({ blueprint, onView, onEdit, onExport, onDelete }) {
+  const [previewMode, setPreviewMode] = useState('desktop');
+  const [showPreview, setShowPreview] = useState(false);
+
+  const previewSizes = {
+    desktop: 'w-full h-48',
+    tablet: 'w-2/3 h-40 mx-auto',
+    mobile: 'w-1/2 h-32 mx-auto'
+  };
+
+  return (
+    <Card className="hover:shadow-lg transition-shadow">
+      <Collapsible open={showPreview} onOpenChange={setShowPreview}>
+        {blueprint.preview_image_url && (
+          <CollapsibleTrigger className="w-full">
+            <div className="relative group cursor-pointer">
+              <img 
+                src={blueprint.preview_image_url} 
+                alt={blueprint.name}
+                className="w-full h-40 object-cover rounded-t-lg"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="text-white text-sm font-semibold flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  {showPreview ? 'Hide Preview' : 'Show Preview Options'}
+                </div>
+              </div>
+            </div>
+          </CollapsibleTrigger>
+        )}
+        
+        <CollapsibleContent>
+          <div className="border-t bg-gray-50 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-xs font-semibold">Preview Mode</Label>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                  onClick={() => setPreviewMode('desktop')}
+                  className="h-7 px-2"
+                >
+                  <Monitor className="w-3 h-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={previewMode === 'tablet' ? 'default' : 'outline'}
+                  onClick={() => setPreviewMode('tablet')}
+                  className="h-7 px-2"
+                >
+                  <Tablet className="w-3 h-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                  onClick={() => setPreviewMode('mobile')}
+                  className="h-7 px-2"
+                >
+                  <Smartphone className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+            {blueprint.preview_image_url && (
+              <div className="bg-white p-2 rounded border">
+                <img 
+                  src={blueprint.preview_image_url}
+                  alt={`${previewMode} preview`}
+                  className={`${previewSizes[previewMode]} object-contain border rounded transition-all`}
+                />
+                <p className="text-xs text-center text-gray-500 mt-2 capitalize">{previewMode} View</p>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <CardHeader>
+        <CardTitle className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-lg font-bold text-gray-900">{blueprint.name}</p>
+            <p className="text-xs text-gray-500 font-mono mt-1">{blueprint.type}</p>
+          </div>
+          <Badge>{blueprint.category}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {blueprint.description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{blueprint.description}</p>
+        )}
+        {blueprint.tags && blueprint.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {blueprint.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={idx} variant="outline" className="text-xs">{tag}</Badge>
+            ))}
+            {blueprint.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">+{blueprint.tags.length - 3}</Badge>
+            )}
+          </div>
+        )}
+        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+          <span>v{blueprint.version}</span>
+          <span>{new Date(blueprint.created_date).toLocaleDateString()}</span>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onView}
+            className="flex-1"
+          >
+            <Eye className="w-3 h-3 mr-1" />
+            View
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onEdit}
+            className="flex-1"
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            onClick={onExport}
+            className="bg-blue-600"
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            Export
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ExportToVC() {
   const [user, setUser] = useState(null);
@@ -423,85 +567,21 @@ const data = await response.json();`}
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredBlueprints.map(blueprint => (
-              <Card key={blueprint.id} className="hover:shadow-lg transition-shadow">
-                {blueprint.preview_image_url && (
-                  <img 
-                    src={blueprint.preview_image_url} 
-                    alt={blueprint.name}
-                    className="w-full h-40 object-cover rounded-t-lg"
-                  />
-                )}
-                <CardHeader>
-                  <CardTitle className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-lg font-bold text-gray-900">{blueprint.name}</p>
-                      <p className="text-xs text-gray-500 font-mono mt-1">{blueprint.type}</p>
-                    </div>
-                    <Badge>{blueprint.category}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {blueprint.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{blueprint.description}</p>
-                  )}
-                  {blueprint.tags && blueprint.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {blueprint.tags.slice(0, 3).map((tag, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">{tag}</Badge>
-                      ))}
-                      {blueprint.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">+{blueprint.tags.length - 3}</Badge>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                    <span>v{blueprint.version}</span>
-                    <span>{new Date(blueprint.created_date).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setViewingBlueprint(blueprint);
-                        setIsViewOpen(true);
-                      }}
-                      className="flex-1"
-                    >
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(blueprint)}
-                      className="flex-1"
-                    >
-                      <Edit className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleExport(blueprint)}
-                      className="bg-blue-600"
-                    >
-                      <Upload className="w-3 h-3 mr-1" />
-                      Export
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        if (confirm('Delete this blueprint?')) {
-                          deleteMutation.mutate(blueprint.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <BlueprintCard
+                key={blueprint.id}
+                blueprint={blueprint}
+                onView={() => {
+                  setViewingBlueprint(blueprint);
+                  setIsViewOpen(true);
+                }}
+                onEdit={() => handleEdit(blueprint)}
+                onExport={() => handleExport(blueprint)}
+                onDelete={() => {
+                  if (confirm('Delete this blueprint?')) {
+                    deleteMutation.mutate(blueprint.id);
+                  }
+                }}
+              />
                   ))}
                 </div>
               )}
