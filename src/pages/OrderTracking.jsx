@@ -482,7 +482,7 @@ export default function OrderTracking() {
   });
 
   const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
-  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex];
+  const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
   const isLoading = isLoadingAll;
 
   const [user, setUser] = useState(null);
