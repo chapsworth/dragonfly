@@ -915,7 +915,7 @@ function VendorOrdersContent() {
                 type="number"
                 step="0.01"
                 value={productForm.price || ''}
-                onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
+                onChange={(e) => setProductForm({ ...productForm, price: e.target.value ? parseFloat(e.target.value) : '' })}
                 placeholder="0.00"
               />
             </div>
@@ -971,18 +971,22 @@ function VendorOrdersContent() {
               </Button>
               <Button
                 onClick={() => {
-                  if (!productForm.product_name || !productForm.category || !productForm.price) {
+                  if (!productForm.product_name || !productForm.category || productForm.price === '' || productForm.price === undefined) {
                     toast.error('Please fill required fields');
                     return;
                   }
+                  const dataToSave = {
+                    ...productForm,
+                    price: typeof productForm.price === 'string' ? parseFloat(productForm.price) : productForm.price
+                  };
                   if (editingProduct) {
                     updateProductMutation.mutate({
                       id: editingProduct.id,
-                      data: productForm
+                      data: dataToSave
                     });
                   } else {
                     createProductMutation.mutate({
-                      ...productForm,
+                      ...dataToSave,
                       vendor_name: selectedVendor,
                       is_active: true
                     });
