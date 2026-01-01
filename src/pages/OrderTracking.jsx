@@ -1321,10 +1321,10 @@ export default function OrderTracking() {
 
           {/* My Location (Admin/Driver viewing) */}
           {currentLocation && (
-            <Marker position={currentLocation} icon={makeEmojiIcon('#3b82f6', '📍')}>
+            <Marker position={currentLocation} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
-                  <p className="font-bold text-blue-600">📍 My Location</p>
+                  <p className="font-bold text-emerald-600">🐉 My Location</p>
                   <p className="text-xs text-gray-500">GPS: {currentLocation[0].toFixed(5)}, {currentLocation[1].toFixed(5)}</p>
                 </div>
               </Popup>
