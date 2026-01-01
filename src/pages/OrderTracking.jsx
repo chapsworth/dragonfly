@@ -1077,26 +1077,23 @@ export default function OrderTracking() {
   }
 
   const centerOnLocation = () => {
-    if (currentLocation && mapRef.current) {
-      mapRef.current.setView(currentLocation, 15);
-    } else {
-      // Get current location if not already available
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const newLocation = [latitude, longitude];
-          setCurrentLocation(newLocation);
-          if (mapRef.current) {
-            mapRef.current.setView(newLocation, 15);
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast.error('Could not get your location');
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
+    // Always get fresh location when clicking locate button
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLocation = [latitude, longitude];
+        setCurrentLocation(newLocation);
+        if (mapRef.current) {
+          mapRef.current.setView(newLocation, 15);
+        }
+        toast.success('Centered on your location');
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        toast.error('Could not get your location. Please enable location permissions.');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   const centerOnOrder = () => {
