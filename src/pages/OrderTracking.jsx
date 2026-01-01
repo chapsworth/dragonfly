@@ -845,9 +845,16 @@ export default function OrderTracking() {
             >
               <ChevronDown className="w-5 h-5 rotate-90" />
             </Button>
-            <div className="text-center min-w-[120px]">
+            <div className="text-center min-w-[180px]">
               <p className="text-xs text-gray-500">Order {currentOrderIndex + 1} of {allOrders.length}</p>
-              <p className="text-sm font-bold text-emerald-900">#{order?.id?.slice(0, 8)}</p>
+              <p className="text-sm font-bold text-emerald-900">{order?.customer_name}</p>
+              <button
+                onClick={centerOnOrder}
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate max-w-full"
+                title={order?.delivery_address}
+              >
+                {order?.delivery_address?.split(',')[0]}
+              </button>
             </div>
             <Button
               variant="ghost"
