@@ -37,6 +37,8 @@ function AdminOrdersContent() {
   const [viewingOrder, setViewingOrder] = useState(null);
   const [mapSelectedOrderId, setMapSelectedOrderId] = useState(null);
   const [flashingOrderId, setFlashingOrderId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
@@ -454,6 +456,20 @@ function AdminOrdersContent() {
     { id: 'users', label: 'Users', icon: Users, page: 'AdminUsers' },
   ];
 
+  // Extract unique cities from orders
+  const cities = [...new Set(orders
+    .map(o => o.delivery_address?.split(',').slice(-3, -2)[0]?.trim())
+    .filter(Boolean)
+  )];
+
+  // Filter orders
+  const filteredOrders = orders.filter(order => {
+    const statusMatch = statusFilter === 'all' || order.status === statusFilter;
+    const cityMatch = cityFilter === 'all' || 
+      order.delivery_address?.toLowerCase().includes(cityFilter.toLowerCase());
+    return statusMatch && cityMatch;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
       <OrderNotification />
@@ -557,31 +573,60 @@ function AdminOrdersContent() {
             </div>
 
             {/* View Toggle */}
-            <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl w-fit">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
-              >
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                Grid
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
-              >
-                <List className="w-4 h-4 mr-2" />
-                List
-              </Button>
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex gap-2 bg-white/60 backdrop-blur-xl p-1 rounded-xl">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  <Grid3x3 className="w-4 h-4 mr-2" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-gradient-to-r from-emerald-500 to-green-500' : ''}
+                >
+                  <List className="w-4 h-4 mr-2" />
+                  List
+                </Button>
+              </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48 bg-white/60 backdrop-blur-xl">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="preparing">Preparing</SelectItem>
+                  <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={cityFilter} onValueChange={setCityFilter}>
+                <SelectTrigger className="w-48 bg-white/60 backdrop-blur-xl">
+                  <SelectValue placeholder="Filter by city" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           {/* Admin Orders Map */}
           <AdminOrdersMap 
-            orders={orders} 
+            orders={filteredOrders} 
             selectedOrderId={mapSelectedOrderId}
             onOrderSelect={(orderId) => {
               setMapSelectedOrderId(orderId);
@@ -596,7 +641,7 @@ function AdminOrdersContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <div 
                   key={order.id} 
                   className={`transition-all ${

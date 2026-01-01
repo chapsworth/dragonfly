@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp, Route, Zap } from 'lucide-react';
+import { Phone, Mail, Navigation, Package, User, MapPin, Clock, ChevronDown, ChevronUp, Route, Zap, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -380,12 +380,14 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
                   {format(new Date(selectedOrder.created_date), 'MMM d, h:mm a')}
                 </p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setSelectedOrder(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="h-8 w-8 rounded-full hover:bg-gray-200"
               >
-                ✕
-              </button>
+                <X className="w-5 h-5 text-gray-600" />
+              </Button>
             </div>
 
             <div className="space-y-3">
