@@ -495,6 +495,20 @@ export default function OrderTracking() {
   const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
   const isLoading = isLoadingAll;
 
+  const defaultMapCenter = React.useMemo(() => {
+    const locations = [];
+    if (currentLocation) locations.push(currentLocation);
+    if (order?.driver_lat && order?.driver_lng) locations.push([order.driver_lat, order.driver_lng]);
+    if (order?.customer_lat && order?.customer_lng) locations.push([order.customer_lat, order.customer_lng]);
+    if (order?.delivery_lat && order?.delivery_lng) locations.push([order.delivery_lat, order.delivery_lng]);
+    
+    if (locations.length === 0) return [34.0522, -118.2437];
+    
+    const avgLat = locations.reduce((sum, loc) => sum + loc[0], 0) / locations.length;
+    const avgLng = locations.reduce((sum, loc) => sum + loc[1], 0) / locations.length;
+    return [avgLat, avgLng];
+  }, [currentLocation, order?.driver_lat, order?.driver_lng, order?.customer_lat, order?.customer_lng, order?.delivery_lat, order?.delivery_lng]);
+
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
@@ -596,20 +610,6 @@ export default function OrderTracking() {
   if (!order && allOrders.length > 0) {
     return null;
   }
-
-  const defaultMapCenter = React.useMemo(() => {
-    const locations = [];
-    if (currentLocation) locations.push(currentLocation);
-    if (order?.driver_lat && order?.driver_lng) locations.push([order.driver_lat, order.driver_lng]);
-    if (order?.customer_lat && order?.customer_lng) locations.push([order.customer_lat, order.customer_lng]);
-    if (order?.delivery_lat && order?.delivery_lng) locations.push([order.delivery_lat, order.delivery_lng]);
-    
-    if (locations.length === 0) return [34.0522, -118.2437];
-    
-    const avgLat = locations.reduce((sum, loc) => sum + loc[0], 0) / locations.length;
-    const avgLng = locations.reduce((sum, loc) => sum + loc[1], 0) / locations.length;
-    return [avgLat, avgLng];
-  }, [currentLocation, order?.driver_lat, order?.driver_lng, order?.customer_lat, order?.customer_lng, order?.delivery_lat, order?.delivery_lng]);
 
   const centerOnLocation = () => {
     if (currentLocation && mapRef.current) {
