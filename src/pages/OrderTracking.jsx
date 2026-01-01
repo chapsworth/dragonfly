@@ -781,7 +781,7 @@ export default function OrderTracking() {
     queryKey: ['active-orders'],
     queryFn: async () => {
       const orders = await base44.entities.Order.list('-created_date');
-      return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
+      return orders;
     },
     refetchInterval: 5000,
     enabled: !orderId

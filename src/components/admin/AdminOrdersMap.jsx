@@ -173,7 +173,6 @@ export default function AdminOrdersMap({ orders, onOrderSelect, selectedOrderId 
 
   // Filter orders with valid coordinates
   const activeOrders = orders.filter(o => 
-    (o.status === 'out_for_delivery' || o.status === 'preparing') &&
     o.delivery_lat && o.delivery_lng
   );
 
