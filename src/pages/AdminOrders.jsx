@@ -471,7 +471,7 @@ function AdminOrdersContent() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 overflow-x-hidden">
       <OrderNotification />
       {/* Mobile Header with Tabs */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-white/40">
@@ -512,8 +512,8 @@ function AdminOrdersContent() {
         <div className="hidden lg:block">
           <AdminNav currentPage="AdminOrders" />
         </div>
-        
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-24 lg:pt-6 pb-20 lg:pb-8">
+
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-24 lg:pt-6 pb-20 lg:pb-8 max-w-full overflow-x-hidden">
           <div className="flex flex-col gap-4 mb-6 lg:mb-8">
             <div className="flex flex-col items-start gap-4">
               <div>
@@ -560,13 +560,13 @@ function AdminOrdersContent() {
                   </>
                 )}
               </div>
-              
+
               {selectedOrders.length > 0 && (
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Badge variant="secondary" className="px-3 py-1">{selectedOrders.length} selected</Badge>
+                <div className="flex items-center gap-2 w-full">
+                  <Badge variant="secondary" className="px-3 py-1 flex-shrink-0">{selectedOrders.length} selected</Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="flex-1 sm:flex-none">Bulk Actions</Button>
+                      <Button variant="outline" className="flex-1 sm:flex-none whitespace-nowrap">Bulk Actions</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleBulkAction('confirmed')}>
@@ -648,22 +648,24 @@ function AdminOrdersContent() {
           </div>
 
           {/* Admin Orders Map */}
-          <AdminOrdersMap 
-            orders={filteredOrders} 
-            selectedOrderId={mapSelectedOrderId}
-            onOrderSelect={(orderId) => {
-              setMapSelectedOrderId(orderId);
-              setFlashingOrderId(orderId);
-              setTimeout(() => setFlashingOrderId(null), 600);
-            }}
-          />
+          <div className="w-full max-w-full overflow-hidden mb-6">
+            <AdminOrdersMap 
+              orders={filteredOrders} 
+              selectedOrderId={mapSelectedOrderId}
+              onOrderSelect={(orderId) => {
+                setMapSelectedOrderId(orderId);
+                setFlashingOrderId(orderId);
+                setTimeout(() => setFlashingOrderId(null), 600);
+              }}
+            />
+          </div>
 
           {isLoading ? (
             <div className="flex justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full max-w-full">
               {filteredOrders.map((order) => (
                 <div 
                   key={order.id} 
