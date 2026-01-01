@@ -1338,12 +1338,12 @@ export default function OrderTracking() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* My Location (Admin/Driver viewing) - Only show to admins or when assigned as driver */}
-          {currentLocation && (user?.role === 'admin' || (order && user?.email === order.driver_email)) && (
+          {/* My Location (Admin/Driver viewing) - Only show when on duty and to admins or assigned driver */}
+          {currentLocation && isOnDuty && (user?.role === 'admin' || (order && user?.email === order.driver_email)) && (
             <Marker position={currentLocation} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
-                  <p className="font-bold text-emerald-600">🐉 My Location</p>
+                  <p className="font-bold text-emerald-600">🐉 My Location (On Duty)</p>
                   <p className="text-xs text-gray-500">GPS: {currentLocation[0].toFixed(5)}, {currentLocation[1].toFixed(5)}</p>
                 </div>
               </Popup>
@@ -1509,6 +1509,22 @@ export default function OrderTracking() {
             onClick={async () => {
               const newStatus = !isOnDuty;
               setIsOnDuty(newStatus);
+
+              // Get location immediately when turning on duty
+              if (newStatus) {
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setCurrentLocation([latitude, longitude]);
+                  },
+                  (error) => {
+                    console.error('Location error:', error);
+                    toast.error('Please enable location permissions');
+                  },
+                  { enableHighAccuracy: true, timeout: 10000 }
+                );
+              }
+
               try {
                 await base44.auth.updateMe({ is_on_duty: newStatus });
                 toast.success(newStatus ? '🐉 On Duty' : 'Off Duty');
