@@ -1338,8 +1338,8 @@ export default function OrderTracking() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* My Location (Admin/Driver viewing) */}
-          {currentLocation && (
+          {/* My Location (Admin/Driver viewing) - Only show to admins or when assigned as driver */}
+          {currentLocation && (user?.role === 'admin' || (order && user?.email === order.driver_email)) && (
             <Marker position={currentLocation} icon={driverIcon}>
               <Popup>
                 <div className="text-center p-2">
