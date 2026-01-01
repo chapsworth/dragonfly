@@ -50,8 +50,8 @@ export default function DeliveryNavigation() {
       libraries: ['places', 'geometry'],
       id: 'google-maps-script',
       preventGoogleFontsLoading: true
-    } : undefined
-  );
+    } : { googleMapsApiKey: '', libraries: [] }
+  ) || {};
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
