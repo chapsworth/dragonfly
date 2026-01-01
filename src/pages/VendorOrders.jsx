@@ -215,6 +215,32 @@ function VendorOrdersContent() {
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Tropical Mix', size: '10000mg', price: 33 },
     { category: 'edibles', product_name: 'Cannabis Gummies', variant: 'Sour Patch Kids', size: '10000mg', price: 33 },
     
+    // Edibles - Mighty Munchies 1200mg
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Blueberry Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Strawberry Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Watermelon Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Neon Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Peach Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Green Apple Rings', size: '1200mg', price: 12 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Neon Worms', size: '1200mg', price: 12 },
+    
+    // Edibles - Mighty Munchies 2400mg
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Blueberry Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Strawberry Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Watermelon Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Neon Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Peach Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Green Apple Rings', size: '2400mg', price: 20 },
+    { category: 'edibles', product_name: 'Mighty Munchies', variant: 'Neon Worms', size: '2400mg', price: 20 },
+    
+    // Edibles - Aurora Chocolates 5g
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: 'Cookies and Cream', size: '5g', price: 10 },
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: 'Peanut Butter', size: '5g', price: 10 },
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: "S'mores", size: '5g', price: 10 },
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: 'Milk Chocolate', size: '5g', price: 10 },
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: 'Strawberries and Cream', size: '5g', price: 10 },
+    { category: 'edibles', product_name: 'Aurora Chocolate', variant: 'Sea Salt Dark Chocolate', size: '5g', price: 10 },
+    
     // Liquid Diamond Gummies (Nano) 500mg
     { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Peach Paradise', size: '500mg', price: 5 },
     { category: 'edibles', product_name: 'Liquid Diamond Gummies (Nano)', variant: 'Strawberry Splash', size: '500mg', price: 5 },
