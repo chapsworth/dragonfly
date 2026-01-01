@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
         Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
         ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
@@ -760,6 +761,9 @@ export default function OrderTracking() {
   const mapRef = React.useRef(null);
   const [routePolyline, setRoutePolyline] = useState(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
+  const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
+  const [createOrderData, setCreateOrderData] = useState({});
 
   const { data: allOrders = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['active-orders'],
@@ -768,6 +772,54 @@ export default function OrderTracking() {
       return orders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
     },
     refetchInterval: 5000
+  });
+
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: () => base44.entities.Contact.list()
+  });
+
+  const createOrderMutation = useMutation({
+    mutationFn: async (orderData) => {
+      const order = await base44.entities.Order.create(orderData);
+      
+      // Update or create contact record
+      if (orderData.customer_id) {
+        const contact = contacts.find(c => c.id === orderData.customer_id);
+        if (contact) {
+          await base44.entities.Contact.update(contact.id, {
+            type: 'customer',
+            total_orders: (contact.total_orders || 0) + 1,
+            total_spent: (contact.total_spent || 0) + orderData.total,
+            last_order_date: new Date().toISOString().split('T')[0]
+          });
+        }
+      } else if (orderData.customer_email) {
+        const existingContact = contacts.find(c => c.email === orderData.customer_email);
+        if (!existingContact) {
+          await base44.entities.Contact.create({
+            full_name: orderData.customer_name,
+            email: orderData.customer_email,
+            phone: orderData.customer_phone,
+            type: 'customer',
+            total_orders: 1,
+            total_spent: orderData.total,
+            last_order_date: new Date().toISOString().split('T')[0]
+          });
+        }
+      }
+      
+      return order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-orders'] });
+      setIsCreateOrderOpen(false);
+      setCreateOrderData({});
+      toast.success('Order created successfully');
+    },
+    onError: () => {
+      toast.error('Failed to create order');
+    }
   });
 
   const order = orderId ? allOrders.find(o => o.id === orderId) : allOrders[currentOrderIndex] || null;
@@ -994,6 +1046,102 @@ export default function OrderTracking() {
 
   const isDriver = user?.email === order.driver_email;
 
+  const handleCreateOrder = () => {
+    setCreateOrderData({
+      items: [],
+      subtotal: 0,
+      discount: 0,
+      fees: 0,
+      total: 0,
+      status: 'pending',
+      delivery_address: '',
+      customer_id: '',
+      customer_selection: 'existing',
+      driver_selection: 'none'
+    });
+    setIsCreateOrderOpen(true);
+  };
+
+  const handleAddProductsToNewOrder = (products) => {
+    const newItems = [...(createOrderData.items || []), ...products];
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (createOrderData.discount || 0) + (createOrderData.fees || 0);
+    setCreateOrderData({ ...createOrderData, items: newItems, subtotal, total });
+  };
+
+  const handleRemoveItemFromNewOrder = (index) => {
+    const newItems = createOrderData.items.filter((_, i) => i !== index);
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (createOrderData.discount || 0) + (createOrderData.fees || 0);
+    setCreateOrderData({ ...createOrderData, items: newItems, subtotal, total });
+  };
+
+  const handleUpdateNewOrderItemQuantity = (index, quantity) => {
+    const newItems = createOrderData.items.map((item, i) => 
+      i === index ? { ...item, quantity: Math.max(1, parseInt(quantity) || 1) } : item
+    );
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (createOrderData.discount || 0) + (createOrderData.fees || 0);
+    setCreateOrderData({ ...createOrderData, items: newItems, subtotal, total });
+  };
+
+  const handleSubmitNewOrder = () => {
+    if (createOrderData.customer_selection === 'new' && !createOrderData.new_customer_name) {
+      toast.error('Please enter customer name');
+      return;
+    }
+    if (createOrderData.customer_selection === 'existing' && !createOrderData.customer_id) {
+      toast.error('Please select a customer');
+      return;
+    }
+    if (!createOrderData.items || createOrderData.items.length === 0) {
+      toast.error('Please add at least one product');
+      return;
+    }
+    
+    const selectedContact = createOrderData.customer_selection === 'existing' 
+      ? contacts.find(c => c.id === createOrderData.customer_id) 
+      : null;
+    
+    const orderData = {
+      items: createOrderData.items,
+      subtotal: createOrderData.subtotal,
+      discount: createOrderData.discount || 0,
+      fees: createOrderData.fees || 0,
+      total: createOrderData.total,
+      status: createOrderData.status,
+      delivery_address: createOrderData.delivery_address,
+      delivery_lat: createOrderData.delivery_lat,
+      delivery_lng: createOrderData.delivery_lng,
+      customer_name: createOrderData.customer_selection === 'existing' 
+        ? selectedContact?.full_name 
+        : createOrderData.new_customer_name,
+      customer_phone: createOrderData.customer_selection === 'existing' 
+        ? selectedContact?.phone 
+        : createOrderData.new_customer_phone,
+      customer_email: createOrderData.customer_selection === 'existing' 
+        ? selectedContact?.email 
+        : createOrderData.new_customer_email,
+      customer_id: createOrderData.customer_selection === 'existing' 
+        ? createOrderData.customer_id 
+        : undefined,
+      notes: createOrderData.notes
+    };
+
+    if (createOrderData.driver_selection === 'self') {
+      orderData.driver_name = user?.full_name;
+      orderData.driver_phone = user?.phone || '';
+      orderData.driver_email = user?.email;
+      orderData.status = 'out_for_delivery';
+    } else if (createOrderData.driver_selection === 'other') {
+      orderData.driver_name = createOrderData.driver_name;
+      orderData.driver_phone = createOrderData.driver_phone;
+      orderData.driver_email = createOrderData.driver_email;
+    }
+    
+    createOrderMutation.mutate(orderData);
+  };
+
   return (
     <div className="fixed inset-0 overflow-hidden bg-gray-100">
       {/* Map Background */}
@@ -1110,6 +1258,14 @@ export default function OrderTracking() {
         >
           <ArrowLeft className="w-5 h-5 text-emerald-900" />
         </Button>
+        <Button
+          size="sm"
+          onClick={handleCreateOrder}
+          className="rounded-full shadow-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          New Order
+        </Button>
 
         {allOrders.length > 1 && (
           <div className="flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-4 py-2">
@@ -1194,6 +1350,372 @@ export default function OrderTracking() {
           <ChevronUp className="w-6 h-6" />
         </Button>
       )}
-    </div>
-  );
-}
+
+      {/* Create Order Dialog */}
+      <Dialog open={isCreateOrderOpen} onOpenChange={setIsCreateOrderOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Order</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Customer Selection */}
+            <div>
+              <Label className="text-base font-semibold mb-3 block">Customer *</Label>
+              <div className="space-y-2">
+                <div 
+                  onClick={() => setCreateOrderData({...createOrderData, customer_selection: 'existing'})}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-emerald-50 ${
+                    createOrderData.customer_selection === 'existing' ? 'border-emerald-500 bg-emerald-50' : ''
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    createOrderData.customer_selection === 'existing' ? 'border-emerald-500' : 'border-gray-300'
+                  }`}>
+                    {createOrderData.customer_selection === 'existing' && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  <Label className="flex-1 cursor-pointer">Select existing customer</Label>
+                </div>
+                <div 
+                  onClick={() => setCreateOrderData({...createOrderData, customer_selection: 'new'})}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-emerald-50 ${
+                    createOrderData.customer_selection === 'new' ? 'border-emerald-500 bg-emerald-50' : ''
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    createOrderData.customer_selection === 'new' ? 'border-emerald-500' : 'border-gray-300'
+                  }`}>
+                    {createOrderData.customer_selection === 'new' && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  <Label className="flex-1 cursor-pointer">Create new customer</Label>
+                </div>
+              </div>
+            </div>
+
+            {createOrderData.customer_selection === 'existing' && (
+              <div>
+                <Label>Select Customer *</Label>
+                <Select 
+                  value={createOrderData.customer_id} 
+                  onValueChange={(v) => {
+                    const selectedContact = contacts.find(c => c.id === v);
+                    if (selectedContact) {
+                      const address = selectedContact.address ? 
+                        `${selectedContact.address}${selectedContact.city ? ', ' + selectedContact.city : ''}${selectedContact.state ? ', ' + selectedContact.state : ''}${selectedContact.zip ? ' ' + selectedContact.zip : ''}` 
+                        : '';
+                      setCreateOrderData({
+                        ...createOrderData, 
+                        customer_id: v,
+                        delivery_address: address
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a customer..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contacts.filter(c => c.type === 'customer' || c.email).map(contact => (
+                      <SelectItem key={contact.id} value={contact.id}>
+                        {contact.full_name} ({contact.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {createOrderData.customer_selection === 'new' && (
+              <div className="space-y-3 p-4 border rounded-lg bg-emerald-50/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="w-5 h-5 text-emerald-600" />
+                  <Label className="font-semibold">New Customer Details</Label>
+                </div>
+                <div>
+                  <Label>Full Name *</Label>
+                  <Input 
+                    value={createOrderData.new_customer_name || ''} 
+                    onChange={(e) => setCreateOrderData({...createOrderData, new_customer_name: e.target.value})}
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input 
+                    type="email"
+                    value={createOrderData.new_customer_email || ''} 
+                    onChange={(e) => setCreateOrderData({...createOrderData, new_customer_email: e.target.value})}
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input 
+                    value={createOrderData.new_customer_phone || ''} 
+                    onChange={(e) => setCreateOrderData({...createOrderData, new_customer_phone: e.target.value})}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Driver Assignment */}
+            <div className="border-t border-emerald-100 pt-4">
+              <Label className="text-base font-semibold mb-3 block">Delivery Driver</Label>
+              <div className="space-y-2">
+                <div 
+                  onClick={() => setCreateOrderData({...createOrderData, driver_selection: 'none'})}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-emerald-50 ${
+                    createOrderData.driver_selection === 'none' ? 'border-emerald-500 bg-emerald-50' : ''
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    createOrderData.driver_selection === 'none' ? 'border-emerald-500' : 'border-gray-300'
+                  }`}>
+                    {createOrderData.driver_selection === 'none' && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  <Label className="flex-1 cursor-pointer">No driver assigned yet</Label>
+                </div>
+                <div 
+                  onClick={() => setCreateOrderData({...createOrderData, driver_selection: 'self'})}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-emerald-50 ${
+                    createOrderData.driver_selection === 'self' ? 'border-emerald-500 bg-emerald-50' : ''
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    createOrderData.driver_selection === 'self' ? 'border-emerald-500' : 'border-gray-300'
+                  }`}>
+                    {createOrderData.driver_selection === 'self' && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  <Label className="flex-1 cursor-pointer">I'll deliver this ({user?.email})</Label>
+                </div>
+                <div 
+                  onClick={() => setCreateOrderData({...createOrderData, driver_selection: 'other'})}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-emerald-50 ${
+                    createOrderData.driver_selection === 'other' ? 'border-emerald-500 bg-emerald-50' : ''
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    createOrderData.driver_selection === 'other' ? 'border-emerald-500' : 'border-gray-300'
+                  }`}>
+                    {createOrderData.driver_selection === 'other' && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  <Label className="flex-1 cursor-pointer">Assign to another driver</Label>
+                </div>
+              </div>
+            </div>
+
+            {createOrderData.driver_selection === 'other' && (
+              <div className="space-y-3 p-4 border rounded-lg bg-blue-50/50">
+                <Label className="font-semibold">Driver Details</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Driver Name</Label>
+                    <Input 
+                      value={createOrderData.driver_name || ''} 
+                      onChange={(e) => setCreateOrderData({...createOrderData, driver_name: e.target.value})}
+                      placeholder="Jane Smith"
+                    />
+                  </div>
+                  <div>
+                    <Label>Driver Phone</Label>
+                    <Input 
+                      value={createOrderData.driver_phone || ''} 
+                      onChange={(e) => setCreateOrderData({...createOrderData, driver_phone: e.target.value})}
+                      placeholder="(555) 987-6543"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Driver Email</Label>
+                  <Input 
+                    type="email"
+                    value={createOrderData.driver_email || ''} 
+                    onChange={(e) => setCreateOrderData({...createOrderData, driver_email: e.target.value})}
+                    placeholder="driver@example.com"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Order Items */}
+            <div className="border-t border-emerald-100 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-base font-semibold">Order Items</Label>
+                <Button 
+                  type="button"
+                  size="sm"
+                  onClick={() => setIsProductSelectorOpen(true)}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Products
+                </Button>
+              </div>
+
+              {(!createOrderData.items || createOrderData.items.length === 0) ? (
+                <p className="text-gray-400 text-center py-4 border rounded-lg">No products added yet</p>
+              ) : (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {createOrderData.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      {item.image_url && (
+                        <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{item.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs">Qty:</span>
+                          <Input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => handleUpdateNewOrderItemQuantity(index, e.target.value)}
+                            className="h-7 w-16 text-xs"
+                          />
+                          <span className="text-xs font-bold text-emerald-600">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleRemoveItemFromNewOrder(index)}
+                        className="h-8 w-8 text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pricing Summary */}
+              <div className="mt-4 p-4 bg-emerald-50 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">${(createOrderData.subtotal || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm">Discount</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={createOrderData.discount || 0}
+                    onChange={(e) => {
+                      const discount = parseFloat(e.target.value) || 0;
+                      const total = createOrderData.subtotal - discount + (createOrderData.fees || 0);
+                      setCreateOrderData({...createOrderData, discount, total});
+                    }}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm">Fees</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={createOrderData.fees || 0}
+                    onChange={(e) => {
+                      const fees = parseFloat(e.target.value) || 0;
+                      const total = createOrderData.subtotal - (createOrderData.discount || 0) + fees;
+                      setCreateOrderData({...createOrderData, fees, total});
+                    }}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-emerald-600">${(createOrderData.total || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Details */}
+            <div className="border-t border-emerald-100 pt-4">
+              <Label className="text-base font-semibold mb-3 block">Order Details</Label>
+              <div>
+                <Label>Status</Label>
+                <Select 
+                  value={createOrderData.status} 
+                  onValueChange={(v) => setCreateOrderData({...createOrderData, status: v})}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="preparing">Preparing</SelectItem>
+                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="mt-3">
+                <Label>Delivery Address</Label>
+                <AddressAutocomplete
+                  value={createOrderData.delivery_address || ''} 
+                  onChange={(val) => setCreateOrderData({...createOrderData, delivery_address: val})}
+                  placeholder="123 Main St, City, State"
+                  onPlaceSelect={(details) => {
+                    setCreateOrderData({
+                      ...createOrderData, 
+                      delivery_address: details.address,
+                      delivery_lat: details.lat,
+                      delivery_lng: details.lng
+                    });
+                  }}
+                />
+              </div>
+              <div className="mt-3">
+                <Label>Notes</Label>
+                <Textarea 
+                  value={createOrderData.notes || ''} 
+                  onChange={(e) => setCreateOrderData({...createOrderData, notes: e.target.value})}
+                  placeholder="Special instructions..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateOrderOpen(false);
+                  setCreateOrderData({});
+                }} 
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitNewOrder} 
+                disabled={createOrderMutation.isPending} 
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500"
+              >
+                {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Selector */}
+      <ProductSelector
+        isOpen={isProductSelectorOpen}
+        onClose={() => setIsProductSelectorOpen(false)}
+        onAddProducts={handleAddProductsToNewOrder}
+      />
+      </div>
+      );
+      }
