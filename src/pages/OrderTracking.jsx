@@ -369,7 +369,7 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
       </div>
 
       {/* Scrollable Content */}
-      <div className="h-full overflow-y-auto pb-32">
+      <div className="h-full overflow-y-auto pb-64">
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
           <div className="flex">
