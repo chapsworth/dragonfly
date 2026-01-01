@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus, Eye, Trash2, TestTube } from 'lucide-react';
+import { CheckCircle, Truck, PackageCheck, XCircle, Mail, MoreHorizontal, LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Plus, UserPlus, Eye, Trash2, TestTube, MapPin } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
@@ -526,15 +526,36 @@ function AdminOrdersContent() {
                   Create Order
                 </Button>
                 {orders.length > 0 && (
-                  <Button 
-                    onClick={() => testAdminEmailMutation.mutate(orders[0].id)} 
-                    disabled={testAdminEmailMutation.isPending}
-                    variant="outline"
-                    className="gap-2"
-                  >
-                    <TestTube className="w-4 h-4" />
-                    {testAdminEmailMutation.isPending ? 'Testing...' : 'Test Admin Email'}
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={() => testAdminEmailMutation.mutate(orders[0].id)} 
+                      disabled={testAdminEmailMutation.isPending}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <TestTube className="w-4 h-4" />
+                      {testAdminEmailMutation.isPending ? 'Testing...' : 'Test Admin Email'}
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        if (confirm('Geocode all orders missing coordinates?')) {
+                          toast.promise(
+                            base44.functions.invoke('geocodeOrders'),
+                            {
+                              loading: 'Geocoding orders...',
+                              success: (res) => `${res.data.message}`,
+                              error: 'Failed to geocode orders'
+                            }
+                          );
+                        }
+                      }}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Geocode Orders
+                    </Button>
+                  </>
                 )}
               </div>
               
