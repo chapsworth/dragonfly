@@ -105,9 +105,36 @@ Deno.serve(async (req) => {
 
     await Promise.all(emailPromises);
 
+    // Send push notifications to all admin devices
+    const deviceTokens = await base44.asServiceRole.entities.DeviceToken.list();
+    const adminDevices = deviceTokens.filter(dt => 
+      admins.some(admin => admin.email === dt.user_email)
+    );
+
+    if (adminDevices.length > 0) {
+      const pushPromises = adminDevices.map(device => 
+        base44.asServiceRole.functions.invoke('sendPushNotification', {
+          device_token: device.device_token,
+          platform: device.platform,
+          title: '🎉 New Order',
+          body: `Order #${order_number} from ${customer_name} - $${total.toFixed(2)}`,
+          data: {
+            type: 'new_order',
+            order_id,
+            order_number,
+            customer_name,
+            total: total.toString(),
+            url: '/AdminOrders'
+          }
+        }).catch(err => console.error('Push notification error:', err))
+      );
+      
+      await Promise.all(pushPromises);
+    }
+
     return Response.json({ 
       success: true, 
-      message: `Notified ${admins.length} admin(s)` 
+      message: `Notified ${admins.length} admin(s) via email and ${adminDevices.length} device(s) via push` 
     });
   } catch (error) {
     console.error('Error notifying admins:', error);

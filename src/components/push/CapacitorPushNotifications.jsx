@@ -58,14 +58,32 @@ export default function CapacitorPushNotifications() {
           console.error('Error on registration:', error);
         });
 
-        // Handle push notification received
+        // Handle push notification received (app in foreground)
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
           console.log('Push notification received:', notification);
+          
+          // Show in-app notification
+          if (notification.data?.type === 'new_order') {
+            const event = new CustomEvent('newOrderNotification', {
+              detail: {
+                order_id: notification.data.order_id,
+                order_number: notification.data.order_number,
+                customer_name: notification.data.customer_name,
+                total: parseFloat(notification.data.total)
+              }
+            });
+            window.dispatchEvent(event);
+          }
         });
 
-        // Handle push notification action performed
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed:', notification);
+        // Handle push notification action performed (app in background/closed)
+        PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+          console.log('Push notification action performed:', action);
+          
+          // Navigate to the order page
+          if (action.notification.data?.url) {
+            window.location.href = action.notification.data.url;
+          }
         });
 
       } catch (error) {
