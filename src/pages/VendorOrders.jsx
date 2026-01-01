@@ -12,12 +12,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw, Grid3x3, List, Edit, DollarSign, MapPin } from 'lucide-react';
+import { Plus, Minus, Download, ShoppingCart, Package, Trash2, Search, FileText, ChevronDown, RefreshCw, Grid3x3, List, Edit, DollarSign, MapPin, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import VendorOrderMap from '@/components/vendor/VendorOrderMap';
+import CarlChat from '@/components/vendor/CarlChat';
 
 export default function VendorOrders() {
   return <VendorOrdersContent />;
@@ -47,6 +48,7 @@ function VendorOrdersContent() {
   const [bulkPriceChange, setBulkPriceChange] = useState({ type: 'set', value: 0 });
   const [globalPriceChange, setGlobalPriceChange] = useState({ type: 'set', value: 0 });
   const [trackingOrder, setTrackingOrder] = useState(null);
+  const [isCarlOpen, setIsCarlOpen] = useState(false);
   const floatingTotalRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -627,6 +629,13 @@ function VendorOrdersContent() {
 
   const total = calculateTotal();
 
+  // Stats for widgets
+  const totalProducts = products.length;
+  const avgPrice = products.length > 0 ? products.reduce((sum, p) => sum + p.price, 0) / products.length : 0;
+  const categoriesCount = categories.length;
+  const totalOrderValue = orders.reduce((sum, o) => sum + o.total, 0);
+  const ordersCount = orders.length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 p-2 sm:p-4 lg:p-8 pb-96 overflow-x-hidden max-w-full">
       {/* Freeze Overlay when dragging */}
@@ -800,6 +809,65 @@ function VendorOrdersContent() {
               ))}
             </TabsList>
           </Tabs>
+
+          {/* Live Stats Widgets */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSearchQuery('')}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Products</p>
+                    <p className="text-2xl font-bold text-emerald-900">{totalProducts}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedCategory('all')}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <Grid3x3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Categories</p>
+                    <p className="text-2xl font-bold text-blue-900">{categoriesCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsOrdersOpen(true)}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Total Orders</p>
+                    <p className="text-2xl font-bold text-purple-900">{ordersCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsCarlOpen(true)}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center animate-pulse">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Ask Carl</p>
+                    <p className="text-sm font-bold text-purple-900">AI Advisor</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-3 sm:gap-6">
@@ -1446,6 +1514,12 @@ function VendorOrdersContent() {
           onClose={() => setTrackingOrder(null)}
         />
       )}
+
+      {/* Carl AI Chat */}
+      <CarlChat
+        isOpen={isCarlOpen}
+        onClose={() => setIsCarlOpen(false)}
+      />
 
       {/* Orders Dialog */}
       <Dialog open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
