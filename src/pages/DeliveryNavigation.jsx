@@ -42,12 +42,17 @@ export default function DeliveryNavigation() {
       });
   }, []);
   
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
-    libraries,
-    id: 'google-maps-script',
-    preventGoogleFontsLoading: true
-  });
+  const loaderOptions = useMemo(() => {
+    if (!apiKey) return null;
+    return {
+      googleMapsApiKey: apiKey,
+      libraries,
+      id: 'google-maps-script',
+      preventGoogleFontsLoading: true
+    };
+  }, [apiKey, libraries]);
+
+  const { isLoaded } = useJsApiLoader(loaderOptions || {});
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
