@@ -951,33 +951,31 @@ export default function OrderTracking() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Track driver/admin location continuously
+  // Track location continuously
   useEffect(() => {
-    if (!user || !order) return;
-    
-    const isDriver = user.email === order.driver_email;
-    const isAdmin = user.role === 'admin';
-    
-    if (isDriver || isAdmin) {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCurrentLocation([latitude, longitude]);
-          
-          // Update order with driver location
-          if (isDriver && order.id) {
-            base44.entities.Order.update(order.id, {
-              driver_lat: latitude,
-              driver_lng: longitude
-            }).catch(err => console.error('Failed to update driver location:', err));
-          }
-        },
-        (error) => console.log('Error getting location:', error),
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-      );
+    if (!user) return;
 
-      return () => navigator.geolocation.clearWatch(watchId);
-    }
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation([latitude, longitude]);
+
+        // Update order with driver location if user is the driver
+        if (order?.id && user.email === order.driver_email) {
+          base44.entities.Order.update(order.id, {
+            driver_lat: latitude,
+            driver_lng: longitude
+          }).catch(err => console.error('Failed to update driver location:', err));
+        }
+      },
+      (error) => {
+        console.error('Location error:', error);
+        toast.error('Please enable location permissions');
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, [user, order?.id, order?.driver_email]);
 
   // Calculate distance
