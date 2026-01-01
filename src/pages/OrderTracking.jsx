@@ -824,6 +824,7 @@ export default function OrderTracking() {
   const [showDrivers, setShowDrivers] = useState(true);
   const [showCustomers, setShowCustomers] = useState(true);
   const [showDeliveryLocations, setShowDeliveryLocations] = useState(true);
+  const [orderFilter, setOrderFilter] = useState('active');
 
   // Fetch specific order if ID provided
   const { data: specificOrder, isLoading: isLoadingSpecific } = useQuery({
@@ -846,6 +847,15 @@ export default function OrderTracking() {
     refetchInterval: 5000,
     enabled: !orderId
   });
+
+  const filteredOrders = React.useMemo(() => {
+    if (orderFilter === 'active') {
+      return allOrders.filter(o => !['delivered', 'cancelled'].includes(o.status));
+    } else if (orderFilter === 'past') {
+      return allOrders.filter(o => ['delivered', 'cancelled'].includes(o.status));
+    }
+    return allOrders;
+  }, [allOrders, orderFilter]);
 
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts'],
@@ -895,7 +905,7 @@ export default function OrderTracking() {
     }
   });
 
-  const order = orderId ? specificOrder : allOrders[currentOrderIndex] || null;
+  const order = orderId ? specificOrder : filteredOrders[currentOrderIndex] || null;
   const isLoading = orderId ? isLoadingSpecific : isLoadingAll;
 
   const defaultMapCenter = React.useMemo(() => {
@@ -976,7 +986,7 @@ export default function OrderTracking() {
     if (currentOrderIndex > 0) {
       const newIndex = currentOrderIndex - 1;
       setCurrentOrderIndex(newIndex);
-      const newOrder = allOrders[newIndex];
+      const newOrder = filteredOrders[newIndex];
       if (newOrder?.delivery_lat && newOrder?.delivery_lng && mapRef.current) {
         mapRef.current.setView([newOrder.delivery_lat, newOrder.delivery_lng], 15);
       }
@@ -984,10 +994,10 @@ export default function OrderTracking() {
   };
 
   const goToNextOrder = () => {
-    if (currentOrderIndex < allOrders.length - 1) {
+    if (currentOrderIndex < filteredOrders.length - 1) {
       const newIndex = currentOrderIndex + 1;
       setCurrentOrderIndex(newIndex);
-      const newOrder = allOrders[newIndex];
+      const newOrder = filteredOrders[newIndex];
       if (newOrder?.delivery_lat && newOrder?.delivery_lng && mapRef.current) {
         mapRef.current.setView([newOrder.delivery_lat, newOrder.delivery_lng], 15);
       }
@@ -1005,14 +1015,14 @@ export default function OrderTracking() {
     );
   }
 
-  if (!order && !orderId && allOrders.length === 0) {
+  if (!order && !orderId && filteredOrders.length === 0) {
     return (
       <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Package className="w-16 h-16 text-emerald-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-emerald-900 mb-2">No Active Deliveries</h1>
-          <p className="text-emerald-600 mb-4">There are no orders currently in delivery.</p>
-          <Button onClick={() => navigate(createPageUrl('AdminOrders'))} className="bg-emerald-600">
+          <h1 className="text-2xl font-bold text-emerald-900 mb-2">No {orderFilter === 'past' ? 'Past' : orderFilter === 'active' ? 'Active' : ''} Orders</h1>
+          <p className="text-emerald-600 mb-4">There are no {orderFilter === 'past' ? 'past' : orderFilter === 'active' ? 'active' : ''} orders to display.</p>
+          <Button onClick={() => setOrderFilter('all')} className="bg-emerald-600">
             View All Orders
           </Button>
         </div>
@@ -1035,7 +1045,7 @@ export default function OrderTracking() {
     );
   }
 
-  if (!order && allOrders.length > 0) {
+  if (!order && filteredOrders.length > 0) {
     return null;
   }
 
@@ -1270,8 +1280,8 @@ export default function OrderTracking() {
             </Marker>
           )}
 
-          {/* All Active Orders */}
-          {allOrders.map((activeOrder, idx) => {
+          {/* All Filtered Orders */}
+          {filteredOrders.map((activeOrder, idx) => {
             const isCurrentOrder = activeOrder.id === order.id;
             const orderIcon = isCurrentOrder ? deliveryIcon : makeEmojiIcon('#64748b', `${idx + 1}`);
 
@@ -1282,7 +1292,7 @@ export default function OrderTracking() {
                 icon={orderIcon}
                 eventHandlers={{
                   click: () => {
-                    const orderIndex = allOrders.findIndex(o => o.id === activeOrder.id);
+                    const orderIndex = filteredOrders.findIndex(o => o.id === activeOrder.id);
                     setCurrentOrderIndex(orderIndex);
                   }
                 }}
@@ -1335,7 +1345,10 @@ export default function OrderTracking() {
                      )}
                      {!isCurrentOrder && (
                        <button 
-                         onClick={() => setCurrentOrderIndex(idx)}
+                         onClick={() => {
+                           const orderIndex = filteredOrders.findIndex(o => o.id === activeOrder.id);
+                           setCurrentOrderIndex(orderIndex);
+                         }}
                          className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
                        >
                          Switch to this order
@@ -1419,7 +1432,7 @@ export default function OrderTracking() {
           <Plus className="w-5 h-5" />
         </Button>
 
-        {allOrders.length > 1 && (
+        {filteredOrders.length > 1 && (
           <div className="flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-4 py-2">
             <Button
               variant="ghost"
@@ -1431,7 +1444,7 @@ export default function OrderTracking() {
               <ChevronDown className="w-5 h-5 rotate-90" />
             </Button>
             <div className="text-center min-w-[180px]">
-              <p className="text-xs text-gray-500">Order {currentOrderIndex + 1} of {allOrders.length}</p>
+              <p className="text-xs text-gray-500">Order {currentOrderIndex + 1} of {filteredOrders.length}</p>
               <p className="text-sm font-bold text-emerald-900">{order?.customer_name}</p>
               <button
                 onClick={centerOnOrder}
@@ -1445,7 +1458,7 @@ export default function OrderTracking() {
               variant="ghost"
               size="icon"
               onClick={goToNextOrder}
-              disabled={currentOrderIndex === allOrders.length - 1}
+              disabled={currentOrderIndex === filteredOrders.length - 1}
               className="h-8 w-8 rounded-full"
             >
               <ChevronDown className="w-5 h-5 -rotate-90" />
@@ -1508,6 +1521,33 @@ export default function OrderTracking() {
             />
             <span>📱</span>
           </label>
+        </div>
+
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex flex-col gap-1">
+          <button
+            onClick={() => setOrderFilter('active')}
+            className={`text-xs px-2 py-1 rounded transition-colors ${
+              orderFilter === 'active' ? 'bg-emerald-500 text-white' : 'hover:bg-gray-100'
+            }`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setOrderFilter('all')}
+            className={`text-xs px-2 py-1 rounded transition-colors ${
+              orderFilter === 'all' ? 'bg-emerald-500 text-white' : 'hover:bg-gray-100'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setOrderFilter('past')}
+            className={`text-xs px-2 py-1 rounded transition-colors ${
+              orderFilter === 'past' ? 'bg-emerald-500 text-white' : 'hover:bg-gray-100'
+            }`}
+          >
+            Past
+          </button>
         </div>
       </div>
 
