@@ -25,8 +25,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { 
         Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
         ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
-        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus, Route
+        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus, Route, Edit, Save
       } from 'lucide-react';
+import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import ProductSelector from '@/components/orders/ProductSelector';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -92,6 +94,9 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
   const [dragCurrentY, setDragCurrentY] = useState(0);
   const [activeTab, setActiveTab] = useState('details');
   const [newNote, setNewNote] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
+  const [editData, setEditData] = useState({});
   const queryClient = useQueryClient();
 
   const snapPositions = [
@@ -192,6 +197,69 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
     }
   };
 
+  const startEditing = () => {
+    setEditData({
+      customer_name: order.customer_name || '',
+      customer_phone: order.customer_phone || '',
+      customer_email: order.customer_email || '',
+      delivery_address: order.delivery_address || '',
+      delivery_lat: order.delivery_lat || '',
+      delivery_lng: order.delivery_lng || '',
+      status: order.status,
+      items: [...(order.items || [])],
+      notes: order.notes || '',
+      subtotal: order.subtotal || 0,
+      discount: order.discount || 0,
+      fees: order.fees || 0,
+      total: order.total || 0
+    });
+    setIsEditing(true);
+    setActiveTab('edit');
+  };
+
+  const handleAddProducts = (products) => {
+    const newItems = [...editData.items, ...products];
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (editData.discount || 0) + (editData.fees || 0);
+    setEditData({ ...editData, items: newItems, subtotal, total });
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = editData.items.filter((_, i) => i !== index);
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (editData.discount || 0) + (editData.fees || 0);
+    setEditData({ ...editData, items: newItems, subtotal, total });
+  };
+
+  const handleUpdateItemQuantity = (index, quantity) => {
+    const newItems = editData.items.map((item, i) => 
+      i === index ? { ...item, quantity: Math.max(1, parseInt(quantity) || 1) } : item
+    );
+    const subtotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal - (editData.discount || 0) + (editData.fees || 0);
+    setEditData({ ...editData, items: newItems, subtotal, total });
+  };
+
+  const saveOrder = async () => {
+    try {
+      await base44.entities.Order.update(order.id, editData);
+      onOrderUpdate?.({ ...order, ...editData });
+      queryClient.invalidateQueries({ queryKey: ['active-orders'] });
+      toast.success('Order updated successfully');
+      setIsEditing(false);
+      setActiveTab('details');
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Failed to update order');
+    }
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditData({});
+    setActiveTab('details');
+  };
+
   return (
     <div
       className="bg-white rounded-t-3xl shadow-2xl border border-gray-200 fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out overflow-hidden"
@@ -229,14 +297,26 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
               <p className="text-sm text-gray-500">{order.customer_name}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isEditing && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={startEditing}
+                className="text-emerald-600 hover:text-emerald-700"
+              >
+                <Edit className="w-5 h-5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -296,7 +376,8 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
             {[
               { id: 'details', label: 'Details', icon: FileText },
               { id: 'steps', label: 'Steps', icon: Clock },
-              { id: 'notes', label: 'Notes', icon: StickyNote }
+              { id: 'notes', label: 'Notes', icon: StickyNote },
+              ...(isEditing ? [{ id: 'edit', label: 'Edit', icon: Edit }] : [])
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -460,8 +541,205 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
               </div>
             </div>
           )}
+
+          {activeTab === 'edit' && (
+            <div className="space-y-4">
+              {/* Order Status */}
+              <div>
+                <Label>Order Status</Label>
+                <Select value={editData.status} onValueChange={(v) => setEditData({...editData, status: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="preparing">Preparing</SelectItem>
+                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Customer Info */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-900">Customer Information</h4>
+                <div>
+                  <Label>Customer Name</Label>
+                  <Input
+                    value={editData.customer_name}
+                    onChange={(e) => setEditData({...editData, customer_name: e.target.value})}
+                    placeholder="Customer name"
+                  />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    value={editData.customer_phone}
+                    onChange={(e) => setEditData({...editData, customer_phone: e.target.value})}
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    value={editData.customer_email}
+                    onChange={(e) => setEditData({...editData, customer_email: e.target.value})}
+                    placeholder="Email address"
+                  />
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div>
+                <Label>Delivery Address</Label>
+                <AddressAutocomplete
+                  value={editData.delivery_address}
+                  onChange={(val) => setEditData({...editData, delivery_address: val})}
+                  placeholder="Enter delivery address"
+                  onPlaceSelect={(details) => {
+                    setEditData({
+                      ...editData,
+                      delivery_address: details.address,
+                      delivery_lat: details.lat,
+                      delivery_lng: details.lng
+                    });
+                  }}
+                />
+              </div>
+
+              {/* Order Items */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900">Order Items</h4>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsProductSelectorOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Products
+                  </Button>
+                </div>
+                {editData.items?.length > 0 ? (
+                  <div className="space-y-2">
+                    {editData.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        {item.image_url && (
+                          <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{item.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm text-gray-600">Qty:</span>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateItemQuantity(idx, e.target.value)}
+                              className="h-7 w-16 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <p className="font-semibold text-emerald-600">${(item.price * item.quantity).toFixed(2)}</p>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveItem(idx)}
+                          className="h-8 w-8 text-red-500"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-gray-50 rounded-lg">
+                    <Package className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No items added</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Total */}
+              <div className="bg-emerald-50 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>${editData.subtotal?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm">Discount</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editData.discount || 0}
+                    onChange={(e) => {
+                      const discount = parseFloat(e.target.value) || 0;
+                      const total = editData.subtotal - discount + (editData.fees || 0);
+                      setEditData({...editData, discount, total});
+                    }}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm">Fees</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editData.fees || 0}
+                    onChange={(e) => {
+                      const fees = parseFloat(e.target.value) || 0;
+                      const total = editData.subtotal - (editData.discount || 0) + fees;
+                      setEditData({...editData, fees, total});
+                    }}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-emerald-600">${editData.total?.toFixed(2) || '0.00'}</span>
+                </div>
+              </div>
+
+              {/* Delivery Notes */}
+              <div>
+                <Label>Delivery Instructions</Label>
+                <Textarea
+                  value={editData.notes}
+                  onChange={(e) => setEditData({...editData, notes: e.target.value})}
+                  placeholder="Add special delivery instructions..."
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={cancelEditing}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveOrder}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Product Selector Modal */}
+      <ProductSelector
+        isOpen={isProductSelectorOpen}
+        onClose={() => setIsProductSelectorOpen(false)}
+        onAddProducts={handleAddProducts}
+      />
     </div>
   );
 };
