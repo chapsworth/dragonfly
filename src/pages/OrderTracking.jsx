@@ -726,8 +726,7 @@ export default function OrderTracking() {
           style={{ height: '100vh', width: '100vw' }}
           zoomControl={false}
           attributionControl={false}
-          ref={mapRef}
-          whenCreated={(mapInstance) => { mapRef.current = mapInstance; }}
+          ref={(map) => { if (map) mapRef.current = map; }}
         >
           <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer
