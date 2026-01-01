@@ -42,9 +42,7 @@ function AdminOrdersContent() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
-      const allOrders = await base44.entities.Order.list('-created_date');
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-      return allOrders.filter(order => new Date(order.created_date) > fourHoursAgo);
+      return await base44.entities.Order.list('-created_date');
     }
   });
 
