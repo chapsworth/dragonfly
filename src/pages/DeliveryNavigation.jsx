@@ -28,30 +28,29 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
-  const [apiKey, setApiKey] = useState(null);
+  const [apiKey, setApiKey] = useState('');
+  const [isKeyLoaded, setIsKeyLoaded] = useState(false);
   const libraries = useMemo(() => ['places', 'geometry'], []);
 
   useEffect(() => {
-    if (apiKey === null) {
-      base44.functions.invoke('getGoogleMapsKey', {})
-        .then(res => {
-          setApiKey(res.data.key || '');
-        })
-        .catch(() => {
-          console.error('Failed to load Google Maps API key');
-          setApiKey('');
-        });
-    }
-  }, [apiKey]);
+    base44.functions.invoke('getGoogleMapsKey', {})
+      .then(res => {
+        setApiKey(res.data.key || '');
+        setIsKeyLoaded(true);
+      })
+      .catch(() => {
+        console.error('Failed to load Google Maps API key');
+        setApiKey('');
+        setIsKeyLoaded(true);
+      });
+  }, []);
   
-  const { isLoaded } = useJsApiLoader(
-    apiKey !== null ? {
-      googleMapsApiKey: apiKey,
-      libraries,
-      id: 'google-maps-script',
-      preventGoogleFontsLoading: true
-    } : {}
-  );
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: apiKey,
+    libraries,
+    id: 'google-maps-script',
+    preventGoogleFontsLoading: true
+  });
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
@@ -267,7 +266,7 @@ export default function DeliveryNavigation() {
     return colors[level] || 'bg-gray-500';
   };
 
-  if (apiKey === null || ordersLoading || !isLoaded) {
+  if (!isKeyLoaded || ordersLoading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
