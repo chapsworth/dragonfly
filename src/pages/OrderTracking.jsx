@@ -26,7 +26,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
         Phone, Mail, MapPin, Clock, Package, Truck, CheckCircle2, Loader2, Navigation,
         ArrowLeft, MessageSquare, X, ChevronUp, ChevronDown, Camera, Play, Pause, Square,
-        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus, Route, Edit, Save
+        StickyNote, Upload, Trash2, GripHorizontal, FileText, User, Plus, Route, Edit, Save,
+        PackageCheck, XCircle
       } from 'lucide-react';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import ProductSelector from '@/components/orders/ProductSelector';
@@ -262,6 +263,18 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
     setActiveTab('details');
   };
 
+  const handleStatusChange = async (newStatus) => {
+    try {
+      await base44.entities.Order.update(order.id, { status: newStatus });
+      onOrderUpdate?.({ ...order, status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['active-orders'] });
+      toast.success('Status updated');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update status');
+    }
+  };
+
   return (
     <div
       className="bg-white rounded-t-3xl shadow-2xl border border-gray-200 fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out overflow-hidden"
@@ -341,6 +354,40 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
           } text-white`}>
             {order.status.replace(/_/g, ' ')}
           </Badge>
+        </div>
+
+        {/* Quick Status Actions */}
+        <div className="flex gap-2 mt-3 flex-wrap">
+          {order.status === 'pending' && (
+            <Button size="sm" onClick={() => handleStatusChange('confirmed')} className="bg-blue-500 hover:bg-blue-600">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Confirm
+            </Button>
+          )}
+          {order.status === 'confirmed' && (
+            <Button size="sm" onClick={() => handleStatusChange('preparing')} className="bg-orange-500 hover:bg-orange-600">
+              <PackageCheck className="w-3 h-3 mr-1" />
+              Start Preparing
+            </Button>
+          )}
+          {order.status === 'preparing' && (
+            <Button size="sm" onClick={() => handleStatusChange('out_for_delivery')} className="bg-purple-500 hover:bg-purple-600">
+              <Truck className="w-3 h-3 mr-1" />
+              Out for Delivery
+            </Button>
+          )}
+          {order.status === 'out_for_delivery' && (
+            <Button size="sm" onClick={() => handleStatusChange('delivered')} className="bg-green-500 hover:bg-green-600">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Mark Delivered
+            </Button>
+          )}
+          {order.status !== 'cancelled' && order.status !== 'delivered' && (
+            <Button size="sm" variant="outline" onClick={() => handleStatusChange('cancelled')} className="text-red-600 border-red-300 hover:bg-red-50">
+              <XCircle className="w-3 h-3 mr-1" />
+              Cancel Order
+            </Button>
+          )}
         </div>
       </div>
 
@@ -480,9 +527,17 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
                   const StepIcon = step.icon;
                   const isActive = idx <= currentStepIndex;
                   const isCurrent = idx === currentStepIndex;
+                  const canAdvance = idx === currentStepIndex + 1;
 
                   return (
-                    <div key={step.status} className="flex items-center gap-4">
+                    <button
+                      key={step.status}
+                      onClick={() => canAdvance && handleStatusChange(step.status)}
+                      disabled={!canAdvance}
+                      className={`flex items-center gap-4 w-full text-left p-3 rounded-lg transition-all ${
+                        canAdvance ? 'hover:bg-emerald-50 cursor-pointer' : ''
+                      }`}
+                    >
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         isActive ? step.color : 'bg-gray-300'
                       } text-white transition-colors`}>
@@ -493,9 +548,10 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
                           {step.label}
                         </p>
                         {isCurrent && <p className="text-sm text-emerald-600">Current status</p>}
+                        {canAdvance && <p className="text-xs text-blue-600">Click to advance</p>}
                       </div>
                       {isActive && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -1231,21 +1287,63 @@ export default function OrderTracking() {
                   }
                 }}
               >
-                <Popup>
-                  <div className="text-center p-2">
-                    <p className="font-bold text-emerald-600">🏠 {isCurrentOrder ? 'Current Delivery' : `Order #${idx + 1}`}</p>
-                    <p className="text-sm text-gray-700">{activeOrder.customer_name}</p>
-                    <p className="text-sm text-gray-600">{activeOrder.delivery_address}</p>
-                    {!isCurrentOrder && (
-                      <button 
-                        onClick={() => setCurrentOrderIndex(idx)}
-                        className="mt-2 text-xs bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
-                      >
-                        Switch to this order
-                      </button>
-                    )}
-                  </div>
-                </Popup>
+               <Popup>
+                 <div className="text-center p-2 min-w-[220px]">
+                   <p className="font-bold text-emerald-600 mb-1">🏠 {isCurrentOrder ? 'Current Delivery' : `Order #${idx + 1}`}</p>
+                   <p className="text-sm text-gray-700">{activeOrder.customer_name}</p>
+                   <p className="text-sm text-gray-600 mb-2">{activeOrder.delivery_address}</p>
+                   <Badge className={`${
+                     activeOrder.status === 'delivered' ? 'bg-green-500' :
+                     activeOrder.status === 'out_for_delivery' ? 'bg-purple-500' :
+                     activeOrder.status === 'preparing' ? 'bg-orange-500' :
+                     activeOrder.status === 'confirmed' ? 'bg-blue-500' : 'bg-yellow-500'
+                   } text-white mb-2`}>
+                     {activeOrder.status.replace(/_/g, ' ')}
+                   </Badge>
+                   <div className="flex flex-col gap-1 mt-2">
+                     {activeOrder.status === 'pending' && (
+                       <button 
+                         onClick={() => updateStatusMutation.mutate({ id: activeOrder.id, status: 'confirmed' })}
+                         className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                       >
+                         Confirm Order
+                       </button>
+                     )}
+                     {activeOrder.status === 'confirmed' && (
+                       <button 
+                         onClick={() => updateStatusMutation.mutate({ id: activeOrder.id, status: 'preparing' })}
+                         className="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600"
+                       >
+                         Start Preparing
+                       </button>
+                     )}
+                     {activeOrder.status === 'preparing' && (
+                       <button 
+                         onClick={() => updateStatusMutation.mutate({ id: activeOrder.id, status: 'out_for_delivery' })}
+                         className="text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
+                       >
+                         Out for Delivery
+                       </button>
+                     )}
+                     {activeOrder.status === 'out_for_delivery' && (
+                       <button 
+                         onClick={() => updateStatusMutation.mutate({ id: activeOrder.id, status: 'delivered' })}
+                         className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                       >
+                         Mark Delivered
+                       </button>
+                     )}
+                     {!isCurrentOrder && (
+                       <button 
+                         onClick={() => setCurrentOrderIndex(idx)}
+                         className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
+                       >
+                         Switch to this order
+                       </button>
+                     )}
+                   </div>
+                 </div>
+               </Popup>
               </Marker>
             );
           })}
