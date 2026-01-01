@@ -1407,7 +1407,7 @@ export default function OrderTracking() {
           variant="ghost"
           size="icon"
           className="rounded-full shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white border-0"
-          onClick={() => navigate(createPageUrl(isDriver ? 'AdminOrders' : 'Orders'))}
+          onClick={() => navigate(createPageUrl((isDriver || user?.role === 'admin') ? 'AdminOrders' : 'Orders'))}
         >
           <ArrowLeft className="w-5 h-5 text-emerald-900" />
         </Button>
