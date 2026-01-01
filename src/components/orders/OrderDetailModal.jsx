@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Mail, MessageSquare, Navigation, MapPin, Package, DollarSign, User } from 'lucide-react';
+import { Phone, Mail, MessageSquare, Navigation, MapPin, Package, DollarSign, User, Radar } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import NavigationModal from './NavigationModal';
 
 export default function OrderDetailModal({ order, isOpen, onClose }) {
@@ -86,7 +88,13 @@ export default function OrderDetailModal({ order, isOpen, onClose }) {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              <Link to={createPageUrl('OrderTracking') + `?id=${order.id}`}>
+                <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
+                  <Radar className="w-4 h-4 mr-2" />
+                  Track
+                </Button>
+              </Link>
               <Button onClick={handleCall} className="bg-gradient-to-r from-green-500 to-emerald-500">
                 <Phone className="w-4 h-4 mr-2" />
                 Call

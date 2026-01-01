@@ -747,34 +747,41 @@ export default function OrderTracking() {
             </Marker>
           )}
 
-          {/* Delivery Address Pin - Always shown */}
-          {order.delivery_lat && order.delivery_lng && (
-            <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
-              <Popup>
-                <div className="text-center p-2">
-                  <p className="font-bold text-emerald-600">🏠 Delivery Address</p>
-                  <p className="text-sm text-gray-700">{order.customer_name}</p>
-                  <p className="text-sm text-gray-600">{order.delivery_address}</p>
-                </div>
-              </Popup>
-            </Marker>
-          )}
-
-          {/* Customer Live Location - GPS from customer's device */}
-          {order.customer_lat && order.customer_lng && (
-            <Marker position={[order.customer_lat, order.customer_lng]} icon={customerIcon}>
-              <Popup>
-                <div className="text-center p-2">
-                  <p className="font-bold text-purple-600">📱 Customer Live Location</p>
-                  <p className="text-sm text-gray-700">{order.customer_name}</p>
-                  {order.customer_phone && (
-                    <p className="text-xs text-gray-500 mt-1">📞 {order.customer_phone}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">GPS: {order.customer_lat.toFixed(5)}, {order.customer_lng.toFixed(5)}</p>
-                </div>
-              </Popup>
-            </Marker>
-          )}
+          {/* All Active Orders */}
+          {allOrders.map((activeOrder, idx) => {
+            const isCurrentOrder = activeOrder.id === order.id;
+            const orderIcon = isCurrentOrder ? deliveryIcon : makeEmojiIcon('#64748b', `${idx + 1}`);
+            
+            return activeOrder.delivery_lat && activeOrder.delivery_lng && (
+              <Marker 
+                key={activeOrder.id} 
+                position={[activeOrder.delivery_lat, activeOrder.delivery_lng]} 
+                icon={orderIcon}
+                eventHandlers={{
+                  click: () => {
+                    const orderIndex = allOrders.findIndex(o => o.id === activeOrder.id);
+                    setCurrentOrderIndex(orderIndex);
+                  }
+                }}
+              >
+                <Popup>
+                  <div className="text-center p-2">
+                    <p className="font-bold text-emerald-600">🏠 {isCurrentOrder ? 'Current Delivery' : `Order #${idx + 1}`}</p>
+                    <p className="text-sm text-gray-700">{activeOrder.customer_name}</p>
+                    <p className="text-sm text-gray-600">{activeOrder.delivery_address}</p>
+                    {!isCurrentOrder && (
+                      <button 
+                        onClick={() => setCurrentOrderIndex(idx)}
+                        className="mt-2 text-xs bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
+                      >
+                        Switch to this order
+                      </button>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
 
           {/* Driver Location - Shown if different from current user */}
           {order.driver_lat && order.driver_lng && (!currentLocation || (order.driver_lat !== currentLocation[0] || order.driver_lng !== currentLocation[1])) && (
@@ -816,8 +823,8 @@ export default function OrderTracking() {
         </MapContainer>
       </div>
 
-      {/* Header with Order Navigation */}
-      <div className="fixed top-4 left-0 right-0 z-30 flex items-center justify-between px-4">
+      {/* Smart Back Button with Order Navigation */}
+      <div className="fixed top-4 left-4 z-30 flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -853,8 +860,6 @@ export default function OrderTracking() {
             </Button>
           </div>
         )}
-
-        <div className="w-10" />
       </div>
 
       {/* Map Controls */}
