@@ -901,13 +901,23 @@ export default function OrderTracking() {
 
   const goToPreviousOrder = () => {
     if (currentOrderIndex > 0) {
-      setCurrentOrderIndex(currentOrderIndex - 1);
+      const newIndex = currentOrderIndex - 1;
+      setCurrentOrderIndex(newIndex);
+      const newOrder = allOrders[newIndex];
+      if (newOrder?.delivery_lat && newOrder?.delivery_lng && mapRef.current) {
+        mapRef.current.setView([newOrder.delivery_lat, newOrder.delivery_lng], 15);
+      }
     }
   };
 
   const goToNextOrder = () => {
     if (currentOrderIndex < allOrders.length - 1) {
-      setCurrentOrderIndex(currentOrderIndex + 1);
+      const newIndex = currentOrderIndex + 1;
+      setCurrentOrderIndex(newIndex);
+      const newOrder = allOrders[newIndex];
+      if (newOrder?.delivery_lat && newOrder?.delivery_lng && mapRef.current) {
+        mapRef.current.setView([newOrder.delivery_lat, newOrder.delivery_lng], 15);
+      }
     }
   };
 
@@ -1259,12 +1269,11 @@ export default function OrderTracking() {
           <ArrowLeft className="w-5 h-5 text-emerald-900" />
         </Button>
         <Button
-          size="sm"
+          size="icon"
           onClick={handleCreateOrder}
           className="rounded-full shadow-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
         >
-          <Plus className="w-4 h-4 mr-1" />
-          New Order
+          <Plus className="w-5 h-5" />
         </Button>
 
         {allOrders.length > 1 && (
