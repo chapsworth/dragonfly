@@ -264,7 +264,7 @@ export default function DeliveryNavigation() {
     return colors[level] || 'bg-gray-500';
   };
 
-  if (ordersLoading || !apiKey || !isLoaded) {
+  if (ordersLoading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
         <div className="text-center">
