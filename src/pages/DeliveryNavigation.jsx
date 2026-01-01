@@ -28,30 +28,27 @@ export default function DeliveryNavigation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderIds = urlParams.get('orderIds')?.split(',') || [];
 
-  const [apiKey, setApiKey] = useState(null);
+  const [apiKey, setApiKey] = useState('');
+  const libraries = useMemo(() => ['places', 'geometry'], []);
 
   useEffect(() => {
     // Fetch API key from backend function
     base44.functions.invoke('getGoogleMapsKey', {})
       .then(res => {
-        setApiKey(res.data.key);
+        setApiKey(res.data.key || '');
       })
       .catch(() => {
         console.error('Failed to load Google Maps API key');
         setApiKey('');
       });
   }, []);
-
-  const shouldLoadMap = !!apiKey;
   
-  const { isLoaded } = useJsApiLoader(
-    shouldLoadMap ? {
-      googleMapsApiKey: apiKey,
-      libraries: ['places', 'geometry'],
-      id: 'google-maps-script',
-      preventGoogleFontsLoading: true
-    } : { googleMapsApiKey: '', libraries: [] }
-  ) || {};
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: apiKey,
+    libraries,
+    id: 'google-maps-script',
+    preventGoogleFontsLoading: true
+  });
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
