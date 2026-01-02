@@ -66,7 +66,8 @@ function VendorOrdersContent() {
     { name: 'LA Bulk - Sungrown (A)', type: 'flower', url: 'https://labulkflower.com/product/bulk-flower/', defaultPrice: 100 },
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 },
-    { name: 'smashed', type: 'custom', url: '', defaultPrice: 0 }
+    { name: 'smashed', type: 'custom', url: '', defaultPrice: 0 },
+    { name: 'pioneer', type: 'flower', url: '', defaultPrice: 0 }
   ];
 
   // Smashed vendor products
@@ -309,6 +310,30 @@ function VendorOrdersContent() {
     { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Unicorn Breath (Indica)', size: '3.5g', price: 20 }
   ];
 
+  // Pioneer vendor products
+  const pioneerProducts = [
+    // Ounces
+    { category: 'flower', product_name: 'Colombian Gold', variant: 'sativa', size: '1oz', price: 55 },
+    { category: 'flower', product_name: 'Super Lemon Gelato', variant: 'hybrid', size: '1oz', price: 55 },
+    { category: 'flower', product_name: 'Sunset Sherbet', variant: 'hybrid/indica', size: '1oz', price: 55 },
+    { category: 'flower', product_name: 'Purple Urkle', variant: 'indica', size: '1oz', price: 55 },
+    { category: 'flower', product_name: 'Cheetah Piss', variant: 'hybrid', size: '1oz', price: 65 },
+    { category: 'flower', product_name: 'Bluephoria', variant: 'hybrid', size: '1oz', price: 65 },
+    { category: 'flower', product_name: 'Bridesmaid', variant: 'indica', size: '1oz', price: 70 },
+    { category: 'flower', product_name: 'White Fire OG', variant: 'indica', size: '1oz', price: 85 },
+    { category: 'flower', product_name: 'Diablo OG', variant: 'indica', size: '1oz', price: 110 },
+    { category: 'flower', product_name: 'Purple Pound Cake', variant: 'hybrid/indica', size: '1oz', price: 110 },
+    { category: 'flower', product_name: 'Captain Jack', variant: 'sativa', size: '1oz', price: 115 },
+    
+    // Quarter Pounds
+    { category: 'flower', product_name: 'Super Lemon Gelato', variant: 'hybrid', size: '1/4lb', price: 200 },
+    { category: 'flower', product_name: 'Cheetah Piss', variant: 'hybrid', size: '1/4lb', price: 225 },
+    { category: 'flower', product_name: 'Bluephoria', variant: 'hybrid', size: '1/4lb', price: 225 },
+    { category: 'flower', product_name: 'Bridesmaid', variant: 'indica', size: '1/4lb', price: 250 },
+    { category: 'flower', product_name: 'White Fire OG', variant: 'indica', size: '1/4lb', price: 300 },
+    { category: 'flower', product_name: 'Diablo OG', variant: 'indica', size: '1/4lb', price: 400 }
+  ];
+
   const vendors = [...defaultVendors, ...vendorsData.filter(v => !defaultVendors.find(d => d.name === v.name))];
 
   const { data: products = [], isLoading } = useQuery({
@@ -319,6 +344,15 @@ function VendorOrdersContent() {
         return smashedProducts.map((p, idx) => ({
           id: `smashed-${idx}`,
           vendor_name: 'smashed',
+          ...p,
+          is_active: true
+        }));
+      }
+      // For pioneer vendor, return hardcoded products
+      if (selectedVendor === 'pioneer') {
+        return pioneerProducts.map((p, idx) => ({
+          id: `pioneer-${idx}`,
+          vendor_name: 'pioneer',
           ...p,
           is_active: true
         }));
