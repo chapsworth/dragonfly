@@ -11,6 +11,7 @@ import { FileCode, Eye, Sparkles, Loader2, Code } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 export default function PageSelector({ onCreateBlueprint }) {
   const [selectedPage, setSelectedPage] = useState('');
@@ -47,6 +48,16 @@ export default function PageSelector({ onCreateBlueprint }) {
     'sendPushNotification', 'updateDriverLocation', 'checkDriverProximity'
   ];
 
+  // Fetch available entities dynamically
+  const { data: availableEntities = [] } = useQuery({
+    queryKey: ['available-entities'],
+    queryFn: async () => {
+      // Get all entity names from the API
+      const entities = ['Order', 'Product', 'Contact', 'Vendor', 'VendorProduct', 'Reward', 'PointsTransaction'];
+      return entities;
+    }
+  });
+
   const categories = ['Navigation', 'Content', 'E-commerce', 'Forms', 'Media', 'Data Display', 'Layout', 'Social'];
 
   const handleAnalyzePage = async () => {
@@ -57,6 +68,49 @@ export default function PageSelector({ onCreateBlueprint }) {
 
     setIsAnalyzing(true);
     try {
+      // Handle entity analysis separately
+      if (selectedType === 'entity') {
+        // Fetch entity schema directly
+        const schema = await base44.entities[selectedPage].schema();
+        
+        // Generate blueprint from schema
+        const entityBlueprint = {
+          mainComponent: selectedPage,
+          description: `Entity schema for ${selectedPage}`,
+          components: [{
+            name: selectedPage,
+            description: `Database entity with properties: ${Object.keys(schema.properties || {}).join(', ')}`,
+            props: schema.properties || {},
+            code_snippet: JSON.stringify(schema, null, 2)
+          }],
+          suggestedCategory: 'Data Display',
+          suggestedTags: ['entity', 'schema', 'database', selectedPage.toLowerCase()]
+        };
+        
+        setExtractedComponents(entityBlueprint.components || []);
+        
+        // Auto-fill with entity blueprint
+        setBlueprintData({
+          name: entityBlueprint.mainComponent,
+          type: entityBlueprint.mainComponent.toLowerCase().replace(/\s+/g, '_'),
+          category: entityBlueprint.suggestedCategory || 'Data Display',
+          description: entityBlueprint.description || '',
+          tags: (entityBlueprint.suggestedTags || []).join(', '),
+          default_props: JSON.stringify({
+            entity_name: selectedPage,
+            schema: schema
+          }, null, 2),
+          editable_fields_schema: JSON.stringify({
+            type: "object",
+            properties: schema.properties || {}
+          }, null, 2)
+        });
+        
+        setIsAnalyzing(false);
+        toast.success('Entity schema analyzed successfully!');
+        return;
+      }
+
       // Determine file path based on type
       let filePath = '';
       if (selectedType === 'page') {
@@ -315,12 +369,13 @@ Return JSON:
                 <SelectItem value="page">Page</SelectItem>
                 <SelectItem value="component">Component</SelectItem>
                 <SelectItem value="function">Function</SelectItem>
+                <SelectItem value="entity">Entity</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label>Select {selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : 'Function'} *</Label>
+            <Label>Select {selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : selectedType === 'function' ? 'Function' : 'Entity'} *</Label>
             <Select value={selectedPage} onValueChange={setSelectedPage}>
               <SelectTrigger>
                 <SelectValue placeholder={`Choose a ${selectedType}...`} />
@@ -334,6 +389,9 @@ Return JSON:
                 ))}
                 {selectedType === 'function' && availableFunctions.map(func => (
                   <SelectItem key={func} value={func}>{func}</SelectItem>
+                ))}
+                {selectedType === 'entity' && availableEntities.map(entity => (
+                  <SelectItem key={entity} value={entity}>{entity}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -352,7 +410,7 @@ Return JSON:
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}
-                  {isAnalyzing ? 'Analyzing...' : `Analyze ${selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : 'Function'}`}
+                  {isAnalyzing ? 'Analyzing...' : `Analyze ${selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : selectedType === 'function' ? 'Function' : 'Entity'}`}
                 </Button>
                 <Button
                   variant="outline"
@@ -521,15 +579,15 @@ Return JSON:
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
-          <p>1. <strong>Select type</strong> - Choose page, component, or function</p>
-          <p>2. <strong>Select item</strong> - Pick from available pages, components, or functions</p>
-          <p>3. <strong>Analyze</strong> - AI reads the code and extracts all components</p>
+          <p>1. <strong>Select type</strong> - Choose page, component, function, or entity</p>
+          <p>2. <strong>Select item</strong> - Pick from available items in your app</p>
+          <p>3. <strong>Analyze</strong> - AI reads the code/schema and extracts all components</p>
           <p>4. <strong>Select component</strong> - AI auto-generates props and schema</p>
           <p>5. <strong>Review/Edit</strong> - Customize the blueprint details</p>
           <p>6. <strong>Generate</strong> - Creates blueprint with full CRUD capabilities</p>
           <p className="text-xs text-gray-500 mt-3 bg-purple-50 p-2 rounded">
             <Sparkles className="w-3 h-3 inline mr-1" />
-            AI automatically extracts all code, props, state, and configuration from pages, components, and functions to generate complete blueprints.
+            AI automatically extracts all code, props, state, configuration, and entity schemas to generate complete blueprints.
           </p>
         </CardContent>
       </Card>
