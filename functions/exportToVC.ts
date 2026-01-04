@@ -7,17 +7,17 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Check authentication - either valid user OR valid secret key
+    // Check authentication - only if INCOMING_API_SECRET is configured
     const authHeader = req.headers.get('Authorization');
     const secretKey = Deno.env.get('INCOMING_API_SECRET');
     
-    const isValidSecret = authHeader && secretKey && 
-      (authHeader === `Bearer ${secretKey}` || authHeader.replace('Bearer ', '') === secretKey);
-    
-    if (!isValidSecret) {
-      const user = await base44.auth.me();
-      if (!user) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Only check auth if a secret is configured
+    if (secretKey) {
+      const isValidSecret = authHeader && 
+        (authHeader === `Bearer ${secretKey}` || authHeader.replace('Bearer ', '') === secretKey);
+      
+      if (!isValidSecret) {
+        return Response.json({ error: 'Invalid API key' }, { status: 401 });
       }
     }
     
