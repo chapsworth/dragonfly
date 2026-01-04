@@ -14,6 +14,7 @@ import { base44 } from '@/api/base44Client';
 
 export default function PageSelector({ onCreateBlueprint }) {
   const [selectedPage, setSelectedPage] = useState('');
+  const [selectedType, setSelectedType] = useState('page');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [pageCode, setPageCode] = useState('');
   const [extractedComponents, setExtractedComponents] = useState([]);
@@ -34,18 +35,40 @@ export default function PageSelector({ onCreateBlueprint }) {
     'ProductDetail', 'Cart', 'Rewards', 'CRM', 'AdminProducts', 'ExportToVC'
   ];
 
+  // List of available components
+  const availableComponents = [
+    'cart/CartContext', 'cart/CartDrawer', 'admin/AdminNav', 'navigation/Header', 
+    'navigation/Sidebar', 'products/ProductCard', 'orders/OrderCard', 'push/CapacitorPushNotifications'
+  ];
+
+  // List of available functions
+  const availableFunctions = [
+    'notifyAdminsNewOrder', 'sendOrderEmail', 'geocodeOrders', 'registerDeviceToken',
+    'sendPushNotification', 'updateDriverLocation', 'checkDriverProximity'
+  ];
+
   const categories = ['Navigation', 'Content', 'E-commerce', 'Forms', 'Media', 'Data Display', 'Layout', 'Social'];
 
   const handleAnalyzePage = async () => {
     if (!selectedPage) {
-      toast.error('Please select a page first');
+      toast.error('Please select an item first');
       return;
     }
 
     setIsAnalyzing(true);
     try {
-      // Use AI to read and analyze the page code
-      const prompt = `Analyze this page file: pages/${selectedPage}.js
+      // Determine file path based on type
+      let filePath = '';
+      if (selectedType === 'page') {
+        filePath = `pages/${selectedPage}.js`;
+      } else if (selectedType === 'component') {
+        filePath = `components/${selectedPage}.jsx`;
+      } else if (selectedType === 'function') {
+        filePath = `functions/${selectedPage}.js`;
+      }
+
+      // Use AI to read and analyze the code
+      const prompt = `Analyze this ${selectedType} file: ${filePath}
 
 Read the file and extract:
 1. Main component name
@@ -279,14 +302,38 @@ Return JSON:
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Select Page *</Label>
-            <Select value={selectedPage} onValueChange={setSelectedPage}>
+            <Label>Select Type *</Label>
+            <Select value={selectedType} onValueChange={(v) => {
+              setSelectedType(v);
+              setSelectedPage('');
+              setExtractedComponents([]);
+            }}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a page..." />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {availablePages.map(page => (
+                <SelectItem value="page">Page</SelectItem>
+                <SelectItem value="component">Component</SelectItem>
+                <SelectItem value="function">Function</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Select {selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : 'Function'} *</Label>
+            <Select value={selectedPage} onValueChange={setSelectedPage}>
+              <SelectTrigger>
+                <SelectValue placeholder={`Choose a ${selectedType}...`} />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedType === 'page' && availablePages.map(page => (
                   <SelectItem key={page} value={page}>{page}</SelectItem>
+                ))}
+                {selectedType === 'component' && availableComponents.map(comp => (
+                  <SelectItem key={comp} value={comp}>{comp}</SelectItem>
+                ))}
+                {selectedType === 'function' && availableFunctions.map(func => (
+                  <SelectItem key={func} value={func}>{func}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -305,7 +352,7 @@ Return JSON:
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}
-                  {isAnalyzing ? 'Analyzing...' : 'Analyze Page'}
+                  {isAnalyzing ? 'Analyzing...' : `Analyze ${selectedType === 'page' ? 'Page' : selectedType === 'component' ? 'Component' : 'Function'}`}
                 </Button>
                 <Button
                   variant="outline"
@@ -474,14 +521,15 @@ Return JSON:
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
-          <p>1. <strong>Select a page</strong> from your app</p>
-          <p>2. <strong>Analyze</strong> - AI reads the code and extracts all components</p>
-          <p>3. <strong>Select component</strong> - AI auto-generates props and schema</p>
-          <p>4. <strong>Review/Edit</strong> - Customize the blueprint details</p>
-          <p>5. <strong>Generate</strong> - Creates blueprint with full CRUD capabilities</p>
+          <p>1. <strong>Select type</strong> - Choose page, component, or function</p>
+          <p>2. <strong>Select item</strong> - Pick from available pages, components, or functions</p>
+          <p>3. <strong>Analyze</strong> - AI reads the code and extracts all components</p>
+          <p>4. <strong>Select component</strong> - AI auto-generates props and schema</p>
+          <p>5. <strong>Review/Edit</strong> - Customize the blueprint details</p>
+          <p>6. <strong>Generate</strong> - Creates blueprint with full CRUD capabilities</p>
           <p className="text-xs text-gray-500 mt-3 bg-purple-50 p-2 rounded">
             <Sparkles className="w-3 h-3 inline mr-1" />
-            AI automatically extracts all code, props, state, and configuration to generate complete blueprints.
+            AI automatically extracts all code, props, state, and configuration from pages, components, and functions to generate complete blueprints.
           </p>
         </CardContent>
       </Card>

@@ -515,7 +515,7 @@ const data = await response.json();`}
               <TabsTrigger value="blueprints">Blueprints ({filteredBlueprints.length})</TabsTrigger>
               <TabsTrigger value="create">
                 <Sparkles className="w-4 h-4 mr-2" />
-                From Pages
+                AI Extract
               </TabsTrigger>
               <TabsTrigger value="raw">Raw Data</TabsTrigger>
             </TabsList>
