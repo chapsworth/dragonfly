@@ -21,6 +21,7 @@ import CRMVendors from './pages/CRMVendors';
 import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
 import CustomerOrderTracking from './pages/CustomerOrderTracking';
+import DeliveryNavigation from './pages/DeliveryNavigation';
 import ExportToVC from './pages/ExportToVC';
 import FactoryWholesale from './pages/FactoryWholesale';
 import Favorites from './pages/Favorites';
@@ -66,6 +67,7 @@ export const PAGES = {
     "ComponentLibrary": ComponentLibrary,
     "Contact": Contact,
     "CustomerOrderTracking": CustomerOrderTracking,
+    "DeliveryNavigation": DeliveryNavigation,
     "ExportToVC": ExportToVC,
     "FactoryWholesale": FactoryWholesale,
     "Favorites": Favorites,
