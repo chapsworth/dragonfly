@@ -667,6 +667,73 @@ export default function PrintifyShop() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Catalog/Blueprint Browser Dialog */}
+      <Dialog open={isCatalogOpen} onOpenChange={setIsCatalogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Printify Product Catalog</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Search catalog..."
+              className="w-full"
+            />
+            {catalogLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {catalog?.map(blueprint => (
+                  <Card 
+                    key={blueprint.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => {
+                      setSelectedBlueprint(blueprint);
+                      setIsCreateDialogOpen(true);
+                      setIsCatalogOpen(false);
+                    }}
+                  >
+                    <div className="aspect-square bg-gray-100 flex items-center justify-center p-4">
+                      <ImageIcon className="w-12 h-12 text-gray-400" />
+                    </div>
+                    <CardContent className="p-3">
+                      <h3 className="font-semibold text-sm line-clamp-2">{blueprint.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{blueprint.brand}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Product from Blueprint Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Product: {selectedBlueprint?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedBlueprint && (
+            <CreateProductForm
+              blueprint={selectedBlueprint}
+              shopId={selectedShop?.id}
+              onSuccess={() => {
+                setIsCreateDialogOpen(false);
+                setSelectedBlueprint(null);
+                refetchProducts();
+                toast.success('Product created successfully');
+              }}
+              onCancel={() => {
+                setIsCreateDialogOpen(false);
+                setSelectedBlueprint(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
