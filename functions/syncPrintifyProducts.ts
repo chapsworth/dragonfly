@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { shopId, productIds } = await req.json();
+    const { shopId, productIds, newOnly = false } = await req.json();
 
     const headers = {
       "Authorization": `Bearer ${PRINTIFY_API_KEY}`,
@@ -24,10 +24,19 @@ Deno.serve(async (req) => {
     const data = await response.json();
     const printifyProducts = data.data || [];
 
+    // Get existing products from database to check for new ones
+    const existingProducts = await base44.asServiceRole.entities.Product.list();
+    const existingSkus = new Set(existingProducts.map(p => p.sku));
+
     // Filter if specific product IDs provided
-    const productsToSync = productIds && productIds.length > 0
+    let productsToSync = productIds && productIds.length > 0
       ? printifyProducts.filter(p => productIds.includes(p.id))
       : printifyProducts;
+
+    // If newOnly flag is set, filter out products that already exist
+    if (newOnly) {
+      productsToSync = productsToSync.filter(p => !existingSkus.has(`PRINTIFY-${p.id}`));
+    }
 
     const syncedProducts = [];
     const errors = [];
@@ -75,7 +84,6 @@ Deno.serve(async (req) => {
         };
 
         // Check if product already exists
-        const existingProducts = await base44.asServiceRole.entities.Product.list();
         const existing = existingProducts.find(p => p.sku === productData.sku);
 
         let savedProduct;

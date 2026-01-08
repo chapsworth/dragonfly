@@ -90,10 +90,11 @@ export default function PrintifyShop() {
   });
 
   const syncProductsMutation = useMutation({
-    mutationFn: async ({ shopId, productIds }) => {
+    mutationFn: async ({ shopId, productIds, newOnly }) => {
       const response = await base44.functions.invoke('syncPrintifyProducts', {
         shopId,
-        productIds
+        productIds,
+        newOnly
       });
       return response.data;
     },
@@ -102,6 +103,7 @@ export default function PrintifyShop() {
       if (data.errors > 0) {
         toast.error(`${data.errors} products failed to sync`);
       }
+      queryClient.invalidateQueries(['shop-products']);
     },
     onError: (error) => {
       toast.error('Failed to sync products');
@@ -176,7 +178,7 @@ export default function PrintifyShop() {
               <Button
                 onClick={() => {
                   if (selectedShop && confirm('Sync all Printify products to shop? This will create/update products in your store.')) {
-                    syncProductsMutation.mutate({ shopId: selectedShop.id });
+                    syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: false });
                   }
                 }}
                 disabled={!selectedShop || syncProductsMutation.isPending}
@@ -189,7 +191,24 @@ export default function PrintifyShop() {
                 ) : (
                   <RefreshCw className="w-4 h-4 mr-2" />
                 )}
-                Sync to Shop
+                Sync All
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedShop && confirm('Sync only new Printify products (not already in shop)?')) {
+                    syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: true });
+                  }
+                }}
+                disabled={!selectedShop || syncProductsMutation.isPending}
+                size="sm"
+                className="bg-emerald-600"
+              >
+                {syncProductsMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Sync New Only
               </Button>
               <Button
                 onClick={() => {
@@ -321,7 +340,8 @@ export default function PrintifyShop() {
                           if (confirm(`Sync "${product.title}" to shop?`)) {
                             syncProductsMutation.mutate({ 
                               shopId: selectedShop.id,
-                              productIds: [product.id]
+                              productIds: [product.id],
+                              newOnly: false
                             });
                           }
                         }}
