@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Upload, Check, ZoomIn, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import DesignEditor from './DesignEditor';
 
 export default function CreateProductForm({ blueprint, shopId, onSuccess, onCancel }) {
   const [productData, setProductData] = useState({
@@ -26,6 +27,7 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [mockupPreview, setMockupPreview] = useState(null);
+  const [printAreasData, setPrintAreasData] = useState(null);
 
   const { data: providers, isLoading: providersLoading } = useQuery({
     queryKey: ['blueprint-providers', blueprint.id],
@@ -46,10 +48,12 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
         blueprintId: blueprint.id,
         printProviderId: productData.selectedProvider.id
       });
-      return response.data.variants;
+      return response.data;
     },
     enabled: !!productData.selectedProvider
   });
+
+  const printAreas = variants?.print_areas || [];
 
   const createProductMutation = useMutation({
     mutationFn: async (data) => {
@@ -108,25 +112,7 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
         price: Math.round(v.price * 100),
         is_enabled: true
       })),
-      print_areas: productData.designImage ? [
-        {
-          variant_ids: productData.selectedVariants.map(v => v.id),
-          placeholders: [
-            {
-              position: 'front',
-              images: [
-                {
-                  id: productData.designImage,
-                  x: 0.5,
-                  y: 0.5,
-                  scale: 1,
-                  angle: 0
-                }
-              ]
-            }
-          ]
-        }
-      ] : []
+      print_areas: printAreasData || []
     };
 
     if (productData.tags.length > 0) {
@@ -142,11 +128,12 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
     <div className="space-y-4">
       {/* Mobile-Friendly Tabs */}
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="info" className="text-xs">Info</TabsTrigger>
           <TabsTrigger value="preview" className="text-xs">Preview</TabsTrigger>
           <TabsTrigger value="design" className="text-xs">Design</TabsTrigger>
           <TabsTrigger value="variants" className="text-xs">Variants</TabsTrigger>
+          <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
         </TabsList>
 
         {/* Product Info Tab */}
@@ -331,7 +318,7 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
                   </div>
                 ) : (
                   <div className="space-y-2 mt-2 max-h-80 overflow-y-auto">
-                    {variants?.map(variant => {
+                    {variants?.variants?.map(variant => {
                       const isSelected = productData.selectedVariants.some(v => v.id === variant.id);
                       const selectedVariant = productData.selectedVariants.find(v => v.id === variant.id);
                       
@@ -391,6 +378,23 @@ export default function CreateProductForm({ blueprint, shopId, onSuccess, onCanc
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* Advanced Design Editor */}
+        <TabsContent value="editor" className="mt-4">
+          {productData.selectedProvider && variants?.print_areas ? (
+            <DesignEditor
+              printAreas={variants.print_areas}
+              onDesignComplete={(designData) => {
+                setPrintAreasData(designData);
+                toast.success('Design completed');
+              }}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">Please select a print provider first</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
