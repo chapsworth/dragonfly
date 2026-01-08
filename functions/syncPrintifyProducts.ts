@@ -43,17 +43,65 @@ Deno.serve(async (req) => {
 
     for (const printifyProduct of productsToSync) {
       try {
-        // Determine category based on tags/title
-        let category = 'merch';
         const tags = printifyProduct.tags || [];
         const title = printifyProduct.title?.toLowerCase() || '';
+        const description = printifyProduct.description?.toLowerCase() || '';
         
-        if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
-          category = 'accessories';
-        } else if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
-          category = 'supplies';
-        } else if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie') || title.includes('mug') || title.includes('hat')) {
-          category = 'merch';
+        // Use AI to determine the best category
+        let category = 'merch';
+        try {
+          const categoryResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `Analyze this product and determine the best category for a cannabis dispensary shop.
+
+Product Details:
+Title: ${printifyProduct.title}
+Description: ${printifyProduct.description || 'N/A'}
+Tags: ${tags.join(', ') || 'N/A'}
+
+Available Categories:
+- flower (cannabis flower/buds)
+- pre-rolls (pre-rolled joints)
+- edibles (food products with cannabis)
+- concentrates (wax, shatter, oils)
+- vapes (vape cartridges, pens)
+- tinctures (liquid drops, sublingual oils)
+- topicals (creams, lotions, balms)
+- accessories (supplements, vitamins, tools)
+- merch (clothing, hats, mugs, promotional items)
+- supplies (packaging, bags, storage, papers)
+
+Return ONLY the category name, nothing else.`,
+            add_context_from_internet: false
+          });
+          
+          const suggestedCategory = categoryResult.trim().toLowerCase();
+          const validCategories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories', 'merch', 'supplies'];
+          
+          if (validCategories.includes(suggestedCategory)) {
+            category = suggestedCategory;
+          }
+        } catch (aiError) {
+          console.error('AI categorization failed, using fallback:', aiError);
+          // Fallback to manual categorization
+          if (tags.includes('flower') || title.includes('flower') || title.includes('bud')) {
+            category = 'flower';
+          } else if (tags.includes('pre-roll') || title.includes('pre-roll') || title.includes('joint')) {
+            category = 'pre-rolls';
+          } else if (tags.includes('edible') || title.includes('edible') || title.includes('gummy') || title.includes('chocolate')) {
+            category = 'edibles';
+          } else if (tags.includes('concentrate') || title.includes('concentrate') || title.includes('wax') || title.includes('shatter')) {
+            category = 'concentrates';
+          } else if (tags.includes('vape') || title.includes('vape') || title.includes('cartridge')) {
+            category = 'vapes';
+          } else if (tags.includes('tincture') || title.includes('tincture') || title.includes('oil') || title.includes('drops')) {
+            category = 'tinctures';
+          } else if (tags.includes('topical') || title.includes('topical') || title.includes('cream') || title.includes('lotion')) {
+            category = 'topicals';
+          } else if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
+            category = 'accessories';
+          } else if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
+            category = 'supplies';
+          }
         }
 
         // Map variants

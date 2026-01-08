@@ -16,18 +16,26 @@ import {
 import { toast } from 'sonner';
 
 const categoryIcons = {
-  'Merch': ShoppingBag,
-  'Shop Supplies': Package,
-  'Health Supplements': Pill,
-  'More': Sparkles
+  'merch': ShoppingBag,
+  'supplies': Package,
+  'accessories': Pill,
+  'flower': Sparkles,
+  'pre-rolls': Sparkles,
+  'edibles': Sparkles,
+  'concentrates': Sparkles,
+  'vapes': Sparkles,
+  'tinctures': Sparkles,
+  'topicals': Sparkles
 };
 
 export default function PrintifyShop() {
-  const [selectedCategory, setSelectedCategory] = useState('Merch');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedShop, setSelectedShop] = useState(null);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: shops, isLoading: shopsLoading } = useQuery({
@@ -89,6 +97,33 @@ export default function PrintifyShop() {
     }
   });
 
+  const { data: shopProducts = [] } = useQuery({
+    queryKey: ['shop-products'],
+    queryFn: () => base44.entities.Product.list()
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      return await base44.entities.Product.update(id, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['shop-products']);
+      setIsEditDialogOpen(false);
+      setEditingProduct(null);
+      toast.success('Product updated successfully');
+    }
+  });
+
+  const deleteShopProductMutation = useMutation({
+    mutationFn: async (id) => {
+      return await base44.entities.Product.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['shop-products']);
+      toast.success('Product deleted from shop');
+    }
+  });
+
   const syncProductsMutation = useMutation({
     mutationFn: async ({ shopId, productIds, newOnly }) => {
       const response = await base44.functions.invoke('syncPrintifyProducts', {
@@ -117,26 +152,50 @@ export default function PrintifyShop() {
     }
   }, [shops, selectedShop]);
 
-  const categories = ['Merch', 'Shop Supplies', 'Health Supplements', 'More'];
+  const categories = [
+    'flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 
+    'tinctures', 'topicals', 'accessories', 'merch', 'supplies'
+  ];
 
   const getProductCategory = (product) => {
     const tags = product.tags || [];
     const title = product.title?.toLowerCase() || '';
     
+    if (tags.includes('flower') || title.includes('flower') || title.includes('bud')) {
+      return 'flower';
+    }
+    if (tags.includes('pre-roll') || title.includes('pre-roll') || title.includes('joint')) {
+      return 'pre-rolls';
+    }
+    if (tags.includes('edible') || title.includes('edible') || title.includes('gummy') || title.includes('chocolate')) {
+      return 'edibles';
+    }
+    if (tags.includes('concentrate') || title.includes('concentrate') || title.includes('wax') || title.includes('shatter')) {
+      return 'concentrates';
+    }
+    if (tags.includes('vape') || title.includes('vape') || title.includes('cartridge') || title.includes('pen')) {
+      return 'vapes';
+    }
+    if (tags.includes('tincture') || title.includes('tincture') || title.includes('oil') || title.includes('drops')) {
+      return 'tinctures';
+    }
+    if (tags.includes('topical') || title.includes('topical') || title.includes('cream') || title.includes('lotion')) {
+      return 'topicals';
+    }
     if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
-      return 'Health Supplements';
+      return 'accessories';
     }
-    if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging')) {
-      return 'Shop Supplies';
+    if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
+      return 'supplies';
     }
-    if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie') || title.includes('mug')) {
-      return 'Merch';
+    if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie') || title.includes('mug') || title.includes('hat')) {
+      return 'merch';
     }
-    return 'More';
+    return 'merch';
   };
 
   const filteredProducts = products?.filter(product => {
-    const matchesCategory = selectedCategory === 'All' || getProductCategory(product) === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || getProductCategory(product) === selectedCategory;
     const matchesSearch = !searchQuery || 
       product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -161,67 +220,70 @@ export default function PrintifyShop() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Printify Shop</h1>
               <p className="text-gray-600">Manage your print-on-demand products</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => refetchProducts()}
-                variant="outline"
-                size="sm"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-              <Button
-                onClick={() => {
-                  if (selectedShop && confirm('Sync all Printify products to shop? This will create/update products in your store.')) {
-                    syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: false });
-                  }
-                }}
-                disabled={!selectedShop || syncProductsMutation.isPending}
-                variant="outline"
-                size="sm"
-                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-              >
-                {syncProductsMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                )}
-                Sync All
-              </Button>
-              <Button
-                onClick={() => {
-                  if (selectedShop && confirm('Sync only new Printify products (not already in shop)?')) {
-                    syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: true });
-                  }
-                }}
-                disabled={!selectedShop || syncProductsMutation.isPending}
-                size="sm"
-                className="bg-emerald-600"
-              >
-                {syncProductsMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4 mr-2" />
-                )}
-                Sync New Only
-              </Button>
-              <Button
-                onClick={() => {
-                  setSelectedProduct(null);
-                  setIsProductDialogOpen(true);
-                }}
-                className="bg-emerald-600"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Product
-              </Button>
-            </div>
+            <Button
+              onClick={() => refetchProducts()}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              onClick={() => {
+                if (selectedShop && confirm('Sync all Printify products to shop? This will create/update products in your store.')) {
+                  syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: false });
+                }
+              }}
+              disabled={!selectedShop || syncProductsMutation.isPending}
+              variant="outline"
+              size="sm"
+              className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+            >
+              {syncProductsMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Sync All
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedShop && confirm('Sync only new Printify products (not already in shop)?')) {
+                  syncProductsMutation.mutate({ shopId: selectedShop.id, newOnly: true });
+                }
+              }}
+              disabled={!selectedShop || syncProductsMutation.isPending}
+              size="sm"
+              className="bg-emerald-600"
+            >
+              {syncProductsMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              Sync New Only
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedProduct(null);
+                setIsProductDialogOpen(true);
+              }}
+              className="bg-emerald-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Product
+            </Button>
+          </div>
+        </div>
 
           {/* Shop Selector */}
           {shops && shops.length > 0 && (
@@ -249,32 +311,24 @@ export default function PrintifyShop() {
           )}
         </div>
 
-        {/* Categories Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {categories.map(category => {
-            const Icon = categoryIcons[category];
-            const count = groupedProducts[category]?.length || 0;
-            return (
-              <Card
-                key={category}
-                className={`cursor-pointer transition-all ${
-                  selectedCategory === category
-                    ? 'ring-2 ring-emerald-500 shadow-lg'
-                    : 'hover:shadow-md'
-                }`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Icon className="w-6 h-6 text-emerald-600" />
-                    <Badge variant="secondary">{count}</Badge>
-                  </div>
-                  <CardTitle className="text-lg mt-2">{category}</CardTitle>
-                </CardHeader>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Categories Tabs */}
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
+          <TabsList className="w-full flex-wrap h-auto gap-2 bg-white/60 p-2">
+            <TabsTrigger value="all" className="flex-shrink-0">
+              All ({products?.length || 0})
+            </TabsTrigger>
+            {categories.map(category => {
+              const Icon = categoryIcons[category] || Sparkles;
+              const count = groupedProducts[category]?.length || 0;
+              return (
+                <TabsTrigger key={category} value={category} className="flex-shrink-0">
+                  <Icon className="w-4 h-4 mr-1" />
+                  {category.replace('-', ' ')} ({count})
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
 
         {/* Search */}
         <div className="mb-6">
@@ -366,7 +420,7 @@ export default function PrintifyShop() {
                         size="icon"
                         variant="ghost"
                         onClick={() => {
-                          if (confirm('Delete this product?')) {
+                          if (confirm('Delete this product from Printify?')) {
                             deleteProductMutation.mutate(product.id);
                           }
                         }}
@@ -378,6 +432,42 @@ export default function PrintifyShop() {
                       </Button>
                     </div>
                   </div>
+                  
+                  {/* Show if product is synced to shop */}
+                  {shopProducts.find(p => p.printify_product_id === product.id.toString()) && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        ✓ In Shop
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const shopProduct = shopProducts.find(p => p.printify_product_id === product.id.toString());
+                          setEditingProduct(shopProduct);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="h-6 text-xs"
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit Shop Product
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const shopProduct = shopProducts.find(p => p.printify_product_id === product.id.toString());
+                          if (confirm('Delete this product from shop?')) {
+                            deleteShopProductMutation.mutate(shopProduct.id);
+                          }
+                        }}
+                        className="h-6 text-xs text-red-500"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Remove from Shop
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -444,6 +534,115 @@ export default function PrintifyShop() {
                     <Badge key={idx} variant="outline">{tag}</Badge>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Shop Product Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Shop Product</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <div className="space-y-4">
+              <div>
+                <Label>Product Name</Label>
+                <Input
+                  value={editingProduct.name || ''}
+                  onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Input
+                  value={editingProduct.description || ''}
+                  onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select
+                  value={editingProduct.category}
+                  onValueChange={(v) => setEditingProduct({...editingProduct, category: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.replace('-', ' ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Price</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editingProduct.price || 0}
+                  onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})}
+                />
+              </div>
+              <div>
+                <Label>Stock Quantity</Label>
+                <Input
+                  type="number"
+                  value={editingProduct.stock_quantity || 0}
+                  onChange={(e) => setEditingProduct({...editingProduct, stock_quantity: parseInt(e.target.value)})}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editingProduct.published || false}
+                  onChange={(e) => setEditingProduct({...editingProduct, published: e.target.checked})}
+                  id="published"
+                />
+                <Label htmlFor="published">Published in Shop</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editingProduct.in_stock || false}
+                  onChange={(e) => setEditingProduct({...editingProduct, in_stock: e.target.checked})}
+                  id="in_stock"
+                />
+                <Label htmlFor="in_stock">In Stock</Label>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    updateProductMutation.mutate({
+                      id: editingProduct.id,
+                      data: {
+                        name: editingProduct.name,
+                        description: editingProduct.description,
+                        category: editingProduct.category,
+                        price: editingProduct.price,
+                        stock_quantity: editingProduct.stock_quantity,
+                        published: editingProduct.published,
+                        in_stock: editingProduct.in_stock
+                      }
+                    });
+                  }}
+                  disabled={updateProductMutation.isPending}
+                  className="flex-1 bg-emerald-600"
+                >
+                  {updateProductMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
               </div>
             </div>
           )}
