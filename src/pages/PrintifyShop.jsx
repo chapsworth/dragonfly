@@ -695,12 +695,21 @@ export default function PrintifyShop() {
                       setIsCatalogOpen(false);
                     }}
                   >
-                    <div className="aspect-square bg-gray-100 flex items-center justify-center p-4">
-                      <ImageIcon className="w-12 h-12 text-gray-400" />
-                    </div>
+                    {blueprint.images?.[0] ? (
+                      <img 
+                        src={blueprint.images[0]} 
+                        alt={blueprint.title}
+                        className="w-full aspect-square object-cover"
+                      />
+                    ) : (
+                      <div className="aspect-square bg-gray-100 flex items-center justify-center p-4">
+                        <ImageIcon className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
                     <CardContent className="p-3">
                       <h3 className="font-semibold text-sm line-clamp-2">{blueprint.title}</h3>
                       <p className="text-xs text-gray-500 mt-1">{blueprint.brand}</p>
+                      <Badge variant="outline" className="text-xs mt-1">{blueprint.model}</Badge>
                     </CardContent>
                   </Card>
                 ))}
