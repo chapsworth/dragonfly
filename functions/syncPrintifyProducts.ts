@@ -47,35 +47,38 @@ Deno.serve(async (req) => {
         const title = printifyProduct.title?.toLowerCase() || '';
         const description = printifyProduct.description?.toLowerCase() || '';
         
-        // Use AI to determine the best category
-        let category = 'merch';
+        // Use AI to determine the best category for apparel/merch
+        let category = 'other';
+        const blueprintTitle = printifyProduct.blueprint?.title?.toLowerCase() || '';
+        
         try {
           const categoryResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-            prompt: `Analyze this product and determine the best category for a cannabis dispensary shop.
+            prompt: `Analyze this Printify product and determine the best category.
 
 Product Details:
 Title: ${printifyProduct.title}
 Description: ${printifyProduct.description || 'N/A'}
 Tags: ${tags.join(', ') || 'N/A'}
+Blueprint: ${blueprintTitle || 'N/A'}
 
 Available Categories:
-- flower (cannabis flower/buds)
-- pre-rolls (pre-rolled joints)
-- edibles (food products with cannabis)
-- concentrates (wax, shatter, oils)
-- vapes (vape cartridges, pens)
-- tinctures (liquid drops, sublingual oils)
-- topicals (creams, lotions, balms)
-- accessories (supplements, vitamins, tools)
-- merch (clothing, hats, mugs, promotional items)
-- supplies (packaging, bags, storage, papers)
+- apparel (t-shirts, hoodies, sweatshirts, tank tops, jerseys)
+- accessories (hats, caps, socks, scarves, gloves, bandanas)
+- home_living (pillows, blankets, posters, canvas prints, towels, shower curtains)
+- drinkware (mugs, cups, bottles, tumblers, wine glasses)
+- stickers (stickers, decals, labels)
+- office (notebooks, journals, pens, mouse pads, desk accessories)
+- kids_babies (kids clothing, baby onesies, bibs, kids accessories)
+- bags (tote bags, backpacks, drawstring bags, pouches)
+- jewelry (necklaces, bracelets, earrings)
+- other (anything that doesn't fit above)
 
 Return ONLY the category name, nothing else.`,
             add_context_from_internet: false
           });
           
           const suggestedCategory = categoryResult.trim().toLowerCase();
-          const validCategories = ['flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 'tinctures', 'topicals', 'accessories', 'merch', 'supplies'];
+          const validCategories = ['apparel', 'accessories', 'home_living', 'drinkware', 'stickers', 'office', 'kids_babies', 'bags', 'jewelry', 'other'];
           
           if (validCategories.includes(suggestedCategory)) {
             category = suggestedCategory;
@@ -83,24 +86,24 @@ Return ONLY the category name, nothing else.`,
         } catch (aiError) {
           console.error('AI categorization failed, using fallback:', aiError);
           // Fallback to manual categorization
-          if (tags.includes('flower') || title.includes('flower') || title.includes('bud')) {
-            category = 'flower';
-          } else if (tags.includes('pre-roll') || title.includes('pre-roll') || title.includes('joint')) {
-            category = 'pre-rolls';
-          } else if (tags.includes('edible') || title.includes('edible') || title.includes('gummy') || title.includes('chocolate')) {
-            category = 'edibles';
-          } else if (tags.includes('concentrate') || title.includes('concentrate') || title.includes('wax') || title.includes('shatter')) {
-            category = 'concentrates';
-          } else if (tags.includes('vape') || title.includes('vape') || title.includes('cartridge')) {
-            category = 'vapes';
-          } else if (tags.includes('tincture') || title.includes('tincture') || title.includes('oil') || title.includes('drops')) {
-            category = 'tinctures';
-          } else if (tags.includes('topical') || title.includes('topical') || title.includes('cream') || title.includes('lotion')) {
-            category = 'topicals';
-          } else if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
+          if (title.includes('shirt') || title.includes('hoodie') || title.includes('sweater') || blueprintTitle.includes('shirt')) {
+            category = 'apparel';
+          } else if (title.includes('hat') || title.includes('cap') || title.includes('sock') || blueprintTitle.includes('hat')) {
             category = 'accessories';
-          } else if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
-            category = 'supplies';
+          } else if (title.includes('pillow') || title.includes('blanket') || title.includes('poster') || blueprintTitle.includes('pillow')) {
+            category = 'home_living';
+          } else if (title.includes('mug') || title.includes('cup') || title.includes('bottle') || blueprintTitle.includes('mug')) {
+            category = 'drinkware';
+          } else if (title.includes('sticker') || blueprintTitle.includes('sticker')) {
+            category = 'stickers';
+          } else if (title.includes('notebook') || title.includes('journal') || blueprintTitle.includes('notebook')) {
+            category = 'office';
+          } else if (title.includes('kids') || title.includes('baby') || blueprintTitle.includes('baby')) {
+            category = 'kids_babies';
+          } else if (title.includes('tote') || title.includes('bag') || blueprintTitle.includes('bag')) {
+            category = 'bags';
+          } else if (title.includes('jewelry') || title.includes('necklace')) {
+            category = 'jewelry';
           }
         }
 

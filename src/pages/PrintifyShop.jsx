@@ -11,21 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Package, ShoppingBag, Pill, Sparkles, Plus, Edit2, Trash2, 
-  ExternalLink, Loader2, Search, RefreshCw, Eye
+  ExternalLink, Loader2, Search, RefreshCw, Eye, Upload, Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
+import CreateProductForm from '@/components/printify/CreateProductForm';
 
 const categoryIcons = {
-  'merch': ShoppingBag,
-  'supplies': Package,
-  'accessories': Pill,
-  'flower': Sparkles,
-  'pre-rolls': Sparkles,
-  'edibles': Sparkles,
-  'concentrates': Sparkles,
-  'vapes': Sparkles,
-  'tinctures': Sparkles,
-  'topicals': Sparkles
+  'apparel': ShoppingBag,
+  'accessories': Package,
+  'home_living': Sparkles,
+  'drinkware': Pill,
+  'stickers': Package,
+  'office': Package,
+  'kids_babies': ShoppingBag,
+  'bags': Package,
+  'jewelry': Sparkles,
+  'other': Package
 };
 
 export default function PrintifyShop() {
@@ -36,6 +37,9 @@ export default function PrintifyShop() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [selectedBlueprint, setSelectedBlueprint] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: shops, isLoading: shopsLoading } = useQuery({
@@ -102,6 +106,15 @@ export default function PrintifyShop() {
     queryFn: () => base44.entities.Product.list()
   });
 
+  const { data: catalog, isLoading: catalogLoading } = useQuery({
+    queryKey: ['printify-catalog'],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('printify', { action: 'getCatalog' });
+      return response.data;
+    },
+    enabled: isCatalogOpen
+  });
+
   const updateProductMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       return await base44.entities.Product.update(id, data);
@@ -153,45 +166,51 @@ export default function PrintifyShop() {
   }, [shops, selectedShop]);
 
   const categories = [
-    'flower', 'pre-rolls', 'edibles', 'concentrates', 'vapes', 
-    'tinctures', 'topicals', 'accessories', 'merch', 'supplies'
+    'apparel', 'accessories', 'home_living', 'drinkware', 'stickers',
+    'office', 'kids_babies', 'bags', 'jewelry', 'other'
   ];
 
   const getProductCategory = (product) => {
     const tags = product.tags || [];
     const title = product.title?.toLowerCase() || '';
+    const blueprintTitle = product.blueprint?.title?.toLowerCase() || '';
     
-    if (tags.includes('flower') || title.includes('flower') || title.includes('bud')) {
-      return 'flower';
+    if (tags.includes('apparel') || title.includes('shirt') || title.includes('hoodie') || title.includes('sweater') || 
+        title.includes('tank') || blueprintTitle.includes('shirt') || blueprintTitle.includes('hoodie')) {
+      return 'apparel';
     }
-    if (tags.includes('pre-roll') || title.includes('pre-roll') || title.includes('joint')) {
-      return 'pre-rolls';
-    }
-    if (tags.includes('edible') || title.includes('edible') || title.includes('gummy') || title.includes('chocolate')) {
-      return 'edibles';
-    }
-    if (tags.includes('concentrate') || title.includes('concentrate') || title.includes('wax') || title.includes('shatter')) {
-      return 'concentrates';
-    }
-    if (tags.includes('vape') || title.includes('vape') || title.includes('cartridge') || title.includes('pen')) {
-      return 'vapes';
-    }
-    if (tags.includes('tincture') || title.includes('tincture') || title.includes('oil') || title.includes('drops')) {
-      return 'tinctures';
-    }
-    if (tags.includes('topical') || title.includes('topical') || title.includes('cream') || title.includes('lotion')) {
-      return 'topicals';
-    }
-    if (tags.includes('supplements') || title.includes('supplement') || title.includes('vitamin')) {
+    if (tags.includes('accessories') || title.includes('hat') || title.includes('cap') || title.includes('socks') || 
+        title.includes('scarf') || blueprintTitle.includes('hat') || blueprintTitle.includes('cap')) {
       return 'accessories';
     }
-    if (tags.includes('supplies') || title.includes('supplies') || title.includes('packaging') || title.includes('bag')) {
-      return 'supplies';
+    if (tags.includes('home') || title.includes('pillow') || title.includes('blanket') || title.includes('poster') || 
+        title.includes('canvas') || title.includes('towel') || blueprintTitle.includes('pillow') || blueprintTitle.includes('poster')) {
+      return 'home_living';
     }
-    if (tags.includes('merch') || title.includes('shirt') || title.includes('hoodie') || title.includes('mug') || title.includes('hat')) {
-      return 'merch';
+    if (tags.includes('drinkware') || title.includes('mug') || title.includes('cup') || title.includes('bottle') || 
+        title.includes('tumbler') || blueprintTitle.includes('mug') || blueprintTitle.includes('bottle')) {
+      return 'drinkware';
     }
-    return 'merch';
+    if (tags.includes('sticker') || title.includes('sticker') || title.includes('decal') || blueprintTitle.includes('sticker')) {
+      return 'stickers';
+    }
+    if (tags.includes('office') || title.includes('notebook') || title.includes('journal') || title.includes('pen') || 
+        blueprintTitle.includes('notebook') || blueprintTitle.includes('journal')) {
+      return 'office';
+    }
+    if (tags.includes('kids') || tags.includes('baby') || title.includes('kids') || title.includes('baby') || 
+        title.includes('onesie') || blueprintTitle.includes('kids') || blueprintTitle.includes('baby')) {
+      return 'kids_babies';
+    }
+    if (tags.includes('bag') || title.includes('tote') || title.includes('backpack') || title.includes('pouch') || 
+        blueprintTitle.includes('bag') || blueprintTitle.includes('tote')) {
+      return 'bags';
+    }
+    if (tags.includes('jewelry') || title.includes('necklace') || title.includes('bracelet') || title.includes('earring') || 
+        blueprintTitle.includes('jewelry')) {
+      return 'jewelry';
+    }
+    return 'other';
   };
 
   const filteredProducts = products?.filter(product => {
@@ -273,14 +292,11 @@ export default function PrintifyShop() {
               Sync New Only
             </Button>
             <Button
-              onClick={() => {
-                setSelectedProduct(null);
-                setIsProductDialogOpen(true);
-              }}
+              onClick={() => setIsCatalogOpen(true)}
               className="bg-emerald-600"
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Product
+              Create from Catalog
             </Button>
           </div>
         </div>
@@ -572,11 +588,14 @@ export default function PrintifyShop() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat.replace('-', ' ')}
-                      </SelectItem>
-                    ))}
+                    {categories.map(cat => {
+                      const displayName = cat.replace('_', ' & ').replace(/\b\w/g, l => l.toUpperCase());
+                      return (
+                        <SelectItem key={cat} value={cat}>
+                          {displayName}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
