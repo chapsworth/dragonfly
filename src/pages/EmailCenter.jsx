@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   Mail, Send, Users, FileText, Zap, Plus, Edit2, Trash2, 
-  Copy, Loader2, Check, X, Search
+  Copy, Loader2, Check, X, Search, Sparkles, Clock, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,8 +33,13 @@ export default function EmailCenter() {
     recipient_group_id: '',
     subject: '',
     body: '',
-    template_id: ''
+    template_id: '',
+    schedule_date: '',
+    schedule_time: ''
   });
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -175,6 +180,11 @@ export default function EmailCenter() {
         recipients = contacts.map(c => c.email).filter(Boolean);
       }
 
+      // Check if scheduled
+      if (emailForm.schedule_date && emailForm.schedule_time) {
+        toast.info('Scheduled emails coming soon - sending immediately for now');
+      }
+
       for (const email of recipients) {
         await base44.integrations.Core.SendEmail({
           to: email,
@@ -190,12 +200,80 @@ export default function EmailCenter() {
         recipient_group_id: '',
         subject: '',
         body: '',
-        template_id: ''
+        template_id: '',
+        schedule_date: '',
+        schedule_time: ''
       });
     } catch (error) {
       toast.error('Failed to send email');
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!aiPrompt) {
+      toast.error('Please enter a prompt');
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate a professional email based on this prompt: ${aiPrompt}\n\nReturn JSON with "subject" and "body" fields. The body should be well-formatted HTML with proper spacing and professional tone.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            subject: { type: "string" },
+            body: { type: "string" }
+          }
+        }
+      });
+
+      setEmailForm({
+        ...emailForm,
+        subject: result.subject,
+        body: result.body
+      });
+      setIsAIAssistantOpen(false);
+      setAiPrompt('');
+      toast.success('Email generated!');
+    } catch (error) {
+      toast.error('Failed to generate email');
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
+  const handleAIImprove = async () => {
+    if (!emailForm.body) {
+      toast.error('Please write some content first');
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Improve this email to be more professional, clear, and engaging:\n\nSubject: ${emailForm.subject}\n\nBody: ${emailForm.body}\n\nReturn improved version as JSON with "subject" and "body" fields.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            subject: { type: "string" },
+            body: { type: "string" }
+          }
+        }
+      });
+
+      setEmailForm({
+        ...emailForm,
+        subject: result.subject,
+        body: result.body
+      });
+      toast.success('Email improved!');
+    } catch (error) {
+      toast.error('Failed to improve email');
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -320,6 +398,46 @@ export default function EmailCenter() {
                         placeholder="Email body..."
                         rows={10}
                       />
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsAIAssistantOpen(true)}
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          AI Generate
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={handleAIImprove}
+                          disabled={generatingAI || !emailForm.body}
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          AI Improve
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Schedule Date (Optional)</Label>
+                        <Input
+                          type="date"
+                          value={emailForm.schedule_date}
+                          onChange={(e) => setEmailForm({ ...emailForm, schedule_date: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Schedule Time (Optional)</Label>
+                        <Input
+                          type="time"
+                          value={emailForm.schedule_time}
+                          onChange={(e) => setEmailForm({ ...emailForm, schedule_time: e.target.value })}
+                        />
+                      </div>
                     </div>
 
                     <Button
@@ -331,6 +449,11 @@ export default function EmailCenter() {
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Sending...
+                        </>
+                      ) : emailForm.schedule_date ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2" />
+                          Schedule Email
                         </>
                       ) : (
                         <>
@@ -502,7 +625,23 @@ export default function EmailCenter() {
 
           {/* Triggers Tab */}
           <TabsContent value="triggers">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-between items-center mb-4">
+              <Button
+                onClick={async () => {
+                  try {
+                    await base44.functions.invoke('setupEmailTriggers', {});
+                    queryClient.invalidateQueries(['email-templates']);
+                    queryClient.invalidateQueries(['email-triggers']);
+                    toast.success('Email system setup complete!');
+                  } catch (error) {
+                    toast.error('Setup failed');
+                  }
+                }}
+                variant="outline"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Auto-Setup Triggers & Templates
+              </Button>
               <Button
                 onClick={() => {
                   setEditingTrigger({ 
@@ -719,6 +858,54 @@ export default function EmailCenter() {
         </Dialog>
 
         {/* Trigger Dialog */}
+        <Dialog open={isAIAssistantOpen} onOpenChange={setIsAIAssistantOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>AI Email Assistant</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>What kind of email do you want to write?</Label>
+                <Textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="E.g., Welcome email for new customers, order confirmation with tracking details, promotional email for holiday sale..."
+                  rows={4}
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAIAssistantOpen(false);
+                    setAiPrompt('');
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAIGenerate}
+                  disabled={generatingAI}
+                  className="flex-1 bg-indigo-600"
+                >
+                  {generatingAI ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isTriggerDialogOpen} onOpenChange={setIsTriggerDialogOpen}>
           <DialogContent>
             <DialogHeader>
