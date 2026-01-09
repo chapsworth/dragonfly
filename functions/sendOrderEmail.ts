@@ -6,6 +6,37 @@ Deno.serve(async (req) => {
 
         const { orderId, status, customerEmail, customerName } = await req.json();
 
+        // Check if EmailTrigger system should handle this
+        const triggers = await base44.asServiceRole.entities.EmailTrigger.list();
+        const relevantTrigger = triggers.find(t => 
+            t.trigger_type === 'order_status_change' && 
+            t.is_active && 
+            t.recipient_type === 'customer'
+        );
+
+        if (relevantTrigger && relevantTrigger.template_id) {
+            // Use trigger system instead
+            const template = await base44.asServiceRole.entities.EmailTemplate.get(relevantTrigger.template_id);
+            if (template) {
+                await base44.integrations.Core.SendEmail({
+                    from_name: 'Dragonfly',
+                    to: customerEmail,
+                    subject: template.subject,
+                    body: template.body
+                });
+                
+                // Update trigger stats
+                await base44.asServiceRole.entities.EmailTrigger.update(relevantTrigger.id, {
+                    last_sent: new Date().toISOString(),
+                    send_count: (relevantTrigger.send_count || 0) + 1
+                });
+                
+                return Response.json({ success: true, via: 'trigger_system' });
+            }
+        }
+
+        // Fallback to legacy system if no trigger configured
+
         // Always use customer order tracking page
         const orderUrl = `https://mydragonfly.club/CustomerOrderTracking?id=${orderId}`;
         const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/6d84e9958_IMG_0305.jpeg';

@@ -5,7 +5,48 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { order_id, order_number, customer_name, customer_email, customer_phone, delivery_address, total, items_count, items } = await req.json();
 
-    // Get all admin users
+    // Check if EmailTrigger system should handle this
+    const triggers = await base44.asServiceRole.entities.EmailTrigger.list();
+    const relevantTrigger = triggers.find(t => 
+        t.trigger_type === 'order_placed' && 
+        t.is_active && 
+        t.recipient_type === 'admin'
+    );
+
+    if (relevantTrigger && relevantTrigger.template_id) {
+        // Use trigger system instead
+        const template = await base44.asServiceRole.entities.EmailTemplate.get(relevantTrigger.template_id);
+        const allUsers = await base44.asServiceRole.entities.User.list();
+        const admins = allUsers.filter(u => u.role === 'admin');
+        
+        if (template && admins.length > 0) {
+            const emailPromises = admins.map(admin => 
+                base44.asServiceRole.integrations.Core.SendEmail({
+                    from_name: 'Dragonfly',
+                    to: admin.email,
+                    subject: template.subject,
+                    body: template.body.replace('[Customer Name]', customer_name)
+                        .replace('[Order Total]', `$${total.toFixed(2)}`)
+                        .replace('[Order Items]', `${items_count} item(s)`)
+                })
+            );
+            await Promise.all(emailPromises);
+            
+            // Update trigger stats
+            await base44.asServiceRole.entities.EmailTrigger.update(relevantTrigger.id, {
+                last_sent: new Date().toISOString(),
+                send_count: (relevantTrigger.send_count || 0) + admins.length
+            });
+            
+            return Response.json({ 
+                success: true, 
+                via: 'trigger_system',
+                admins_notified: admins.length
+            });
+        }
+    }
+
+    // Fallback to legacy system if no trigger configured
     const allUsers = await base44.asServiceRole.entities.User.list();
     const admins = allUsers.filter(u => u.role === 'admin');
 

@@ -9,32 +9,50 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/6d84e9958_IMG_0305.jpeg';
+    
     // Create default email templates
     const templates = [
       {
         name: 'Order Confirmation',
-        subject: '✅ Order Confirmed - Thank You!',
-        body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #10b981;">Order Confirmed!</h2>
-          <p>Hi there,</p>
-          <p>Thank you for your order! We're excited to get your items to you.</p>
-          <p><strong>Order Details:</strong></p>
-          <p>Your order has been confirmed and is being prepared for delivery.</p>
-          <p>You'll receive another email when your order is on its way.</p>
-          <p style="margin-top: 30px;">Thanks for shopping with us!</p>
-          <p style="color: #6b7280; font-size: 12px;">Need help? Reply to this email or contact our support team.</p>
+        subject: '🌿 Order Confirmed - Dragonfly Delivery',
+        body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <img src="${logoUrl}" alt="Dragonfly" style="width: 80px; height: 80px; margin-bottom: 15px;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Dragonfly</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Premium Cannabis Delivery</p>
+          </div>
+          <div style="padding: 30px 25px;">
+            <h2 style="color: #10b981; margin: 0 0 15px 0; font-size: 22px;">🌿 Order Confirmed!</h2>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">Hi there,</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">Thank you for your order! We've received your order and it's being processed.</p>
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 25px 0;">
+              <p style="margin: 0; color: #065f46;"><strong>Status:</strong> <span style="background: #fef3c7; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #92400e;">⏳ CONFIRMED</span></p>
+            </div>
+            <p style="color: #374151; line-height: 1.6; margin: 20px 0;">We'll notify you as soon as your order is on its way!</p>
+          </div>
+          <div style="background: #f9fafb; padding: 25px; border-radius: 0 0 10px 10px; margin-top: 30px; border-top: 3px solid #10b981;">
+            <p style="text-align: center; color: #9ca3af; font-size: 11px; margin: 15px 0 0 0;">© 2025 Dragonfly Delivery. All rights reserved.</p>
+          </div>
         </div>`,
         category: 'transactional'
       },
       {
         name: 'Order Status Update',
-        subject: '📦 Your Order Status Has Been Updated',
-        body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3b82f6;">Order Status Update</h2>
-          <p>Hi there,</p>
-          <p>Your order status has been updated!</p>
-          <p>You can track your order and see the latest updates anytime.</p>
-          <p style="margin-top: 30px;">Thank you for your patience!</p>
+        subject: '📦 Order Status Update - Dragonfly',
+        body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <img src="${logoUrl}" alt="Dragonfly" style="width: 80px; height: 80px; margin-bottom: 15px;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Dragonfly</h1>
+          </div>
+          <div style="padding: 30px 25px;">
+            <h2 style="color: #3b82f6; margin: 0 0 15px 0; font-size: 22px;">📦 Order Status Update</h2>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">Hi there,</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">Your order status has been updated! Check your order tracking for the latest information.</p>
+          </div>
+          <div style="background: #f9fafb; padding: 25px; border-top: 3px solid #10b981;">
+            <p style="text-align: center; color: #9ca3af; font-size: 11px;">© 2025 Dragonfly Delivery. All rights reserved.</p>
+          </div>
         </div>`,
         category: 'transactional'
       },
@@ -71,14 +89,22 @@ Deno.serve(async (req) => {
       },
       {
         name: 'New Order - Admin Notification',
-        subject: '🔔 New Order Received',
-        body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #ef4444;">New Order Alert</h2>
-          <p>A new order has been placed!</p>
-          <p><strong>Customer:</strong> [Customer Name]</p>
-          <p><strong>Order Total:</strong> [Order Total]</p>
-          <p><strong>Items:</strong> [Order Items]</p>
-          <p style="margin-top: 20px;">Please review and process this order in the admin dashboard.</p>
+        subject: '🎉 New Order Received - Action Required',
+        body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 20px; text-align: center;">
+            <img src="${logoUrl}" alt="Dragonfly" style="width: 80px; height: 80px; margin-bottom: 15px;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🎉 New Order Alert!</h1>
+          </div>
+          <div style="padding: 30px 25px;">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 25px; border-radius: 10px; margin: 0 0 25px 0; border-left: 5px solid #10b981;">
+              <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Customer:</strong> [Customer Name]</p>
+              <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Total:</strong> <span style="color: #10b981; font-size: 24px; font-weight: bold;">[Order Total]</span></p>
+              <p style="margin: 0; color: #065f46;"><strong>Items:</strong> [Order Items]</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://mydragonfly.club/AdminOrders" style="display: inline-block; background: linear-gradient(to right, #10b981, #059669); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">📦 View Order</a>
+            </div>
+          </div>
         </div>`,
         category: 'notification'
       },
