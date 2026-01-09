@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   Mail, Send, Users, FileText, Zap, Plus, Edit2, Trash2, 
-  Copy, Loader2, Check, X, Search, Sparkles, Clock, Calendar
+  Copy, Loader2, Check, X, Search, Sparkles, Clock, Calendar, Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 

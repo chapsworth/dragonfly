@@ -22,11 +22,13 @@ import ComponentLibrary from './pages/ComponentLibrary';
 import Contact from './pages/Contact';
 import CustomerOrderTracking from './pages/CustomerOrderTracking';
 import DeliveryNavigation from './pages/DeliveryNavigation';
+import EmailCenter from './pages/EmailCenter';
 import ExportToVC from './pages/ExportToVC';
 import FactoryWholesale from './pages/FactoryWholesale';
 import Favorites from './pages/Favorites';
 import GlassPortal from './pages/GlassPortal';
 import Home from './pages/Home';
+import Messages from './pages/Messages';
 import NotificationCenter from './pages/NotificationCenter';
 import NotificationManager from './pages/NotificationManager';
 import OrderTracking from './pages/OrderTracking';
@@ -40,8 +42,6 @@ import Shop from './pages/Shop';
 import StrainLibrary from './pages/StrainLibrary';
 import VendorOrders from './pages/VendorOrders';
 import distro from './pages/distro';
-import EmailCenter from './pages/EmailCenter';
-import Messages from './pages/Messages';
 import __Layout from './Layout.jsx';
 
 
@@ -70,11 +70,13 @@ export const PAGES = {
     "Contact": Contact,
     "CustomerOrderTracking": CustomerOrderTracking,
     "DeliveryNavigation": DeliveryNavigation,
+    "EmailCenter": EmailCenter,
     "ExportToVC": ExportToVC,
     "FactoryWholesale": FactoryWholesale,
     "Favorites": Favorites,
     "GlassPortal": GlassPortal,
     "Home": Home,
+    "Messages": Messages,
     "NotificationCenter": NotificationCenter,
     "NotificationManager": NotificationManager,
     "OrderTracking": OrderTracking,
@@ -88,8 +90,6 @@ export const PAGES = {
     "StrainLibrary": StrainLibrary,
     "VendorOrders": VendorOrders,
     "distro": distro,
-    "EmailCenter": EmailCenter,
-    "Messages": Messages,
 }
 
 export const pagesConfig = {
