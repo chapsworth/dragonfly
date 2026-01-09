@@ -57,6 +57,11 @@ export default function CRMContacts() {
     queryFn: () => base44.entities.Contact.list()
   });
 
+  const { data: vendors = [] } = useQuery({
+    queryKey: ['vendors'],
+    queryFn: () => base44.entities.Vendor.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Contact.create(data),
     onSuccess: () => {
@@ -1284,6 +1289,7 @@ export default function CRMContacts() {
         isOpen={isEmailGroupManagerOpen}
         onClose={() => setIsEmailGroupManagerOpen(false)}
         allContacts={contacts}
+        allVendors={vendors}
         onSelectGroup={(contacts) => {
           setSelectedForEmail(contacts);
           setIsEmailComposerOpen(true);

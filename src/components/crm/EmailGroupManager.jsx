@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Edit2, Trash2, Mail, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function EmailGroupManager({ isOpen, onClose, allContacts, onSelectGroup }) {
+export default function EmailGroupManager({ isOpen, onClose, allContacts, allVendors = [], onSelectGroup }) {
   const [isCreating, setIsCreating] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [groupName, setGroupName] = useState('');
@@ -108,13 +108,20 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, onSele
 
   const availableContacts = allContacts.filter(c => 
     c.email &&
-    !selectedContacts.find(sc => sc.id === c.id) &&
+    !selectedContacts.find(sc => sc.id === c.id && sc.type !== 'vendor') &&
     (c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
      c.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleAddContact = (contact) => {
-    setSelectedContacts([...selectedContacts, contact]);
+  const availableVendors = allVendors.filter(v => 
+    v.email &&
+    !selectedContacts.find(sc => sc.id === v.id && sc.type === 'vendor') &&
+    (v.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     v.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleAddContact = (contact, type = 'contact') => {
+    setSelectedContacts([...selectedContacts, { ...contact, type }]);
     setSearchTerm('');
   };
 
@@ -271,18 +278,42 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, onSele
                     className="pl-10 border-purple-200"
                   />
                 </div>
-                {searchTerm && availableContacts.length > 0 && (
-                  <div className="mt-2 border border-purple-200 rounded-lg max-h-48 overflow-y-auto">
-                    {availableContacts.slice(0, 20).map(contact => (
-                      <button
-                        key={contact.id}
-                        onClick={() => handleAddContact(contact)}
-                        className="w-full px-4 py-2 text-left hover:bg-purple-50 transition-colors border-b border-purple-100 last:border-b-0"
-                      >
-                        <div className="font-semibold text-sm">{contact.full_name}</div>
-                        <div className="text-xs text-gray-600">{contact.email}</div>
-                      </button>
-                    ))}
+                {searchTerm && (availableContacts.length > 0 || availableVendors.length > 0) && (
+                  <div className="mt-2 border border-purple-200 rounded-lg max-h-64 overflow-y-auto">
+                    {availableContacts.length > 0 && (
+                      <>
+                        <div className="px-3 py-1.5 bg-purple-50 text-xs font-semibold text-purple-700 sticky top-0">
+                          CRM CONTACTS
+                        </div>
+                        {availableContacts.slice(0, 15).map(contact => (
+                          <button
+                            key={contact.id}
+                            onClick={() => handleAddContact(contact, 'contact')}
+                            className="w-full px-4 py-2 text-left hover:bg-purple-50 transition-colors border-b border-purple-100"
+                          >
+                            <div className="font-semibold text-sm">{contact.full_name}</div>
+                            <div className="text-xs text-gray-600">{contact.email}</div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {availableVendors.length > 0 && (
+                      <>
+                        <div className="px-3 py-1.5 bg-blue-50 text-xs font-semibold text-blue-700 sticky top-0">
+                          VENDORS
+                        </div>
+                        {availableVendors.slice(0, 15).map(vendor => (
+                          <button
+                            key={vendor.id}
+                            onClick={() => handleAddContact(vendor, 'vendor')}
+                            className="w-full px-4 py-2 text-left hover:bg-blue-50 transition-colors border-b border-purple-100"
+                          >
+                            <div className="font-semibold text-sm">{vendor.company_name}</div>
+                            <div className="text-xs text-gray-600">{vendor.email}</div>
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )}
               </div>
