@@ -9,6 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 
 // Fix Leaflet default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -58,12 +61,26 @@ export default function CustomerOrderTracking() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('id');
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.list().then(orders => orders.find(o => o.id === orderId)),
     enabled: !!orderId,
     refetchInterval: (data) => data?.status === 'out_for_delivery' ? 5000 : false // Update every 5 seconds
+  });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: (id) => base44.entities.Order.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+      toast.success('Order deleted');
+      navigate(createPageUrl('Orders'));
+    },
+    onError: () => {
+      toast.error('Failed to delete order');
+    }
   });
 
   const [distance, setDistance] = useState(null);
@@ -226,6 +243,18 @@ export default function CustomerOrderTracking() {
             <h1 className="text-lg font-bold text-gray-900">Track Your Order</h1>
             <p className="text-sm text-gray-600">Order #{order.id.slice(0, 8).toUpperCase()}</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (confirm('Delete this order? This cannot be undone.')) {
+                deleteOrderMutation.mutate(order.id);
+              }
+            }}
+            className="rounded-full text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 

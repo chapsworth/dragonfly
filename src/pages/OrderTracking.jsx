@@ -413,6 +413,19 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
               Cancel Order
             </Button>
           )}
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => {
+              if (confirm('Delete this order? This cannot be undone.')) {
+                deleteOrderMutation.mutate(order.id);
+              }
+            }}
+            className="text-red-600 border-red-300 hover:bg-red-50"
+          >
+            <Trash2 className="w-3 h-3 mr-1" />
+            Delete
+          </Button>
         </div>
       </div>
 
@@ -1002,6 +1015,21 @@ export default function OrderTracking() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order'] });
       toast.success('Status updated');
+    }
+  });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: (id) => base44.entities.Order.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+      toast.success('Order deleted');
+      if (orderId) {
+        navigate(createPageUrl('AdminOrders'));
+      }
+    },
+    onError: () => {
+      toast.error('Failed to delete order');
     }
   });
 
