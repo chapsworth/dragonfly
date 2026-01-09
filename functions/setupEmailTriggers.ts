@@ -97,13 +97,24 @@ Deno.serve(async (req) => {
           </div>
           <div style="padding: 30px 25px;">
             <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 25px; border-radius: 10px; margin: 0 0 25px 0; border-left: 5px solid #10b981;">
-              <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Customer:</strong> [Customer Name]</p>
-              <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Total:</strong> <span style="color: #10b981; font-size: 24px; font-weight: bold;">[Order Total]</span></p>
-              <p style="margin: 0; color: #065f46;"><strong>Items:</strong> [Order Items]</p>
+              <p style="margin: 0 0 15px 0; color: #065f46; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Order Summary</p>
+              <div style="margin-bottom: 10px;">
+                <span style="color: #065f46; font-size: 16px; font-weight: bold;">Total Amount:</span>
+                <span style="color: #10b981; font-size: 32px; font-weight: bold; display: block; margin-top: 5px;">[Order Total]</span>
+              </div>
+              <p style="margin: 8px 0 0 0; color: #059669;"><strong>Items:</strong> [Order Items]</p>
             </div>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://mydragonfly.club/AdminOrders" style="display: inline-block; background: linear-gradient(to right, #10b981, #059669); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">📦 View Order</a>
+              <a href="https://mydragonfly.club/AdminOrders" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">📦 View & Manage Order</a>
             </div>
+            <p style="color: #6b7280; text-align: center; font-size: 13px; margin: 20px 0 0 0;">Click the button above to manage this order in your admin dashboard.</p>
+          </div>
+          <div style="background: #f9fafb; padding: 25px; border-top: 3px solid #10b981; text-align: center;">
+            <div style="margin-bottom: 15px;">
+              <img src="${logoUrl}" alt="Dragonfly" style="width: 40px; height: 40px; opacity: 0.8;">
+            </div>
+            <p style="color: #374151; font-size: 14px; margin: 10px 0;"><strong>Dragonfly Admin</strong><br>Premium Cannabis Delivery System</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 15px 0 0 0;">This is an automated notification from your Dragonfly delivery system.<br>© 2025 Dragonfly. All rights reserved.</p>
           </div>
         </div>`,
         category: 'notification'

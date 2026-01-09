@@ -78,9 +78,9 @@ Deno.serve(async (req) => {
               <!-- Order Summary -->
               <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 25px; border-radius: 10px; margin: 0 0 25px 0; border-left: 5px solid #10b981;">
                 <p style="margin: 0 0 15px 0; color: #065f46; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Order Summary</p>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="margin-bottom: 10px;">
                   <span style="color: #065f46; font-size: 16px; font-weight: bold;">Total Amount:</span>
-                  <span style="color: #10b981; font-size: 32px; font-weight: bold;">$${total.toFixed(2)}</span>
+                  <span style="color: #10b981; font-size: 32px; font-weight: bold; display: block; margin-top: 5px;">$${total.toFixed(2)}</span>
                 </div>
                 <p style="margin: 8px 0 0 0; color: #059669;"><strong>Items:</strong> ${items_count} product${items_count > 1 ? 's' : ''}</p>
               </div>
@@ -88,10 +88,11 @@ Deno.serve(async (req) => {
               <!-- Customer Information -->
               <div style="background: #f9fafb; padding: 20px; border-radius: 10px; margin: 0 0 25px 0; border: 1px solid #e5e7eb;">
                 <h3 style="color: #059669; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #10b981; padding-bottom: 8px;">👤 Customer Information</h3>
-                <p style="margin: 10px 0; color: #374151; line-height: 1.8;">
+                <p style="margin: 0; color: #374151; line-height: 2;">
                   <strong style="color: #059669;">Name:</strong> ${customer_name}<br>
-                  <strong style="color: #059669;">Email:</strong> <a href="mailto:${customer_email}" style="color: #10b981; text-decoration: none;">${customer_email}</a><br>
-                  <strong style="color: #059669;">Phone:</strong> <a href="tel:${customer_phone}" style="color: #10b981; text-decoration: none;">${customer_phone || 'Not provided'}</a><br>
+                  <strong style="color: #059669;">Email:</strong><br>
+                  <span style="color: #10b981;">${customer_email}</span><br>
+                  <strong style="color: #059669;">Phone:</strong> ${customer_phone || 'Not provided'}<br>
                   <strong style="color: #059669;">Address:</strong><br>
                   <span style="background: white; padding: 10px; display: inline-block; margin-top: 5px; border-radius: 6px; border-left: 3px solid #10b981;">${delivery_address}</span>
                 </p>
@@ -103,9 +104,9 @@ Deno.serve(async (req) => {
                 <h3 style="color: #059669; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #10b981; padding-bottom: 8px;">📦 Order Items</h3>
                 ${items.map(item => `
                   <div style="padding: 15px; margin: 10px 0; background: #f9fafb; border-radius: 8px; border-left: 3px solid #10b981;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #059669; font-size: 15px;">${item.name} ${item.variant ? `<span style="color: #6b7280; font-weight: normal; font-size: 13px;">(${item.variant})</span>` : ''}</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #059669; font-size: 15px;">${item.name}</p>
                     <p style="margin: 0; color: #374151; font-size: 14px;">
-                      <strong>Qty:</strong> ${item.quantity} × <strong>$${item.price.toFixed(2)}</strong> = <span style="color: #10b981; font-weight: bold; font-size: 15px;">$${(item.quantity * item.price).toFixed(2)}</span>
+                      <strong>Qty:</strong> ${item.quantity} × $${item.price.toFixed(2)} = <span style="color: #10b981; font-weight: bold; font-size: 15px;">$${(item.quantity * item.price).toFixed(2)}</span>
                     </p>
                   </div>
                 `).join('')}
@@ -115,7 +116,7 @@ Deno.serve(async (req) => {
               <!-- Action Button -->
               <div style="text-align: center; margin: 30px 0;">
                 <a href="https://mydragonfly.club/AdminOrders" 
-                   style="display: inline-block; background: linear-gradient(to right, #10b981, #059669); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+                   style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
                   📦 View & Manage Order
                 </a>
               </div>
@@ -126,15 +127,15 @@ Deno.serve(async (req) => {
             </div>
             
             <!-- Footer -->
-            <div style="background: #f9fafb; padding: 25px; border-top: 3px solid #10b981;">
-              <div style="text-align: center; margin-bottom: 15px;">
+            <div style="background: #f9fafb; padding: 25px; border-top: 3px solid #10b981; text-align: center;">
+              <div style="margin-bottom: 15px;">
                 <img src="${logoUrl}" alt="Dragonfly" style="width: 40px; height: 40px; opacity: 0.8;">
               </div>
-              <p style="text-align: center; color: #374151; font-size: 14px; margin: 10px 0;">
+              <p style="color: #374151; font-size: 14px; margin: 10px 0;">
                 <strong>Dragonfly Admin</strong><br>
                 Premium Cannabis Delivery System
               </p>
-              <p style="text-align: center; color: #9ca3af; font-size: 12px; margin: 15px 0 0 0;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 15px 0 0 0;">
                 This is an automated notification from your Dragonfly delivery system.<br>
                 © 2025 Dragonfly. All rights reserved.
               </p>

@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
         const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6937d9495caf111699370601/6d84e9958_IMG_0305.jpeg';
         
         const emailHeader = `
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 20px; text-align: center;">
                 <img src="${logoUrl}" alt="Dragonfly" style="width: 80px; height: 80px; margin-bottom: 15px;">
                 <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Dragonfly</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Premium Cannabis Delivery</p>
@@ -50,25 +50,17 @@ Deno.serve(async (req) => {
         `;
         
         const emailFooter = `
-            <div style="background: #f9fafb; padding: 25px; border-radius: 0 0 10px 10px; margin-top: 30px; border-top: 3px solid #10b981;">
-                <div style="text-align: center; margin-bottom: 20px;">
+            <div style="background: #f9fafb; padding: 25px; border-top: 3px solid #10b981; text-align: center;">
+                <div style="margin-bottom: 15px;">
                     <img src="${logoUrl}" alt="Dragonfly" style="width: 40px; height: 40px; opacity: 0.8;">
                 </div>
-                <p style="text-align: center; color: #374151; font-size: 14px; margin: 10px 0;">
-                    <strong>Dragonfly Delivery</strong><br>
-                    Premium Cannabis • Fast & Discreet • Quality Guaranteed
+                <p style="color: #374151; font-size: 14px; margin: 10px 0;">
+                    <strong>Dragonfly Admin</strong><br>
+                    Premium Cannabis Delivery System
                 </p>
-                <p style="text-align: center; color: #6b7280; font-size: 13px; margin: 15px 0;">
-                    📍 Visit us: <a href="https://mydragonfly.club" style="color: #10b981; text-decoration: none;">mydragonfly.club</a><br>
-                    📧 Email: <a href="mailto:support@mydragonfly.club" style="color: #10b981; text-decoration: none;">support@mydragonfly.club</a><br>
-                    📞 Phone: (555) 420-1234
-                </p>
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="${orderUrl}" style="display: inline-block; background: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold;">Track Your Order</a>
-                </div>
-                <p style="text-align: center; color: #9ca3af; font-size: 11px; margin: 15px 0 0 0;">
-                    © 2025 Dragonfly Delivery. All rights reserved.<br>
-                    This email was sent because you placed an order with us.
+                <p style="color: #9ca3af; font-size: 12px; margin: 15px 0 0 0;">
+                    This is an automated notification from your Dragonfly delivery system.<br>
+                    © 2025 Dragonfly. All rights reserved.
                 </p>
             </div>
         `;
