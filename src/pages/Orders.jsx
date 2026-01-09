@@ -542,6 +542,18 @@ export default function Orders() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Receipt
                         </Button>
+                        <Button
+                          variant="outline"
+                          className="border-red-200 hover:bg-red-50 text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete this order? This cannot be undone.')) {
+                              deleteOrdersMutation.mutate([order.id]);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
