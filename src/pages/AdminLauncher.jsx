@@ -22,10 +22,6 @@ export default function AdminLauncher() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [background, setBackground] = useState('');
 
-  useEffect(() => {
-    navigate(createPageUrl('AdminDashboard'));
-  }, [navigate]);
-
   const { data: settings } = useQuery({
     queryKey: ['launcher-settings'],
     queryFn: async () => {
