@@ -14,7 +14,7 @@ import {
   Leaf, Sparkles, Phone, ClipboardList, Building2, Calendar, CheckSquare, 
   Bookmark, FileText, FolderTree, ShoppingBag, Heart, TrendingUp,
   DollarSign, MapPin, Camera, Upload, Palette, Home, Layers, Wine, Navigation,
-  Code, Receipt
+  Code, Receipt, Mail, MessageSquare, Bell, Send, BarChart3, Zap, User, Factory
 } from 'lucide-react';
 
 export default function AdminLauncher() {
@@ -79,6 +79,7 @@ export default function AdminLauncher() {
     { icon: CheckSquare, label: 'Tasks', page: 'CRMTasks', color: 'bg-gradient-to-br from-amber-500 to-orange-500', badge: tasks.length || null },
     { icon: Bookmark, label: 'Bookmarks', page: 'CRMBookmarks', color: 'bg-gradient-to-br from-teal-500 to-cyan-500' },
     { icon: FileText, label: 'Documents', page: 'CRMDocuments', color: 'bg-gradient-to-br from-violet-500 to-purple-500' },
+    { icon: Send, label: 'Text Templates', page: 'CRMTextTemplates', color: 'bg-gradient-to-br from-blue-500 to-indigo-500' },
   ];
 
   // Shop apps
@@ -100,6 +101,8 @@ export default function AdminLauncher() {
     { icon: Wine, label: 'Glass Portal', page: 'GlassPortal', color: 'bg-gradient-to-br from-rose-500 to-pink-500' },
     { icon: Package, label: 'Products DB', page: 'ProductLibrary', color: 'bg-gradient-to-br from-amber-500 to-yellow-500' },
     { icon: Navigation, label: 'Delivery Nav', page: 'DeliveryNavigation', color: 'bg-gradient-to-br from-teal-500 to-cyan-500' },
+    { icon: Code, label: 'Export VC', page: 'ExportToVC', color: 'bg-gradient-to-br from-purple-500 to-indigo-500' },
+    { icon: Zap, label: 'Automations', page: 'Automations', color: 'bg-gradient-to-br from-yellow-500 to-orange-500' },
   ];
 
   return (
@@ -156,14 +159,42 @@ export default function AdminLauncher() {
             apps={settingsApps}
           />
           <AppIcon 
-            icon={Phone} 
-            label="Contact" 
-            page="Contact" 
-            color="bg-gradient-to-br from-green-500 to-emerald-600"
+            icon={Mail} 
+            label="Email" 
+            page="EmailCenter" 
+            color="bg-gradient-to-br from-blue-500 to-indigo-600"
           />
         </div>
 
         {/* Row 3 */}
+        <div className="grid grid-cols-4 gap-x-4 gap-y-6 mb-6">
+          <AppIcon 
+            icon={MessageSquare} 
+            label="Messages" 
+            page="Messages" 
+            color="bg-gradient-to-br from-purple-500 to-pink-500"
+          />
+          <AppIcon 
+            icon={Bell} 
+            label="Notifications" 
+            page="NotificationCenter" 
+            color="bg-gradient-to-br from-red-500 to-orange-500"
+          />
+          <AppIcon 
+            icon={BarChart3} 
+            label="Analytics" 
+            page="Analytics" 
+            color="bg-gradient-to-br from-green-500 to-teal-500"
+          />
+          <AppIcon 
+            icon={ShoppingBag} 
+            label="Printify" 
+            page="PrintifyShop" 
+            color="bg-gradient-to-br from-emerald-500 to-green-600"
+          />
+        </div>
+
+        {/* Row 4 */}
         <div className="grid grid-cols-4 gap-x-4 gap-y-6 mb-6">
           <AppIcon 
             icon={MapPin} 
@@ -171,6 +202,28 @@ export default function AdminLauncher() {
             page="OrderTracking" 
             color="bg-gradient-to-br from-cyan-500 to-blue-500"
           />
+          <AppIcon 
+            icon={User} 
+            label="Profile" 
+            page="Profile" 
+            color="bg-gradient-to-br from-pink-500 to-rose-500"
+          />
+          <AppIcon 
+            icon={Factory} 
+            label="Distro" 
+            page="distro" 
+            color="bg-gradient-to-br from-gray-600 to-slate-700"
+          />
+          <AppIcon 
+            icon={Phone} 
+            label="Contact" 
+            page="Contact" 
+            color="bg-gradient-to-br from-green-500 to-emerald-600"
+          />
+        </div>
+
+        {/* Row 5 */}
+        <div className="grid grid-cols-4 gap-x-4 gap-y-6 mb-6">
           <AppIcon 
             icon={Home} 
             label="Home" 
