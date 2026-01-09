@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Users, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Calendar, DollarSign, Tag, ChevronDown, ChevronUp, MessageSquare, Package, Upload, Target, Send } from 'lucide-react';
 import { toast } from 'sonner';
-import BiometricGuard from '@/components/auth/BiometricGuard';
+
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
 import EmailComposer from '@/components/crm/EmailComposer';

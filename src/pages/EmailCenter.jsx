@@ -63,6 +63,11 @@ export default function EmailCenter() {
     queryFn: () => base44.entities.Contact.list()
   });
 
+  const { data: vendors = [] } = useQuery({
+    queryKey: ['vendors'],
+    queryFn: () => base44.entities.Vendor.list()
+  });
+
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.asServiceRole.entities.User.list()
@@ -178,6 +183,8 @@ export default function EmailCenter() {
         recipients = users.map(u => u.email);
       } else if (emailForm.recipient_type === 'all_contacts') {
         recipients = contacts.map(c => c.email).filter(Boolean);
+      } else if (emailForm.recipient_type === 'all_vendors') {
+        recipients = vendors.map(v => v.email).filter(Boolean);
       }
 
       // Check if scheduled
@@ -343,7 +350,8 @@ export default function EmailCenter() {
                           <SelectItem value="individual">Individual</SelectItem>
                           <SelectItem value="group">Group</SelectItem>
                           <SelectItem value="all_users">All Users</SelectItem>
-                          <SelectItem value="all_contacts">All Contacts</SelectItem>
+                          <SelectItem value="all_contacts">All CRM Contacts</SelectItem>
+                          <SelectItem value="all_vendors">All Vendors</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

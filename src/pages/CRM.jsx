@@ -6,17 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Building2, Calendar, CheckSquare, Bookmark, FileText, TrendingUp, DollarSign, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import BiometricGuard from '@/components/auth/BiometricGuard';
-
 export default function CRM() {
-  return (
-    <BiometricGuard>
-      <CRMContent />
-    </BiometricGuard>
-  );
-}
-
-function CRMContent() {
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list()

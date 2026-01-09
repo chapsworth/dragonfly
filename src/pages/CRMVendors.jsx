@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Building2, Plus, Search, Phone, Mail, MapPin, Edit2, Trash2, Filter, Star, Globe, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import BiometricGuard from '@/components/auth/BiometricGuard';
+
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
 
