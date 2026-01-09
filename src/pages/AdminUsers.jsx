@@ -7,11 +7,12 @@ import AdminNav from '@/components/admin/AdminNav';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, User, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, ArrowLeft, Grid3x3, List, Edit2, User, Trash2, MessageSquare, Mail } from 'lucide-react';
 
 export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState(null);
@@ -19,6 +20,9 @@ export default function AdminUsers() {
   const [viewMode, setViewMode] = useState('list');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState(null);
+  const [messageForm, setMessageForm] = useState({ subject: '', body: '' });
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -71,6 +75,51 @@ export default function AdminUsers() {
     if (userToDelete) {
       deleteMutation.mutate(userToDelete.id);
     }
+  };
+
+  const handleMessage = (user) => {
+    setMessageRecipient(user);
+    setIsMessageDialogOpen(true);
+    setMessageForm({ subject: '', body: '' });
+  };
+
+  const handleEmail = async (user) => {
+    const subject = prompt('Email subject:');
+    if (!subject) return;
+    const body = prompt('Email message:');
+    if (!body) return;
+    
+    try {
+      await base44.integrations.Core.SendEmail({
+        to: user.email,
+        subject,
+        body
+      });
+      alert('Email sent successfully!');
+    } catch (error) {
+      alert('Failed to send email');
+    }
+  };
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data) => base44.entities.Message.create(data),
+    onSuccess: () => {
+      setIsMessageDialogOpen(false);
+      setMessageRecipient(null);
+      setMessageForm({ subject: '', body: '' });
+      alert('Message sent!');
+    }
+  });
+
+  const handleSendMessage = async () => {
+    const currentUser = await base44.auth.me();
+    sendMessageMutation.mutate({
+      from_user_email: currentUser.email,
+      to_user_email: messageRecipient.email,
+      subject: messageForm.subject,
+      body: messageForm.body,
+      is_read: false
+    });
   };
 
   const tierColors = {
@@ -183,12 +232,17 @@ export default function AdminUsers() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-emerald-600">Joined {format(new Date(user.created_date), 'MMM d, yyyy')}</span>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs">
-                        <Edit2 className="w-3 h-3 mr-1" />
-                        Edit
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline" onClick={() => handleMessage(user)} className="h-7 text-xs" title="Message">
+                        <MessageSquare className="w-3 h-3" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600">
+                      <Button size="sm" variant="outline" onClick={() => handleEmail(user)} className="h-7 text-xs" title="Email">
+                        <Mail className="w-3 h-3" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs" title="Edit">
+                        <Edit2 className="w-3 h-3" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600" title="Delete">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
@@ -210,11 +264,17 @@ export default function AdminUsers() {
                           <h3 className="font-bold text-emerald-900 text-sm line-clamp-1">{user.full_name || 'Anonymous'}</h3>
                           <p className="text-xs text-emerald-600 truncate">{user.email}</p>
                         </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs">
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button size="sm" variant="outline" onClick={() => handleMessage(user)} className="h-7 text-xs" title="Message">
+                            <MessageSquare className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEmail(user)} className="h-7 text-xs" title="Email">
+                            <Mail className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="h-7 text-xs" title="Edit">
                             <Edit2 className="w-3 h-3" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600">
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user)} className="h-7 text-xs text-red-600" title="Delete">
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -303,6 +363,43 @@ export default function AdminUsers() {
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                   >
                     {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send Message to {messageRecipient?.full_name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Subject</Label>
+                  <Input 
+                    value={messageForm.subject}
+                    onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
+                    placeholder="Message subject..."
+                  />
+                </div>
+                <div>
+                  <Label>Message</Label>
+                  <Textarea 
+                    value={messageForm.body}
+                    onChange={(e) => setMessageForm({...messageForm, body: e.target.value})}
+                    placeholder="Type your message..."
+                    rows={6}
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)} className="flex-1">Cancel</Button>
+                  <Button 
+                    onClick={handleSendMessage} 
+                    disabled={sendMessageMutation.isPending || !messageForm.body}
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500"
+                  >
+                    {sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
                   </Button>
                 </div>
               </div>
