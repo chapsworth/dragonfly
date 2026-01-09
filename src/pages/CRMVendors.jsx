@@ -16,14 +16,6 @@ import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import CallLogger from '@/components/crm/CallLogger';
 
 export default function CRMVendors() {
-  return (
-    <BiometricGuard>
-      <CRMVendorsContent />
-    </BiometricGuard>
-  );
-}
-
-function CRMVendorsContent() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');

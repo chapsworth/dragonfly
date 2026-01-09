@@ -23,14 +23,6 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function CRMContacts() {
-  return (
-    <BiometricGuard>
-      <CRMContactsContent />
-    </BiometricGuard>
-  );
-}
-
-function CRMContactsContent() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [stageFilter, setStageFilter] = useState('all');
