@@ -35,7 +35,8 @@ export default function EmailCenter() {
     body: '',
     template_id: '',
     schedule_date: '',
-    schedule_time: ''
+    schedule_time: '',
+    selected_recipients: []
   });
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -176,6 +177,12 @@ export default function EmailCenter() {
           return;
         }
         recipients = [emailForm.recipient_email];
+      } else if (emailForm.recipient_type === 'select_multiple') {
+        if (!emailForm.selected_recipients || emailForm.selected_recipients.length === 0) {
+          toast.error('Please select at least one recipient');
+          return;
+        }
+        recipients = emailForm.selected_recipients;
       } else if (emailForm.recipient_type === 'group') {
         const group = groups.find(g => g.id === emailForm.recipient_group_id);
         recipients = group?.member_emails || [];
@@ -209,7 +216,8 @@ export default function EmailCenter() {
         body: '',
         template_id: '',
         schedule_date: '',
-        schedule_time: ''
+        schedule_time: '',
+        selected_recipients: []
       });
     } catch (error) {
       toast.error('Failed to send email');
@@ -348,6 +356,7 @@ export default function EmailCenter() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="individual">Individual</SelectItem>
+                          <SelectItem value="select_multiple">Select Multiple</SelectItem>
                           <SelectItem value="group">Group</SelectItem>
                           <SelectItem value="all_users">All Users</SelectItem>
                           <SelectItem value="all_contacts">All CRM Contacts</SelectItem>
@@ -365,6 +374,147 @@ export default function EmailCenter() {
                           onChange={(e) => setEmailForm({ ...emailForm, recipient_email: e.target.value })}
                           placeholder="user@example.com"
                         />
+                      </div>
+                    )}
+
+                    {emailForm.recipient_type === 'select_multiple' && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>Select Recipients ({emailForm.selected_recipients.length} selected)</Label>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const allEmails = [
+                                  ...users.map(u => u.email),
+                                  ...contacts.filter(c => c.email).map(c => c.email),
+                                  ...vendors.filter(v => v.email).map(v => v.email)
+                                ];
+                                setEmailForm({ ...emailForm, selected_recipients: allEmails });
+                              }}
+                            >
+                              Select All
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEmailForm({ ...emailForm, selected_recipients: [] })}
+                            >
+                              Clear
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (emailForm.selected_recipients.length === 0) {
+                                  toast.error('Please select at least one recipient');
+                                  return;
+                                }
+                                const groupName = prompt('Enter group name:');
+                                if (groupName) {
+                                  createGroupMutation.mutate({
+                                    name: groupName,
+                                    description: `Created from email selection on ${new Date().toLocaleDateString()}`,
+                                    member_emails: emailForm.selected_recipients
+                                  });
+                                }
+                              }}
+                              className="bg-indigo-600 text-white"
+                            >
+                              <Users className="w-3 h-3 mr-1" />
+                              Create Group
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="border rounded-lg p-3 max-h-80 overflow-y-auto space-y-3 bg-gray-50">
+                          <div>
+                            <div className="text-xs font-semibold text-indigo-600 mb-2 flex items-center gap-2 sticky top-0 bg-gray-50 pb-1">
+                              <Users className="w-3 h-3" />
+                              APP USERS ({users.length})
+                            </div>
+                            <div className="space-y-1.5">
+                              {users.map(user => (
+                                <div key={user.email} className="flex items-center gap-2 p-2 hover:bg-white rounded transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={emailForm.selected_recipients?.includes(user.email)}
+                                    onChange={(e) => {
+                                      const selected = emailForm.selected_recipients || [];
+                                      if (e.target.checked) {
+                                        setEmailForm({ ...emailForm, selected_recipients: [...selected, user.email] });
+                                      } else {
+                                        setEmailForm({ ...emailForm, selected_recipients: selected.filter(em => em !== user.email) });
+                                      }
+                                    }}
+                                    className="w-4 h-4"
+                                  />
+                                  <span className="text-sm flex-1">{user.full_name}</span>
+                                  <span className="text-xs text-gray-500">{user.email}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3">
+                            <div className="text-xs font-semibold text-emerald-600 mb-2 flex items-center gap-2 sticky top-0 bg-gray-50 pb-1">
+                              <Users className="w-3 h-3" />
+                              CRM CONTACTS ({contacts.filter(c => c.email).length})
+                            </div>
+                            <div className="space-y-1.5">
+                              {contacts.filter(c => c.email).map(contact => (
+                                <div key={contact.id} className="flex items-center gap-2 p-2 hover:bg-white rounded transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={emailForm.selected_recipients?.includes(contact.email)}
+                                    onChange={(e) => {
+                                      const selected = emailForm.selected_recipients || [];
+                                      if (e.target.checked) {
+                                        setEmailForm({ ...emailForm, selected_recipients: [...selected, contact.email] });
+                                      } else {
+                                        setEmailForm({ ...emailForm, selected_recipients: selected.filter(em => em !== contact.email) });
+                                      }
+                                    }}
+                                    className="w-4 h-4"
+                                  />
+                                  <span className="text-sm flex-1">{contact.full_name}</span>
+                                  <span className="text-xs text-gray-500">{contact.email}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3">
+                            <div className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-2 sticky top-0 bg-gray-50 pb-1">
+                              <Building2 className="w-3 h-3" />
+                              VENDORS ({vendors.filter(v => v.email).length})
+                            </div>
+                            <div className="space-y-1.5">
+                              {vendors.filter(v => v.email).map(vendor => (
+                                <div key={vendor.id} className="flex items-center gap-2 p-2 hover:bg-white rounded transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={emailForm.selected_recipients?.includes(vendor.email)}
+                                    onChange={(e) => {
+                                      const selected = emailForm.selected_recipients || [];
+                                      if (e.target.checked) {
+                                        setEmailForm({ ...emailForm, selected_recipients: [...selected, vendor.email] });
+                                      } else {
+                                        setEmailForm({ ...emailForm, selected_recipients: selected.filter(em => em !== vendor.email) });
+                                      }
+                                    }}
+                                    className="w-4 h-4"
+                                  />
+                                  <span className="text-sm flex-1">{vendor.company_name}</span>
+                                  <span className="text-xs text-gray-500">{vendor.email}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
 
