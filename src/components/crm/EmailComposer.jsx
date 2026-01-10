@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function EmailComposer({ isOpen, onClose, contacts, preSelectedContacts = [] }) {
-  const [selectedContacts, setSelectedContacts] = useState(preSelectedContacts);
+  const [selectedContacts, setSelectedContacts] = useState([]);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -21,6 +21,12 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [includeAppLink, setIncludeAppLink] = useState(true);
   const [includeQR, setIncludeQR] = useState(true);
+
+  React.useEffect(() => {
+    if (isOpen && preSelectedContacts.length > 0) {
+      setSelectedContacts(preSelectedContacts);
+    }
+  }, [isOpen, preSelectedContacts]);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['email-templates'],
