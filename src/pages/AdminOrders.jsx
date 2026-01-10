@@ -206,6 +206,19 @@ function AdminOrdersContent() {
     }
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (orderIds) => {
+      for (const id of orderIds) {
+        await base44.entities.Order.delete(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setSelectedOrders([]);
+      toast.success('Orders deleted successfully');
+    }
+  });
+
   const testAdminEmailMutation = useMutation({
     mutationFn: async (orderId) => {
       const order = orders.find(o => o.id === orderId);
@@ -588,6 +601,17 @@ function AdminOrdersContent() {
                       <DropdownMenuItem onClick={() => handleBulkAction('cancel')} className="text-red-600">
                         <XCircle className="w-4 h-4 mr-2" />
                         Cancel Orders
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          if (confirm(`Delete ${selectedOrders.length} selected order(s)? This cannot be undone.`)) {
+                            bulkDeleteMutation.mutate(selectedOrders);
+                          }
+                        }} 
+                        className="text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Orders
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
