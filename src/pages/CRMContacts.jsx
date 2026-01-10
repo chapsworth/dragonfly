@@ -161,8 +161,9 @@ export default function CRMContacts() {
   };
 
   const handleText = (contact) => {
-    setSelectedContactForText(contact);
-    setIsTextDialogOpen(true);
+    if (contact.phone) {
+      window.location.href = `sms:${contact.phone}`;
+    }
   };
 
   const handleEmail = (email) => {
