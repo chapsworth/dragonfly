@@ -311,6 +311,57 @@ function VendorOrdersContent() {
     { category: 'vapes', product_name: 'Eighth Vape (Live Resin x Liquid Diamond)', variant: 'Unicorn Breath (Indica)', size: '3.5g', price: 20 }
   ];
 
+  // Flavs vendor products
+  const flavsProducts = [
+    // 710 Labs - Concentrates
+    { category: 'concentrates', product_name: 'Persy Water Hash', variant: '710 Labs', size: '1g', price: 50 },
+    { category: 'concentrates', product_name: 'Persy Rosin Sauce', variant: '710 Labs', size: '1g', price: 52 },
+    { category: 'concentrates', product_name: 'Persy Rosin', variant: '710 Labs', size: '1g', price: 50 },
+    { category: 'concentrates', product_name: 'Live Rosin Tier 1', variant: '710 Labs', size: '1g', price: 45 },
+    { category: 'concentrates', product_name: 'Live Rosin Tier 2', variant: '710 Labs', size: '1g', price: 38 },
+    { category: 'concentrates', product_name: 'Live Rosin Tier 3', variant: '710 Labs', size: '1g', price: 32 },
+    
+    // 710 Labs - Flower
+    { category: 'flower', product_name: 'Persy Flower', variant: '710 Labs', size: '3.5g', price: 38 },
+    { category: 'flower', product_name: 'Flower', variant: '710 Labs', size: '3.5g', price: 35 },
+    
+    // 710 Labs - Vapes
+    { category: 'vapes', product_name: 'Vape Pod', variant: '710 Labs', size: '.5g', price: 45 },
+    
+    // 710 Labs - Pre-Rolls
+    { category: 'pre-rolls', product_name: 'Single Joint', variant: '710 Labs', size: '1g', price: 16.5 },
+    { category: 'pre-rolls', product_name: 'Doinks Hash Holes', variant: '710 Labs Infused', size: '2g', price: 45 },
+    
+    // 710 Labs - Edibles
+    { category: 'edibles', product_name: 'Gummies', variant: '710 Labs', price: 17.5 },
+    
+    // Alien Labs/Connected
+    { category: 'flower', product_name: 'Jars', variant: 'Alien Labs/Connected', size: '3.5g', price: 27.5 },
+    { category: 'vapes', product_name: 'All-in-One Dispo', variant: 'Alien Labs/Connected', size: '.5g', price: 17.5 },
+    
+    // Backpack Boyz
+    { category: 'vapes', product_name: 'Dispo', variant: 'Backpack Boyz', size: '1ml', price: 25 },
+    { category: 'vapes', product_name: 'Dispo', variant: 'Backpack Boyz', size: '2ml', price: 20 },
+    
+    // Boutiq
+    { category: 'vapes', product_name: 'Dispo', variant: 'Boutiq 100 Pack', size: '2g', price: 18 },
+    { category: 'pre-rolls', product_name: 'Snack Pack Infused Joints', variant: 'Boutiq 100 Pack', price: 17.5 },
+    
+    // CBX
+    { category: 'flower', product_name: 'Jars', variant: 'CBX', size: '3.5g', price: 35 },
+    { category: 'pre-rolls', product_name: 'Prerolls', variant: 'CBX', price: 12 },
+    
+    // Plug Play
+    { category: 'vapes', product_name: 'Pod', variant: 'Plug Play', size: '1ml', price: 23 },
+    { category: 'vapes', product_name: 'Livest', variant: 'Plug Play', size: '1ml', price: 27.5 },
+    
+    // Coldfire
+    { category: 'vapes', product_name: 'Vape', variant: 'Coldfire', size: '1ml', price: 30 },
+    
+    // Flavorade
+    { category: 'vapes', product_name: 'Vape', variant: 'Flavorade', size: '1ml', price: 27 }
+  ];
+
   // Pioneer vendor products
   const pioneerProducts = [
     // Ounces
