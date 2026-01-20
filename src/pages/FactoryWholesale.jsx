@@ -449,13 +449,6 @@ function FactoryWholesaleContent() {
             >
               THCV Pioneer
             </Button>
-            <Button 
-              variant={selectedVendor === 'Flavs' ? 'default' : 'outline'}
-              onClick={() => setSelectedVendor('Flavs')}
-              className="text-sm"
-            >
-              Flavs
-            </Button>
             {isAdmin && (
               <Button onClick={() => setIsAddItemOpen(true)} className="bg-emerald-600 text-sm ml-auto">
                 <Plus className="w-4 h-4 mr-1" />
