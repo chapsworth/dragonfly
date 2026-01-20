@@ -67,7 +67,8 @@ function VendorOrdersContent() {
     { name: 'LA Bulk - AA', type: 'flower', url: 'https://labulkflower.com/product/aa/', defaultPrice: 150 },
     { name: 'LA Bulk - AAA Indoor', type: 'flower', url: 'https://labulkflower.com/product/aaa-indoor/', defaultPrice: 300 },
     { name: 'smashed', type: 'custom', url: '', defaultPrice: 0 },
-    { name: 'pioneer', type: 'flower', url: '', defaultPrice: 0 }
+    { name: 'pioneer', type: 'flower', url: '', defaultPrice: 0 },
+    { name: 'Flavs', type: 'custom', url: '', defaultPrice: 0 }
   ];
 
   // Smashed vendor products
