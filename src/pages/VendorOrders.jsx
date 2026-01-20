@@ -409,6 +409,15 @@ function VendorOrdersContent() {
           is_active: true
         }));
       }
+      // For Flavs vendor, return hardcoded products
+      if (selectedVendor === 'Flavs') {
+        return flavsProducts.map((p, idx) => ({
+          id: `flavs-${idx}`,
+          vendor_name: 'Flavs',
+          ...p,
+          is_active: true
+        }));
+      }
       const all = await base44.entities.VendorProduct.list();
       return all.filter(p => p.vendor_name === selectedVendor && p.is_active);
     }
