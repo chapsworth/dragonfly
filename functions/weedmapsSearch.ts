@@ -39,11 +39,17 @@ Deno.serve(async (req) => {
       // Search for brands
       url = `https://api-g.weedmaps.com/discovery/v1/brands?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'products') {
-      // Search for products
-      url = `https://api-g.weedmaps.com/discovery/v1/products?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+      // Search for products - use region/location search for broader results
+      url = `https://api-g.weedmaps.com/discovery/v1/products?filter[region_path]=${encodeURIComponent(query)}&page_size=${limit}`;
+      if (latitude && longitude) {
+        url += `&latlng=${latitude},${longitude}`;
+      }
     } else if (searchType === 'strains') {
-      // Search for strains
-      url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+      // Search for strains - use region/location search for broader results
+      url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[region_path]=${encodeURIComponent(query)}&page_size=${limit}`;
+      if (latitude && longitude) {
+        url += `&latlng=${latitude},${longitude}`;
+      }
     } else if (searchType === 'menu') {
       // Get menu for a specific dispensary by ID
       url = `https://api-g.weedmaps.com/discovery/v1/listings/${query}/menu_items?page_size=${limit}`;
