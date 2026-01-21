@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         latitude: listing.latitude,
         longitude: listing.longitude,
         rating: listing.rating,
-        image: listing.avatar_image?.small_url,
+        image: listing.avatar_image?.small_url || listing.avatar_image?.original_url || listing.image || listing.photos?.[0],
         phone: listing.phone_number,
         website: listing.web_url
       }));
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
         thc: product.thc_percent?.min,
         cbd: product.cbd_percent?.min,
         description: product.description,
-        image: product.avatar_image?.small_url,
+        image: product.avatar_image?.small_url || product.avatar_image?.original_url || product.image || product.photos?.[0],
         strain_type: product.strain_type
       }));
     } else if (searchType === 'strains' && data.data?.strains) {
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         thc_max: strain.thc?.max,
         cbd_min: strain.cbd?.min,
         cbd_max: strain.cbd?.max,
-        image: strain.avatar_image?.small_url,
+        image: strain.avatar_image?.small_url || strain.avatar_image?.original_url || strain.image || strain.photos?.[0],
         genetics: strain.genetics
       }));
     } else if (searchType === 'menu' && data.data?.menu_items) {
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         thc: item.thc_percent,
         cbd: item.cbd_percent,
         description: item.description,
-        image: item.image,
+        image: item.avatar_image?.small_url || item.avatar_image?.original_url || item.image || item.photos?.[0],
         strain_type: item.strain_type,
         in_stock: item.in_stock
       }));
