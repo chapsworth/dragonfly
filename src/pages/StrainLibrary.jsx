@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2, Grid2X2, Rows, LayoutGrid } from 'lucide-react';
+import { Search, Leaf, Sparkles, Heart, Brain, Smile, Wind, ChevronRight, Loader2, Edit2, Grid2X2, Rows, LayoutGrid, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from 'sonner';
@@ -208,9 +208,22 @@ export default function StrainLibrary() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Leaf className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-4xl font-bold text-emerald-900">Strain Library</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1" />
+            <div className="inline-flex items-center gap-2">
+              <Leaf className="w-8 h-8 text-emerald-600" />
+              <h1 className="text-4xl font-bold text-emerald-900">Strain Library</h1>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <Button
+                onClick={() => window.location.href = createPageUrl('WeedMapsImporter')}
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                WeedMaps Import
+              </Button>
+            </div>
           </div>
           <p className="text-emerald-600 text-lg">Explore our comprehensive cannabis strain database</p>
         </motion.div>

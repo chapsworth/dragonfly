@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createPageUrl } from '@/utils';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy } from 'lucide-react';
+import { Search, Package, Sparkles, ChevronRight, Loader2, Edit2, Brain, Grid2X2, Rows, LayoutGrid, Copy, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ProductEditModal from '@/components/products/ProductEditModal';
@@ -239,9 +240,22 @@ export default function ProductLibrary() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Package className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-4xl font-bold text-emerald-900">Product Library</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1" />
+            <div className="inline-flex items-center gap-2">
+              <Package className="w-8 h-8 text-emerald-600" />
+              <h1 className="text-4xl font-bold text-emerald-900">Product Library</h1>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <Button
+                onClick={() => window.location.href = createPageUrl('WeedMapsImporter')}
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                WeedMaps Import
+              </Button>
+            </div>
           </div>
           <p className="text-emerald-600 text-lg">Explore premium cannabis concentrates, extracts, tinctures & topicals</p>
         </motion.div>

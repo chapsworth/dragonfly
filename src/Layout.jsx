@@ -10,6 +10,21 @@ import CapacitorPushNotifications from '@/components/push/CapacitorPushNotificat
 export default function Layout({ children, currentPageName }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Save current page to localStorage
+  useEffect(() => {
+    if (currentPageName) {
+      localStorage.setItem('last_page', currentPageName);
+    }
+  }, [currentPageName]);
+
+  // Restore last page on app load
+  useEffect(() => {
+    const lastPage = localStorage.getItem('last_page');
+    if (lastPage && window.location.pathname === '/' && !window.location.search) {
+      window.location.href = `/page/${lastPage}`;
+    }
+  }, []);
+
   // Hide header on specific pages
   const hideHeader = ['distro', 'FactoryWholesale', 'VendorOrders', 'OrderTracking'].includes(currentPageName);
 
