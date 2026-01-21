@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +11,18 @@ import { Search, Download, Package, Leaf, MapPin, ShoppingCart, Image, DollarSig
 import { toast } from 'sonner';
 
 export default function WeedMapsImporter() {
-  const [searchType, setSearchType] = useState('products');
+  const [searchType, setSearchType] = useState(() => {
+    return localStorage.getItem('weedmaps_search_type') || 'products';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [importTarget, setImportTarget] = useState('products');
+
+  useEffect(() => {
+    localStorage.setItem('weedmaps_search_type', searchType);
+  }, [searchType]);
 
   const queryClient = useQueryClient();
 
