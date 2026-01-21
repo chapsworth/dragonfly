@@ -32,7 +32,7 @@ export default function WeedMapsImporter() {
   const queryClient = useQueryClient();
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && searchType !== 'products' && searchType !== 'strains') {
       toast.error('Enter a search query');
       return;
     }
@@ -327,7 +327,7 @@ export default function WeedMapsImporter() {
               </Select>
 
               <Input
-                placeholder={searchType === 'products' ? 'Search products by name or location' : searchType === 'strains' ? 'Search strains by name or location' : `Search ${searchType}...`}
+                placeholder={searchType === 'products' ? 'Search by name (leave empty for all)' : searchType === 'strains' ? 'Search by name (leave empty for all)' : `Search ${searchType}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}

@@ -39,11 +39,19 @@ Deno.serve(async (req) => {
       // Search for brands
       url = `https://api-g.weedmaps.com/discovery/v1/brands?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'products') {
-      // Search for products - search by location for all products in that area
-      url = `https://api-g.weedmaps.com/discovery/v1/listings/products/search?filter[query]=${encodeURIComponent(query)}&page_size=${limit}`;
+      // Search for products - if query is empty, get all products, otherwise search by name
+      if (query && query.trim()) {
+        url = `https://api-g.weedmaps.com/discovery/v1/products?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+      } else {
+        url = `https://api-g.weedmaps.com/discovery/v1/products?page_size=${limit}`;
+      }
     } else if (searchType === 'strains') {
-      // Search for strains by name or location
-      url = `https://api-g.weedmaps.com/discovery/v1/listings/strains/search?filter[query]=${encodeURIComponent(query)}&page_size=${limit}`;
+      // Search for strains - if query is empty, get all strains, otherwise search by name
+      if (query && query.trim()) {
+        url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+      } else {
+        url = `https://api-g.weedmaps.com/discovery/v1/strains?page_size=${limit}`;
+      }
     } else if (searchType === 'menu') {
       // Get menu for a specific dispensary by ID
       url = `https://api-g.weedmaps.com/discovery/v1/listings/${query}/menu_items?page_size=${limit}`;
