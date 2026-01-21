@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchType, query, latitude, longitude, limit = 20 } = await req.json();
+    const { searchType, query, latitude, longitude, limit = 200, page = 1 } = await req.json();
     const apiKey = Deno.env.get('WEEDMAPS_API_KEY');
 
     if (!apiKey) {
@@ -41,16 +41,16 @@ Deno.serve(async (req) => {
     } else if (searchType === 'products') {
       // Search for products - if query is empty, get all products, otherwise search by name
       if (query && query.trim()) {
-        url = `https://api-g.weedmaps.com/discovery/v1/products?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+        url = `https://api-g.weedmaps.com/discovery/v1/products?filter[name]=${encodeURIComponent(query)}&page_size=${limit}&page=${page}`;
       } else {
-        url = `https://api-g.weedmaps.com/discovery/v1/products?page_size=${limit}`;
+        url = `https://api-g.weedmaps.com/discovery/v1/products?page_size=${limit}&page=${page}`;
       }
     } else if (searchType === 'strains') {
       // Search for strains - if query is empty, get all strains, otherwise search by name
       if (query && query.trim()) {
-        url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
+        url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[name]=${encodeURIComponent(query)}&page_size=${limit}&page=${page}`;
       } else {
-        url = `https://api-g.weedmaps.com/discovery/v1/strains?page_size=${limit}`;
+        url = `https://api-g.weedmaps.com/discovery/v1/strains?page_size=${limit}&page=${page}`;
       }
     } else if (searchType === 'menu') {
       // Get menu for a specific dispensary by ID

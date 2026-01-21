@@ -19,6 +19,8 @@ export default function WeedMapsImporter() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [importTarget, setImportTarget] = useState('products');
   const [expandedDispensary, setExpandedDispensary] = useState(null);
   const [menuItems, setMenuItems] = useState({});
@@ -31,30 +33,40 @@ export default function WeedMapsImporter() {
 
   const queryClient = useQueryClient();
 
-  const handleSearch = async () => {
+  const handleSearch = async (page = 1, append = false) => {
     if (!searchQuery.trim() && searchType !== 'products' && searchType !== 'strains') {
       toast.error('Enter a search query');
       return;
     }
 
-    // Clear previous results and state
-    setSearchResults([]);
-    setSelectedItems([]);
-    setExpandedDispensary(null);
-    setMenuItems({});
-    setSelectedMenuItems({});
+    // Clear previous results and state only if not appending
+    if (!append) {
+      setSearchResults([]);
+      setSelectedItems([]);
+      setExpandedDispensary(null);
+      setMenuItems({});
+      setSelectedMenuItems({});
+      setCurrentPage(1);
+    }
     
     setIsSearching(true);
     try {
       const response = await base44.functions.invoke('weedmapsSearch', {
         searchType,
         query: searchQuery,
-        limit: 50
+        limit: 200,
+        page
       });
 
       if (response.data.success) {
-        setSearchResults(response.data.results);
-        toast.success(`Found ${response.data.count} results`);
+        if (append) {
+          setSearchResults(prev => [...prev, ...response.data.results]);
+        } else {
+          setSearchResults(response.data.results);
+        }
+        setHasMore(response.data.results.length === 200);
+        setCurrentPage(page);
+        toast.success(`${append ? 'Loaded' : 'Found'} ${response.data.count} results`);
       } else {
         if (response.data.status === 429) {
           toast.error('Rate limit exceeded - please wait 60 seconds before searching again');
@@ -67,6 +79,10 @@ export default function WeedMapsImporter() {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const loadMore = () => {
+    handleSearch(currentPage + 1, true);
   };
 
   const loadDispensaryMenu = async (dispensaryId, dispensaryName) => {
@@ -582,6 +598,18 @@ export default function WeedMapsImporter() {
                 </div>
               ))}
             </div>
+
+            {hasMore && !isSearching && (
+              <div className="flex justify-center mt-6">
+                <Button
+                  onClick={loadMore}
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Load More Products
+                </Button>
+              </div>
+            )}
           </>
         )}
 
