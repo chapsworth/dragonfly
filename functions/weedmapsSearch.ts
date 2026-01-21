@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
         id: brand.id,
         name: brand.name,
         description: brand.description,
-        image: brand.avatar_image?.small_url,
+        image: brand.avatar_image?.small_url || brand.avatar_image?.original_url || brand.image?.small_url || brand.image || brand.logo?.small_url || brand.logo,
         website: brand.website
       }));
     }
