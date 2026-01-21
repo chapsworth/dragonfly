@@ -417,23 +417,21 @@ export default function WeedMapsImporter() {
                     onClick={() => isDispensarySearch ? loadDispensaryMenu(item.id, item.name) : toggleSelection(item.id)}
                   >
                     <CardContent className="p-4">
-                      {item.image && (
-                        <div className="relative mb-3">
-                          <img 
-                            src={item.image} 
-                            alt={item.name}
-                            className="w-full h-40 object-cover rounded-lg"
-                          />
-                          {isDispensarySearch && (
-                            <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2">
-                              {expandedDispensary === item.id ? 
-                                <ChevronUp className="w-5 h-5" /> : 
-                                <ChevronDown className="w-5 h-5" />
-                              }
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div className="relative mb-3">
+                        <img 
+                          src={item.image || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=400'} 
+                          alt={item.name}
+                          className="w-full h-40 object-cover rounded-lg"
+                        />
+                        {isDispensarySearch && (
+                          <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2">
+                            {expandedDispensary === item.id ? 
+                              <ChevronUp className="w-5 h-5" /> : 
+                              <ChevronDown className="w-5 h-5" />
+                            }
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
@@ -550,13 +548,11 @@ export default function WeedMapsImporter() {
                                 >
                                   <CardContent className="p-3">
                                     <div className="flex gap-3">
-                                      {menuItem.image && (
-                                        <img 
-                                          src={menuItem.image} 
-                                          alt={menuItem.name}
-                                          className="w-16 h-16 object-cover rounded flex-shrink-0"
-                                        />
-                                      )}
+                                      <img 
+                                        src={menuItem.image || 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=100'} 
+                                        alt={menuItem.name}
+                                        className="w-16 h-16 object-cover rounded flex-shrink-0"
+                                      />
                                       <div className="flex-1 min-w-0">
                                         <h5 className="font-semibold text-sm text-gray-900 truncate">{menuItem.name}</h5>
                                         {menuItem.brand && <p className="text-xs text-gray-600">{menuItem.brand}</p>}
