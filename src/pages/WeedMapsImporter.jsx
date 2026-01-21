@@ -38,7 +38,11 @@ export default function WeedMapsImporter() {
         setSearchResults(response.data.results);
         toast.success(`Found ${response.data.count} results`);
       } else {
-        toast.error('Search failed: ' + response.data.error);
+        if (response.data.status === 429) {
+          toast.error('Rate limit exceeded - please wait 60 seconds before searching again');
+        } else {
+          toast.error('Search failed: ' + (response.data.details || response.data.error));
+        }
       }
     } catch (error) {
       toast.error('Search error: ' + error.message);

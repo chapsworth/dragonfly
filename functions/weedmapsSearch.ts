@@ -49,6 +49,16 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      
+      // Handle rate limiting specifically
+      if (response.status === 429) {
+        return Response.json({ 
+          error: 'Rate limit exceeded', 
+          details: 'WeedMaps API rate limit reached. Please wait a moment and try again.',
+          status: 429
+        }, { status: 429 });
+      }
+      
       return Response.json({ 
         error: 'WeedMaps API error', 
         details: errorText,
