@@ -51,6 +51,7 @@ export default function WeedMapsImporter() {
     
     setIsSearching(true);
     try {
+      console.log('Searching:', { searchType, query: searchQuery, limit: 200, page });
       const response = await base44.functions.invoke('weedmapsSearch', {
         searchType,
         query: searchQuery,
@@ -58,7 +59,10 @@ export default function WeedMapsImporter() {
         page
       });
 
+      console.log('Search response:', response.data);
+
       if (response.data.success) {
+        console.log('Results:', response.data.results);
         if (append) {
           setSearchResults(prev => [...prev, ...response.data.results]);
         } else {
@@ -68,6 +72,7 @@ export default function WeedMapsImporter() {
         setCurrentPage(page);
         toast.success(`${append ? 'Loaded' : 'Found'} ${response.data.count} results`);
       } else {
+        console.error('Search failed:', response.data);
         if (response.data.status === 429) {
           toast.error('Rate limit exceeded - please wait 60 seconds before searching again');
         } else {
@@ -75,6 +80,7 @@ export default function WeedMapsImporter() {
         }
       }
     } catch (error) {
+      console.error('Search error:', error);
       toast.error('Search error: ' + error.message);
     } finally {
       setIsSearching(false);
