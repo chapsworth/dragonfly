@@ -424,15 +424,16 @@ export default function WeedMapsImporter() {
                             alt={item.name}
                             className="w-full h-40 object-cover rounded-lg"
                           />
-                        {isDispensarySearch && (
-                          <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2">
-                            {expandedDispensary === item.id ? 
-                              <ChevronUp className="w-5 h-5" /> : 
-                              <ChevronDown className="w-5 h-5" />
-                            }
-                          </div>
-                        )}
-                      </div>
+                          {isDispensarySearch && (
+                            <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2">
+                              {expandedDispensary === item.id ? 
+                                <ChevronUp className="w-5 h-5" /> : 
+                                <ChevronDown className="w-5 h-5" />
+                              }
+                            </div>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
