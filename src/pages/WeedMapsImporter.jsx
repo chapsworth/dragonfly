@@ -37,6 +37,13 @@ export default function WeedMapsImporter() {
       return;
     }
 
+    // Clear previous results and state
+    setSearchResults([]);
+    setSelectedItems([]);
+    setExpandedDispensary(null);
+    setMenuItems({});
+    setSelectedMenuItems({});
+    
     setIsSearching(true);
     try {
       const response = await base44.functions.invoke('weedmapsSearch', {
