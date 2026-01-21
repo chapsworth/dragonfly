@@ -849,7 +849,10 @@ export default function CRMContacts() {
                                 {contact.email && (
                                   <Button
                                     size="sm"
-                                    onClick={() => handleBulkEmail([contact])}
+                                    onClick={() => {
+                                      setSelectedForEmail([contact]);
+                                      setIsEmailComposerOpen(true);
+                                    }}
                                     className="bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
                                   >
                                     <Mail className="w-4 h-4" />

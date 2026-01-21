@@ -890,22 +890,42 @@ export default function EmailCenter() {
           {/* Triggers Tab */}
           <TabsContent value="triggers">
             <div className="flex justify-between items-center mb-4">
-              <Button
-                onClick={async () => {
-                  try {
-                    await base44.functions.invoke('setupEmailTriggers', {});
-                    queryClient.invalidateQueries(['email-templates']);
-                    queryClient.invalidateQueries(['email-triggers']);
-                    toast.success('Email system setup complete!');
-                  } catch (error) {
-                    toast.error('Setup failed');
-                  }
-                }}
-                variant="outline"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Auto-Setup Triggers & Templates
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={async () => {
+                    try {
+                      toast.loading('Generating AI email templates...');
+                      await base44.functions.invoke('generateEmailTemplates', {});
+                      queryClient.invalidateQueries(['email-templates']);
+                      toast.dismiss();
+                      toast.success('Email templates generated!');
+                    } catch (error) {
+                      toast.dismiss();
+                      toast.error('Failed to generate templates');
+                    }
+                  }}
+                  variant="outline"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate AI Templates
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await base44.functions.invoke('setupEmailTriggers', {});
+                      queryClient.invalidateQueries(['email-templates']);
+                      queryClient.invalidateQueries(['email-triggers']);
+                      toast.success('Email system setup complete!');
+                    } catch (error) {
+                      toast.error('Setup failed');
+                    }
+                  }}
+                  variant="outline"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Setup Triggers
+                </Button>
+              </div>
               <Button
                 onClick={() => {
                   setEditingTrigger({ 
