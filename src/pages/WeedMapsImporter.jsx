@@ -352,7 +352,7 @@ export default function WeedMapsImporter() {
             </div>
 
             <Button 
-              onClick={handleSearch} 
+              onClick={() => handleSearch()} 
               disabled={isSearching}
               className="w-full bg-green-600 hover:bg-green-700"
             >
