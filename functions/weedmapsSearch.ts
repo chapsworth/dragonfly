@@ -25,10 +25,19 @@ Deno.serve(async (req) => {
     // WeedMaps API endpoints
     if (searchType === 'dispensaries') {
       // Search for dispensaries
-      url = `https://api-g.weedmaps.com/discovery/v1/listings?filter[region_path]=${encodeURIComponent(query)}&page_size=${limit}`;
+      url = `https://api-g.weedmaps.com/discovery/v1/listings?filter[region_path]=${encodeURIComponent(query)}&filter[type]=dispensary&page_size=${limit}`;
       if (latitude && longitude) {
         url += `&latlng=${latitude},${longitude}`;
       }
+    } else if (searchType === 'deliveries') {
+      // Search for delivery services
+      url = `https://api-g.weedmaps.com/discovery/v1/listings?filter[region_path]=${encodeURIComponent(query)}&filter[type]=delivery&page_size=${limit}`;
+      if (latitude && longitude) {
+        url += `&latlng=${latitude},${longitude}`;
+      }
+    } else if (searchType === 'brands') {
+      // Search for brands
+      url = `https://api-g.weedmaps.com/discovery/v1/brands?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'products') {
       // Search for products
       url = `https://api-g.weedmaps.com/discovery/v1/products?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
@@ -71,7 +80,7 @@ Deno.serve(async (req) => {
     // Transform the data to a more usable format
     let results = [];
     
-    if (searchType === 'dispensaries' && data.data?.listings) {
+    if ((searchType === 'dispensaries' || searchType === 'deliveries') && data.data?.listings) {
       results = data.data.listings.map(listing => ({
         id: listing.id,
         name: listing.name,
@@ -132,6 +141,14 @@ Deno.serve(async (req) => {
         id: cat.id,
         name: cat.name,
         slug: cat.slug
+      }));
+    } else if (searchType === 'brands' && data.data?.brands) {
+      results = data.data.brands.map(brand => ({
+        id: brand.id,
+        name: brand.name,
+        description: brand.description,
+        image: brand.avatar_image?.small_url,
+        website: brand.website
       }));
     }
 
