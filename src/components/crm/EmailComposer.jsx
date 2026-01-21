@@ -21,6 +21,7 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [includeAppLink, setIncludeAppLink] = useState(true);
   const [includeQR, setIncludeQR] = useState(true);
+  const [manualEmail, setManualEmail] = useState('');
 
   React.useEffect(() => {
     if (isOpen && preSelectedContacts.length > 0) {
@@ -46,7 +47,7 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
   };
 
   const handleRemoveContact = (contactId) => {
-    setSelectedContacts(selectedContacts.filter(c => c.id !== contactId));
+    setSelectedContacts(selectedContacts.filter(c => (c.id || c.email) !== contactId));
   };
 
   const handleUseTemplate = (template) => {
@@ -148,10 +149,11 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
 
       await Promise.all(emailPromises);
       
-      toast.success(`Email sent to ${selectedContacts.length} contact(s)`);
+      toast.success(`Email sent to ${selectedContacts.length} contact(s). Sent from: noreply@base44.app`);
       setSelectedContacts([]);
       setSubject('');
       setMessage('');
+      setManualEmail('');
       onClose();
     } catch (error) {
       console.error('Email error:', error);
@@ -224,10 +226,10 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
             <Label>To</Label>
             <div className="flex flex-wrap gap-2 mb-2 min-h-[40px] p-2 border rounded-lg border-purple-200">
               {selectedContacts.map(contact => (
-                <Badge key={contact.id} className="bg-purple-500 text-white flex items-center gap-1">
-                  {contact.full_name} ({contact.email})
+                <Badge key={contact.id || contact.email} className="bg-purple-500 text-white flex items-center gap-1">
+                  {contact.full_name ? `${contact.full_name} (${contact.email})` : contact.email}
                   <button
-                    onClick={() => handleRemoveContact(contact.id)}
+                    onClick={() => handleRemoveContact(contact.id || contact.email)}
                     className="hover:bg-purple-600 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
@@ -236,27 +238,53 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
               ))}
             </div>
             
-            <div className="relative">
-              <Input
-                placeholder="Search contacts by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-purple-200"
-              />
-              {searchTerm && filteredContacts.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-purple-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {filteredContacts.slice(0, 10).map(contact => (
-                    <button
-                      key={contact.id}
-                      onClick={() => handleAddContact(contact)}
-                      className="w-full px-4 py-2 text-left hover:bg-purple-50 transition-colors"
-                    >
-                      <div className="font-semibold text-sm">{contact.full_name}</div>
-                      <div className="text-xs text-gray-600">{contact.email}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  placeholder="Search contacts by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-purple-200"
+                />
+                {searchTerm && filteredContacts.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-purple-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {filteredContacts.slice(0, 10).map(contact => (
+                      <button
+                        key={contact.id}
+                        onClick={() => handleAddContact(contact)}
+                        className="w-full px-4 py-2 text-left hover:bg-purple-50 transition-colors"
+                      >
+                        <div className="font-semibold text-sm">{contact.full_name}</div>
+                        <div className="text-xs text-gray-600">{contact.email}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Or type email address manually..."
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  className="border-purple-200 flex-1"
+                  type="email"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (manualEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(manualEmail)) {
+                      handleAddContact({ email: manualEmail, full_name: '', id: manualEmail });
+                      setManualEmail('');
+                    } else {
+                      toast.error('Please enter a valid email address');
+                    }
+                  }}
+                  className="bg-purple-600"
+                >
+                  Add
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -280,6 +308,13 @@ export default function EmailComposer({ isOpen, onClose, contacts, preSelectedCo
               placeholder="Type your message here..."
               className="h-64 border-purple-200"
             />
+          </div>
+
+          {/* Sender Info */}
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <p className="text-xs text-blue-900">
+              <strong>From:</strong> Dragonfly &lt;noreply@base44.app&gt;
+            </p>
           </div>
 
           {/* HTML Options */}
