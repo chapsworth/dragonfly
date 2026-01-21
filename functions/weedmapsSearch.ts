@@ -39,17 +39,11 @@ Deno.serve(async (req) => {
       // Search for brands
       url = `https://api-g.weedmaps.com/discovery/v1/brands?filter[name]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'products') {
-      // Search for products - use region/location search for broader results
-      url = `https://api-g.weedmaps.com/discovery/v1/products?filter[region_path]=${encodeURIComponent(query)}&page_size=${limit}`;
-      if (latitude && longitude) {
-        url += `&latlng=${latitude},${longitude}`;
-      }
+      // Search for products - search by location for all products in that area
+      url = `https://api-g.weedmaps.com/discovery/v1/listings/products/search?filter[query]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'strains') {
-      // Search for strains - use region/location search for broader results
-      url = `https://api-g.weedmaps.com/discovery/v1/strains?filter[region_path]=${encodeURIComponent(query)}&page_size=${limit}`;
-      if (latitude && longitude) {
-        url += `&latlng=${latitude},${longitude}`;
-      }
+      // Search for strains by name or location
+      url = `https://api-g.weedmaps.com/discovery/v1/listings/strains/search?filter[query]=${encodeURIComponent(query)}&page_size=${limit}`;
     } else if (searchType === 'menu') {
       // Get menu for a specific dispensary by ID
       url = `https://api-g.weedmaps.com/discovery/v1/listings/${query}/menu_items?page_size=${limit}`;
@@ -101,33 +95,51 @@ Deno.serve(async (req) => {
         website: listing.web_url
       }));
     } else if (searchType === 'products' && data.data?.products) {
-      results = data.data.products.map(product => ({
-        id: product.id,
-        name: product.name,
-        brand: product.brand?.name,
-        category: product.category?.name,
-        price: product.price_range?.min,
-        thc: product.thc_percent?.min,
-        cbd: product.cbd_percent?.min,
-        description: product.description,
-        image: product.avatar_image?.small_url || product.avatar_image?.original_url || product.image || product.photos?.[0],
-        strain_type: product.strain_type
-      }));
+      results = data.data.products.map(product => {
+        const img = product.avatar_image?.small_url || 
+                    product.avatar_image?.original_url || 
+                    product.image?.small_url ||
+                    product.image?.url ||
+                    product.image ||
+                    product.photos?.[0]?.url ||
+                    product.photos?.[0];
+        return {
+          id: product.id,
+          name: product.name,
+          brand: product.brand?.name,
+          category: product.category?.name,
+          price: product.price_range?.min,
+          thc: product.thc_percent?.min,
+          cbd: product.cbd_percent?.min,
+          description: product.description,
+          image: img,
+          strain_type: product.strain_type
+        };
+      });
     } else if (searchType === 'strains' && data.data?.strains) {
-      results = data.data.strains.map(strain => ({
-        id: strain.id,
-        name: strain.name,
-        type: strain.category,
-        description: strain.description,
-        effects: strain.effects || [],
-        flavors: strain.flavors || [],
-        thc_min: strain.thc?.min,
-        thc_max: strain.thc?.max,
-        cbd_min: strain.cbd?.min,
-        cbd_max: strain.cbd?.max,
-        image: strain.avatar_image?.small_url || strain.avatar_image?.original_url || strain.image || strain.photos?.[0],
-        genetics: strain.genetics
-      }));
+      results = data.data.strains.map(strain => {
+        const img = strain.avatar_image?.small_url || 
+                    strain.avatar_image?.original_url || 
+                    strain.image?.small_url ||
+                    strain.image?.url ||
+                    strain.image ||
+                    strain.photos?.[0]?.url ||
+                    strain.photos?.[0];
+        return {
+          id: strain.id,
+          name: strain.name,
+          type: strain.category,
+          description: strain.description,
+          effects: strain.effects || [],
+          flavors: strain.flavors || [],
+          thc_min: strain.thc?.min,
+          thc_max: strain.thc?.max,
+          cbd_min: strain.cbd?.min,
+          cbd_max: strain.cbd?.max,
+          image: img,
+          genetics: strain.genetics
+        };
+      });
     } else if (searchType === 'menu' && data.data?.menu_items) {
       results = data.data.menu_items.map(item => ({
         id: item.id,

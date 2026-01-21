@@ -327,7 +327,7 @@ export default function WeedMapsImporter() {
               </Select>
 
               <Input
-                placeholder={searchType === 'products' || searchType === 'strains' ? 'Enter city, state (e.g., Los Angeles, CA)' : `Search ${searchType}...`}
+                placeholder={searchType === 'products' ? 'Search products by name or location' : searchType === 'strains' ? 'Search strains by name or location' : `Search ${searchType}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
