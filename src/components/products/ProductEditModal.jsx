@@ -756,11 +756,25 @@ Return a JSON object with these exact fields:
           </div>
 
           <div>
-            <Label>Description</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Description</Label>
+              {formData.name?.trim() && (
+                <button
+                  type="button"
+                  onClick={handleResearchStrain}
+                  disabled={isResearchingStrain}
+                  className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  AI Auto-fill
+                </button>
+              )}
+            </div>
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className="border-emerald-200 h-24"
+              placeholder="Enter description or use AI auto-fill..."
             />
           </div>
 
