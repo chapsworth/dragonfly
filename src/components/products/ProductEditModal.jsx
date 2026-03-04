@@ -284,6 +284,85 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
     toast.success(`Pre-filled with ${strain.name} strain data`);
   };
 
+  const handleResearchStrain = async () => {
+    const strainName = formData.name?.trim();
+    if (!strainName) {
+      toast.error('Enter a strain name first');
+      return;
+    }
+    setIsResearchingStrain(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a cannabis strain expert. Research the strain "${strainName}" and provide factual information.
+
+If this is a known strain: compile facts from your knowledge about it including its type (indica/sativa/hybrid), THC/CBD ranges, effects, flavors, and a detailed description.
+
+If this is an unknown or new strain: analyze the name for clues (parent strain names, naming conventions) and use logical reasoning to predict its type and characteristics.
+
+Return a JSON object with these exact fields:
+{
+  "name": "exact strain name properly formatted",
+  "strain_type": "indica" or "sativa" or "hybrid" or "cbd",
+  "thc_min": number (estimated min THC%),
+  "thc_max": number (estimated max THC%),
+  "cbd_min": number (estimated min CBD%),
+  "cbd_max": number (estimated max CBD%),
+  "description": "2-3 sentence factual product description suitable for a cannabis dispensary. Include strain type, effects, flavor profile, and ideal use case.",
+  "effects": ["effect1", "effect2", "effect3"],
+  "flavors": ["flavor1", "flavor2"],
+  "is_known_strain": true or false
+}`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            strain_type: { type: "string" },
+            thc_min: { type: "number" },
+            thc_max: { type: "number" },
+            cbd_min: { type: "number" },
+            cbd_max: { type: "number" },
+            description: { type: "string" },
+            effects: { type: "array", items: { type: "string" } },
+            flavors: { type: "array", items: { type: "string" } },
+            is_known_strain: { type: "boolean" }
+          }
+        }
+      });
+
+      if (result) {
+        const avgTHC = result.thc_min && result.thc_max ? ((result.thc_min + result.thc_max) / 2).toFixed(1) : formData.thc_level;
+        const avgCBD = result.cbd_min && result.cbd_max ? ((result.cbd_min + result.cbd_max) / 2).toFixed(1) : formData.cbd_level;
+
+        setFormData(prev => ({
+          ...prev,
+          name: result.name || prev.name,
+          strain_type: result.strain_type || prev.strain_type,
+          description: result.description || prev.description,
+          thc_level: avgTHC || prev.thc_level,
+          cbd_level: avgCBD || prev.cbd_level
+        }));
+
+        // Also trigger Google image search for the strain
+        setGoogleQuery(result.name || strainName);
+        const imgResponse = await base44.functions.invoke('searchGoogleImages', { query: `${result.name || strainName} cannabis strain` });
+        if (imgResponse.data?.results?.length > 0) {
+          setGoogleResults(imgResponse.data.results);
+        }
+
+        toast.success(result.is_known_strain 
+          ? `✓ Found "${result.name}" — description & details auto-filled!`
+          : `✓ "${result.name}" not found — AI predicted strain type & description using logical reasoning`
+        );
+      }
+    } catch (error) {
+      console.error('Strain research failed:', error);
+      toast.error('Strain research failed: ' + error.message);
+    } finally {
+      setIsResearchingStrain(false);
+    }
+  };
+
   const handleSave = async () => {
     // Validate required fields
     const errors = [];
