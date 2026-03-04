@@ -322,17 +322,23 @@ export default function CartDrawer() {
                     ))}
                   </div>
                   <div className="border-t border-emerald-100/50 pt-4 space-y-4">
-                    <div className="flex justify-between text-lg font-bold text-emerald-900">
-                      <span>Total</span>
-                      <span>${cartTotal.toFixed(2)}</span>
-                    </div>
-                    <Button
-                      onClick={handleCheckout}
-                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold text-lg shadow-lg shadow-emerald-500/30"
-                    >
-                      Continue to Checkout
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                   <div className="flex justify-between text-lg font-bold text-emerald-900">
+                     <span>Total</span>
+                     <span>${cartTotal.toFixed(2)}</span>
+                   </div>
+                   {cartTotal < 40 && (
+                     <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-center">
+                       $40.00 minimum order — add ${(40 - cartTotal).toFixed(2)} more to checkout
+                     </div>
+                   )}
+                   <Button
+                     onClick={handleCheckout}
+                     disabled={cartTotal < 40}
+                     className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold text-lg shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     Continue to Checkout
+                     <ArrowRight className="w-5 h-5 ml-2" />
+                   </Button>
                   </div>
                 </>
               )}
