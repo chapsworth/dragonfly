@@ -36,6 +36,7 @@ export default function ProductEditModal({ isOpen, onClose, product }) {
   const [isScrapingLeafly, setIsScrapingLeafly] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isResearchingStrain, setIsResearchingStrain] = useState(false);
   const [selectedStrainId, setSelectedStrainId] = useState(null);
   const [inventoryEnabled, setInventoryEnabled] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
