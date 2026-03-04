@@ -714,11 +714,26 @@ Return a JSON object with these exact fields:
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="border-emerald-200"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="border-emerald-200 flex-1"
+                  placeholder="Enter strain name..."
+                />
+                <Button
+                  type="button"
+                  onClick={handleResearchStrain}
+                  disabled={isResearchingStrain || !formData.name?.trim()}
+                  className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-3 flex-shrink-0"
+                  title="AI: Research strain & auto-fill description"
+                >
+                  {isResearchingStrain ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                </Button>
+              </div>
+              {isResearchingStrain && (
+                <p className="text-xs text-purple-600 mt-1 animate-pulse">Researching strain online...</p>
+              )}
             </div>
             <div>
               <Label>Category</Label>
