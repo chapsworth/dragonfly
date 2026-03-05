@@ -166,6 +166,17 @@ export default function CRMContacts() {
     }
   };
 
+  const handleQuickText = (contact, message) => {
+    if (!contact.phone) { toast.error('No phone number'); return; }
+    const phone = contact.phone.replace(/\D/g, '');
+    window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+  };
+
+  const handleQuickEmail = (contact, subject, body) => {
+    if (!contact.email) { toast.error('No email address'); return; }
+    window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
   const handleEmail = (email) => {
     if (email) window.location.href = `mailto:${email}`;
   };
