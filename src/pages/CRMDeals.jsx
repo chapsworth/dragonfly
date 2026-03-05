@@ -260,74 +260,13 @@ function CRMDealsContent() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`${
-                                snapshot.isDragging ? 'opacity-50' : ''
-                              }`}
+                              className={`${snapshot.isDragging ? 'opacity-50' : ''}`}
                             >
-                              <Card className="bg-white border-indigo-200 hover:shadow-md transition-shadow cursor-move">
-                                <CardContent className="p-4">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <h4 className="font-bold text-indigo-900 text-sm">{deal.title}</h4>
-                                    <div className="flex gap-1">
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-6 w-6"
-                                        onClick={() => setEditingDeal(deal)}
-                                      >
-                                        <Edit2 className="w-3 h-3" />
-                                      </Button>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-6 w-6 text-red-600"
-                                        onClick={() => {
-                                          if (confirm('Delete this deal?')) {
-                                            deleteMutation.mutate(deal.id);
-                                          }
-                                        }}
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  {deal.contact_name && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-                                      <User className="w-3 h-3" />
-                                      {deal.contact_name}
-                                    </div>
-                                  )}
-                                  <div className="text-lg font-bold text-green-700 mb-2">
-                                    ${(deal.value || 0).toLocaleString()}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs mb-2">
-                                    <Badge variant="outline" className="border-indigo-300">
-                                      {deal.probability}% prob
-                                    </Badge>
-                                    {deal.priority && (
-                                      <Badge className={
-                                        deal.priority === 'urgent' ? 'bg-red-500' :
-                                        deal.priority === 'high' ? 'bg-orange-500' :
-                                        deal.priority === 'medium' ? 'bg-yellow-500' :
-                                        'bg-gray-500'
-                                      }>
-                                        {deal.priority}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  {deal.expected_close_date && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                                      <Clock className="w-3 h-3" />
-                                      {new Date(deal.expected_close_date).toLocaleDateString()}
-                                    </div>
-                                  )}
-                                  {deal.next_step && (
-                                    <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-indigo-100">
-                                      Next: {deal.next_step}
-                                    </div>
-                                  )}
-                                </CardContent>
-                              </Card>
+                              <DealCard
+                                deal={deal}
+                                onEdit={() => setEditingDeal(deal)}
+                                onDelete={() => { if (confirm('Delete this customer record?')) deleteMutation.mutate(deal.id); }}
+                              />
                             </div>
                           )}
                         </Draggable>
