@@ -231,7 +231,7 @@ function CRMDealsContent() {
 
         {/* Kanban Board */}
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="flex gap-4 overflow-x-auto pb-4" style={{ minWidth: 0 }}>
             {stages.map(stage => (
               <Droppable key={stage.id} droppableId={stage.id}>
                 {(provided, snapshot) => (
