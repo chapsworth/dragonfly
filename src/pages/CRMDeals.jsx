@@ -248,12 +248,8 @@ function CRMDealsContent() {
                         <h3 className="font-bold text-indigo-900">{stage.label}</h3>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <span>{dealsByStage[stage.id].length} deals</span>
-                        <span>•</span>
-                        <span>
-                          ${dealsByStage[stage.id].reduce((sum, d) => sum + (d.value || 0), 0).toLocaleString()}
-                        </span>
-                      </div>
+                          <span>{dealsByStage[stage.id].length} customers</span>
+                        </div>
                     </div>
 
                     <div className="space-y-3">
