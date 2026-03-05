@@ -700,6 +700,15 @@ export default function CRMContacts() {
               <span className="sm:hidden">Groups</span>
             </Button>
             <Button 
+              onClick={() => setIsQuickMessageManagerOpen(true)} 
+              variant="outline" 
+              className="gap-2 flex-1 sm:flex-initial whitespace-nowrap bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Quick Messages</span>
+              <span className="sm:hidden">Templates</span>
+            </Button>
+            <Button 
               onClick={scanForDuplicates} 
               variant="outline" 
               className="gap-2 flex-1 sm:flex-initial whitespace-nowrap"
