@@ -19,6 +19,7 @@ import TextMessageDialog from '@/components/crm/TextMessageDialog';
 import BulkTextDialog from '@/components/crm/BulkTextDialog';
 import TextGroupManager from '@/components/crm/TextGroupManager';
 import EmailGroupManager from '@/components/crm/EmailGroupManager';
+import QuickMessageManager, { ContactQuickMessages } from '@/components/crm/QuickMessageManager';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
