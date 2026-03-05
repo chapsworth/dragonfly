@@ -96,12 +96,16 @@ function CRMDealsContent() {
   );
 
   const stages = [
-    { id: 'lead', label: 'Lead', color: 'bg-gray-500' },
-    { id: 'qualified', label: 'Qualified', color: 'bg-blue-500' },
-    { id: 'proposal', label: 'Proposal', color: 'bg-purple-500' },
-    { id: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
-    { id: 'closed_won', label: 'Closed Won', color: 'bg-green-500' },
-    { id: 'closed_lost', label: 'Closed Lost', color: 'bg-red-500' }
+    { id: 'new', label: 'New', color: 'bg-gray-400' },
+    { id: 'existing', label: 'Existing', color: 'bg-blue-400' },
+    { id: 'waiting_for_delivery', label: 'Waiting for Delivery', color: 'bg-yellow-500' },
+    { id: 'order_delivered', label: 'Order Delivered', color: 'bg-green-500' },
+    { id: 'returning_customer', label: 'Returning Customer', color: 'bg-teal-500' },
+    { id: 'vip_customer', label: 'VIP Customer', color: 'bg-purple-500' },
+    { id: 'og_customer', label: 'OG Customer', color: 'bg-amber-600' },
+    { id: 'special_needs', label: 'Special Needs', color: 'bg-pink-500' },
+    { id: 'orders_weekly', label: 'Orders Weekly', color: 'bg-indigo-500' },
+    { id: 'orders_daily', label: 'Orders Daily', color: 'bg-rose-500' }
   ];
 
   const dealsByStage = stages.reduce((acc, stage) => {
