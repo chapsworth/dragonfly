@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Plus, TrendingUp, Clock, Target, Edit2, Trash2, Search, User } from 'lucide-react';
+import { DollarSign, Plus, TrendingUp, Clock, Target, Edit2, Trash2, Search, User, ChevronDown, ChevronUp, History } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import BiometricGuard from '@/components/auth/BiometricGuard';
