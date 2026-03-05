@@ -233,107 +233,133 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, allVen
             </>
           ) : (
             <div className="space-y-4">
-              <div>
-                <Label>Group Name *</Label>
-                <Input
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="e.g., VIP Customers, Weekly Newsletter"
-                  className="border-purple-200"
-                />
-              </div>
-
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={groupDescription}
-                  onChange={(e) => setGroupDescription(e.target.value)}
-                  placeholder="Optional description..."
-                  className="border-purple-200"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label>Selected Contacts ({selectedContacts.length})</Label>
-                <div className="flex flex-wrap gap-2 mb-2 min-h-[60px] p-3 border rounded-lg border-purple-200 bg-purple-50">
-                  {selectedContacts.length === 0 ? (
-                    <p className="text-sm text-gray-500">No contacts selected</p>
-                  ) : (
-                    selectedContacts.map(contact => (
-                      <Badge key={contact.id} className="bg-purple-500 text-white flex items-center gap-1">
-                        {contact.full_name}
-                        <button
-                          onClick={() => handleRemoveContact(contact.id)}
-                          className="hover:bg-purple-600 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label>Add Contacts</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Group Name *</Label>
                   <Input
-                    placeholder="Search contacts by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-purple-200"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="e.g., VIP Customers, Weekly Newsletter"
+                    className="border-purple-200"
                   />
                 </div>
-                {searchTerm && (availableContacts.length > 0 || availableVendors.length > 0) && (
-                  <div className="mt-2 border border-purple-200 rounded-lg max-h-64 overflow-y-auto">
-                    {availableContacts.length > 0 && (
-                      <>
-                        <div className="px-3 py-1.5 bg-purple-50 text-xs font-semibold text-purple-700 sticky top-0">
-                          CRM CONTACTS
+                <div>
+                  <Label>Description</Label>
+                  <Input
+                    value={groupDescription}
+                    onChange={(e) => setGroupDescription(e.target.value)}
+                    placeholder="Optional description..."
+                    className="border-purple-200"
+                  />
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-purple-200"
+                />
+              </div>
+
+              {/* Selected count */}
+              <div className="flex items-center gap-2">
+                <Badge className="bg-purple-500 text-white">{selectedContacts.length} selected</Badge>
+                {selectedContacts.length > 0 && (
+                  <button
+                    onClick={() => setSelectedContacts([])}
+                    className="text-xs text-red-500 underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              {/* Full checklist */}
+              <div className="border border-purple-200 rounded-lg overflow-hidden max-h-[340px] overflow-y-auto">
+                {/* CRM Contacts */}
+                {contactsWithEmail.length > 0 && (
+                  <>
+                    <div className="px-3 py-2 bg-purple-50 border-b border-purple-200 flex items-center justify-between sticky top-0 z-10">
+                      <span className="text-xs font-bold text-purple-700 uppercase tracking-wide">CRM Contacts ({contactsWithEmail.length})</span>
+                      <button
+                        onClick={() => toggleAll(contactsWithEmail, 'contact')}
+                        className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                      >
+                        {contactsWithEmail.every(c => isSelected(c.id)) ? (
+                          <><CheckSquare className="w-3 h-3" /> Deselect All</>
+                        ) : (
+                          <><Square className="w-3 h-3" /> Select All</>
+                        )}
+                      </button>
+                    </div>
+                    {contactsWithEmail.map(contact => (
+                      <label
+                        key={contact.id}
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer border-b border-gray-100 transition-colors ${isSelected(contact.id) ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
+                      >
+                        <Checkbox
+                          checked={isSelected(contact.id)}
+                          onCheckedChange={() => toggleContact(contact, 'contact')}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-gray-900 truncate">{contact.full_name}</div>
+                          <div className="text-xs text-gray-500 truncate">{contact.email}</div>
                         </div>
-                        {availableContacts.slice(0, 15).map(contact => (
-                          <button
-                            key={contact.id}
-                            onClick={() => handleAddContact(contact, 'contact')}
-                            className="w-full px-4 py-2 text-left hover:bg-purple-50 transition-colors border-b border-purple-100"
-                          >
-                            <div className="font-semibold text-sm">{contact.full_name}</div>
-                            <div className="text-xs text-gray-600">{contact.email}</div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                    {availableVendors.length > 0 && (
-                      <>
-                        <div className="px-3 py-1.5 bg-blue-50 text-xs font-semibold text-blue-700 sticky top-0">
-                          VENDORS
+                        {contact.type && (
+                          <Badge variant="outline" className="text-xs shrink-0">{contact.type}</Badge>
+                        )}
+                      </label>
+                    ))}
+                  </>
+                )}
+
+                {/* Vendors */}
+                {vendorsWithEmail.length > 0 && (
+                  <>
+                    <div className="px-3 py-2 bg-blue-50 border-b border-blue-200 flex items-center justify-between sticky top-0 z-10">
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Vendors ({vendorsWithEmail.length})</span>
+                      <button
+                        onClick={() => toggleAll(vendorsWithEmail, 'vendor')}
+                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        {vendorsWithEmail.every(v => isSelected(v.id)) ? (
+                          <><CheckSquare className="w-3 h-3" /> Deselect All</>
+                        ) : (
+                          <><Square className="w-3 h-3" /> Select All</>
+                        )}
+                      </button>
+                    </div>
+                    {vendorsWithEmail.map(vendor => (
+                      <label
+                        key={vendor.id}
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer border-b border-gray-100 transition-colors ${isSelected(vendor.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                      >
+                        <Checkbox
+                          checked={isSelected(vendor.id)}
+                          onCheckedChange={() => toggleContact(vendor, 'vendor')}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-gray-900 truncate">{vendor.company_name}</div>
+                          <div className="text-xs text-gray-500 truncate">{vendor.email}</div>
                         </div>
-                        {availableVendors.slice(0, 15).map(vendor => (
-                          <button
-                            key={vendor.id}
-                            onClick={() => handleAddContact(vendor, 'vendor')}
-                            className="w-full px-4 py-2 text-left hover:bg-blue-50 transition-colors border-b border-purple-100"
-                          >
-                            <div className="font-semibold text-sm">{vendor.company_name}</div>
-                            <div className="text-xs text-gray-600">{vendor.email}</div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </div>
+                        <Badge variant="outline" className="text-xs shrink-0 text-blue-600">vendor</Badge>
+                      </label>
+                    ))}
+                  </>
+                )}
+
+                {contactsWithEmail.length === 0 && vendorsWithEmail.length === 0 && (
+                  <div className="p-8 text-center text-gray-400 text-sm">No contacts with email addresses found.</div>
                 )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500"
-                >
+                <Button variant="outline" onClick={resetForm}>Cancel</Button>
+                <Button onClick={handleSave} className="bg-gradient-to-r from-purple-500 to-pink-500">
                   {editingGroup ? 'Update' : 'Create'} Group
                 </Button>
               </div>
