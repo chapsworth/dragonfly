@@ -72,10 +72,16 @@ function CRMDealsContent() {
   });
 
   const moveDealMutation = useMutation({
-    mutationFn: ({ id, stage }) => base44.entities.Deal.update(id, { 
-      stage,
-      last_activity: new Date().toISOString()
-    }),
+    mutationFn: ({ id, stage, deal, stageLabel }) => {
+      const now = new Date().toISOString();
+      const history = deal.stage_history || [];
+      const newEntry = { stage, label: stageLabel, timestamp: now, changed_by: '' };
+      return base44.entities.Deal.update(id, {
+        stage,
+        last_activity: now,
+        stage_history: [...history, newEntry]
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
     }
@@ -83,11 +89,11 @@ function CRMDealsContent() {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-
     const dealId = result.draggableId;
     const newStage = result.destination.droppableId;
-
-    moveDealMutation.mutate({ id: dealId, stage: newStage });
+    const deal = deals.find(d => d.id === dealId);
+    const stageObj = stages.find(s => s.id === newStage);
+    moveDealMutation.mutate({ id: dealId, stage: newStage, deal, stageLabel: stageObj?.label || newStage });
   };
 
   const filteredDeals = deals.filter(d => 
