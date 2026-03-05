@@ -497,12 +497,16 @@ function DealDialog({ deal, isOpen, contacts, onClose, onSave }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="proposal">Proposal</SelectItem>
-                  <SelectItem value="negotiation">Negotiation</SelectItem>
-                  <SelectItem value="closed_won">Closed Won</SelectItem>
-                  <SelectItem value="closed_lost">Closed Lost</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="existing">Existing</SelectItem>
+                  <SelectItem value="waiting_for_delivery">Waiting for Delivery</SelectItem>
+                  <SelectItem value="order_delivered">Order Delivered</SelectItem>
+                  <SelectItem value="returning_customer">Returning Customer</SelectItem>
+                  <SelectItem value="vip_customer">VIP Customer</SelectItem>
+                  <SelectItem value="og_customer">OG Customer</SelectItem>
+                  <SelectItem value="special_needs">Special Needs Customer</SelectItem>
+                  <SelectItem value="orders_weekly">Orders Weekly</SelectItem>
+                  <SelectItem value="orders_daily">Orders Daily</SelectItem>
                 </SelectContent>
               </Select>
             </div>
