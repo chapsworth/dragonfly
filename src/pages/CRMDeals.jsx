@@ -195,7 +195,7 @@ function CRMDealsContent() {
                   <Target className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Won This Month</p>
+                  <p className="text-xs text-gray-600">Delivered This Month</p>
                   <p className="text-xl font-bold text-green-900">${wonValue.toLocaleString()}</p>
                 </div>
               </div>
