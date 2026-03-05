@@ -65,8 +65,8 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, allVen
     setEditingGroup(group);
     setGroupName(group.name);
     setGroupDescription(group.description || '');
-    const groupContacts = allContacts.filter(c => group.contact_ids.includes(c.id));
-    setSelectedContacts(groupContacts);
+    const groupContacts = allContacts.filter(c => group.contact_ids?.includes(c.id));
+    setSelectedContacts(groupContacts.map(c => ({ ...c, type: 'contact' })));
     setIsCreating(true);
   };
 
@@ -79,13 +79,11 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, allVen
       toast.error('Please select at least one contact');
       return;
     }
-
     const data = {
       name: groupName,
       description: groupDescription,
       contact_ids: selectedContacts.map(c => c.id)
     };
-
     if (editingGroup) {
       updateMutation.mutate({ id: editingGroup.id, data });
     } else {
@@ -100,35 +98,44 @@ export default function EmailGroupManager({ isOpen, onClose, allContacts, allVen
   };
 
   const handleEmailGroup = (group) => {
-    const groupContacts = allContacts.filter(c => group.contact_ids.includes(c.id) && c.email);
+    const groupContacts = allContacts.filter(c => group.contact_ids?.includes(c.id) && c.email);
     if (onSelectGroup) {
       onSelectGroup(groupContacts);
       onClose();
     }
   };
 
-  const availableContacts = allContacts.filter(c => 
+  const isSelected = (id) => selectedContacts.some(sc => sc.id === id);
+
+  const toggleContact = (contact, type = 'contact') => {
+    if (isSelected(contact.id)) {
+      setSelectedContacts(selectedContacts.filter(c => c.id !== contact.id));
+    } else {
+      setSelectedContacts([...selectedContacts, { ...contact, type }]);
+    }
+  };
+
+  const toggleAll = (list, type) => {
+    const allSelected = list.every(c => isSelected(c.id));
+    if (allSelected) {
+      setSelectedContacts(selectedContacts.filter(sc => !list.some(c => c.id === sc.id)));
+    } else {
+      const toAdd = list.filter(c => !isSelected(c.id)).map(c => ({ ...c, type }));
+      setSelectedContacts([...selectedContacts, ...toAdd]);
+    }
+  };
+
+  const contactsWithEmail = allContacts.filter(c =>
     c.email &&
-    !selectedContacts.find(sc => sc.id === c.id && sc.type !== 'vendor') &&
-    (c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
      c.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const availableVendors = allVendors.filter(v => 
+  const vendorsWithEmail = allVendors.filter(v =>
     v.email &&
-    !selectedContacts.find(sc => sc.id === v.id && sc.type === 'vendor') &&
-    (v.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (v.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
      v.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  const handleAddContact = (contact, type = 'contact') => {
-    setSelectedContacts([...selectedContacts, { ...contact, type }]);
-    setSearchTerm('');
-  };
-
-  const handleRemoveContact = (contactId) => {
-    setSelectedContacts(selectedContacts.filter(c => c.id !== contactId));
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
