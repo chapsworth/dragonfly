@@ -302,6 +302,79 @@ function CRMDealsContent() {
   );
 }
 
+function DealCard({ deal, onEdit, onDelete }) {
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+  const history = deal.stage_history || [];
+
+  return (
+    <Card className="bg-white border-indigo-200 hover:shadow-md transition-shadow cursor-move">
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between mb-1">
+          <h4 className="font-bold text-indigo-900 text-sm leading-tight">{deal.title}</h4>
+          <div className="flex gap-0.5 shrink-0">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEdit}>
+              <Edit2 className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-6 w-6 text-red-600" onClick={onDelete}>
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+        {deal.contact_name && (
+          <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+            <User className="w-3 h-3" />
+            {deal.contact_name}
+          </div>
+        )}
+        <div className="text-base font-bold text-green-700 mb-1">
+          ${(deal.value || 0).toLocaleString()}
+        </div>
+        {deal.priority && (
+          <Badge className={`text-xs mb-1 ${
+            deal.priority === 'urgent' ? 'bg-red-500' :
+            deal.priority === 'high' ? 'bg-orange-500' :
+            deal.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'
+          }`}>
+            {deal.priority}
+          </Badge>
+        )}
+        {deal.next_step && (
+          <div className="text-xs text-gray-600 mt-1 pt-1 border-t border-indigo-100">
+            Next: {deal.next_step}
+          </div>
+        )}
+
+        {/* Activity History - collapsed by default */}
+        {history.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-indigo-100">
+            <button
+              onClick={(e) => { e.stopPropagation(); setHistoryOpen(!historyOpen); }}
+              className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 w-full"
+            >
+              <History className="w-3 h-3" />
+              <span>Activity ({history.length})</span>
+              {historyOpen ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+            </button>
+            {historyOpen && (
+              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {[...history].reverse().map((h, i) => (
+                  <div key={i} className="flex items-start gap-1.5 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1 shrink-0" />
+                    <div>
+                      <span className="font-medium text-gray-800">{h.label}</span>
+                      <div className="text-gray-400">{new Date(h.timestamp).toLocaleString()}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function DealDialog({ deal, isOpen, contacts, onClose, onSave }) {
   const [formData, setFormData] = useState({
     title: '',
