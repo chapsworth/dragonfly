@@ -836,9 +836,10 @@ export default function CRMContacts() {
                           {isExpanded && (
                             <div className="px-4 pb-4 space-y-4 border-t border-emerald-100">
                               {/* Action Buttons */}
-                              <div className="flex gap-2 pt-4 flex-wrap">
-                                {contact.phone && (
-                                  <>
+                              <div className="pt-4 space-y-3">
+                                {/* Primary actions */}
+                                <div className="flex gap-2 flex-wrap">
+                                  {contact.phone && (
                                     <Button
                                       size="sm"
                                       onClick={() => handleCall(contact.phone, contact)}
@@ -847,51 +848,94 @@ export default function CRMContacts() {
                                       <Phone className="w-4 h-4" />
                                       Call
                                     </Button>
+                                  )}
+                                  {contact.phone && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleText(contact)}
+                                      onClick={() => {
+                                        setSelectedContactForText(contact);
+                                        setIsTextDialogOpen(true);
+                                      }}
                                       className="bg-gradient-to-r from-green-500 to-emerald-500 gap-2"
                                     >
                                       <MessageSquare className="w-4 h-4" />
                                       Text
                                     </Button>
-                                  </>
-                                )}
-                                {contact.email && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedForEmail([contact]);
-                                      setIsEmailComposerOpen(true);
-                                    }}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
-                                  >
-                                    <Mail className="w-4 h-4" />
-                                    Email
+                                  )}
+                                  {contact.email && (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedForEmail([contact]);
+                                        setIsEmailComposerOpen(true);
+                                      }}
+                                      className="bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
+                                    >
+                                      <Mail className="w-4 h-4" />
+                                      Email
+                                    </Button>
+                                  )}
+                                  <Button size="sm" variant="outline" onClick={() => setEditingContact(contact)} className="gap-2 ml-auto">
+                                    <Edit2 className="w-4 h-4" />Edit
                                   </Button>
+                                  <Button
+                                    size="sm" variant="outline"
+                                    onClick={() => { if (confirm('Delete this contact?')) deleteMutation.mutate(contact.id); }}
+                                    className="gap-2 text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4" />Delete
+                                  </Button>
+                                </div>
+
+                                {/* Quick Text Shortcuts */}
+                                {contact.phone && (
+                                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-green-700 uppercase mb-2">Quick Text</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        { label: '👋 Hey checking in', msg: `Hey ${contact.full_name?.split(' ')[0] || 'there'}, just checking in! Let us know if you need anything. 🌿` },
+                                        { label: '🛍️ New products', msg: `Hi ${contact.full_name?.split(' ')[0] || 'there'}! We just got some amazing new products in. Want to see what's available? 🌿` },
+                                        { label: '🎉 Special deal', msg: `Hey ${contact.full_name?.split(' ')[0] || 'there'}! We have a special deal just for you today. Reply back and I'll fill you in! 💚` },
+                                        { label: '📦 Order ready', msg: `Hi ${contact.full_name?.split(' ')[0] || 'there'}, your order is ready! Let us know when you'd like to set up delivery. 🚀` },
+                                        { label: '⭐ Follow up', msg: `Hey ${contact.full_name?.split(' ')[0] || 'there'}, just following up from last time. How's everything going? 😊` },
+                                        { label: '📍 We deliver', msg: `Hi ${contact.full_name?.split(' ')[0] || 'there'}! Quick reminder — we deliver to your area! Let us know if you'd like to place an order. 🌿` },
+                                      ].map(({ label, msg }) => (
+                                        <button
+                                          key={label}
+                                          onClick={() => handleQuickText(contact, msg)}
+                                          className="px-2 py-1 text-xs bg-white border border-green-300 rounded-full hover:bg-green-100 transition-colors text-green-800 font-medium"
+                                        >
+                                          {label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingContact(contact)}
-                                  className="gap-2 ml-auto"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    if (confirm('Delete this contact?')) {
-                                      deleteMutation.mutate(contact.id);
-                                    }
-                                  }}
-                                  className="gap-2 text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </Button>
+
+                                {/* Quick Email Shortcuts */}
+                                {contact.email && (
+                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-purple-700 uppercase mb-2">Quick Email</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        { label: '👋 Check-in', subject: 'Checking in!', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nJust wanted to check in and see how things are going. Let us know if there's anything we can help with!\n\nBest,\nThe Team` },
+                                        { label: '🌿 New arrivals', subject: 'New Products Just Arrived!', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nWe just got some exciting new products in! Head over to the shop to check them out.\n\nTalk soon,\nThe Team` },
+                                        { label: '🎉 Special offer', subject: 'A Special Offer Just For You', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nWe wanted to reach out with an exclusive offer just for you. Reply to this email and we'll get you taken care of!\n\nWarm regards,\nThe Team` },
+                                        { label: '⭐ Follow up', subject: 'Following Up', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nJust wanted to follow up from our last conversation. Are you ready to move forward or have any questions?\n\nBest,\nThe Team` },
+                                        { label: '📋 Order confirm', subject: 'Your Order Confirmation', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nThank you for your order! We're getting it ready and will be in touch with delivery details shortly.\n\nThank you,\nThe Team` },
+                                        { label: '💚 Thank you', subject: 'Thank You!', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nJust wanted to say thank you for your continued support — it means the world to us!\n\nWith gratitude,\nThe Team` },
+                                      ].map(({ label, subject, body }) => (
+                                        <button
+                                          key={label}
+                                          onClick={() => handleQuickEmail(contact, subject, body)}
+                                          className="px-2 py-1 text-xs bg-white border border-purple-300 rounded-full hover:bg-purple-100 transition-colors text-purple-800 font-medium"
+                                        >
+                                          {label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Quick Stage Update & Deals */}
