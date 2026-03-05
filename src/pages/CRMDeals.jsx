@@ -136,7 +136,7 @@ function CRMDealsContent() {
 
   const totalValue = filteredDeals.reduce((sum, d) => sum + (d.value || 0), 0);
   const weightedValue = filteredDeals.reduce((sum, d) => sum + ((d.value || 0) * (d.probability || 0) / 100), 0);
-  const wonDeals = deals.filter(d => d.stage === 'closed_won');
+  const wonDeals = deals.filter(d => d.stage === 'order_delivered');
   const wonValue = wonDeals.reduce((sum, d) => sum + (d.value || 0), 0);
 
   return (
