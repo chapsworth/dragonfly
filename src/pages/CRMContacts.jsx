@@ -51,6 +51,7 @@ export default function CRMContacts() {
   const [isBulkTextOpen, setIsBulkTextOpen] = useState(false);
   const [isTextGroupManagerOpen, setIsTextGroupManagerOpen] = useState(false);
   const [isEmailGroupManagerOpen, setIsEmailGroupManagerOpen] = useState(false);
+  const [isQuickMessageManagerOpen, setIsQuickMessageManagerOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
