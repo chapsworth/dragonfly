@@ -1069,8 +1069,14 @@ export default function CRMContacts() {
                                 />
                               </div>
 
+                              {/* Per-contact custom quick messages */}
+                              <ContactQuickMessages
+                                contact={contact}
+                                onUpdate={(data) => updateMutation.mutate({ id: contact.id, data })}
+                              />
+
                               {/* Vendor Products Section */}
-                              {contact.type === 'vendor_contact' && (
+                               {contact.type === 'vendor_contact' && (
                                 <div className="pt-3 border-t border-emerald-100">
                                   <div className="flex items-center justify-between mb-2">
                                     <p className="text-xs font-semibold text-gray-600 uppercase flex items-center gap-2">
