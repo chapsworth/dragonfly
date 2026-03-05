@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Edit2, Trash2, Mail, Search, X } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Users, Plus, Edit2, Trash2, Mail, Search, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function EmailGroupManager({ isOpen, onClose, allContacts, allVendors = [], onSelectGroup }) {
