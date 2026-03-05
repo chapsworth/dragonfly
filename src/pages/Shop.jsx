@@ -162,21 +162,23 @@ export default function Shop() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 flex items-center justify-center gap-4">
+            className="mb-4 flex items-center justify-between gap-3">
 
-            <h1 className="text-4xl font-bold text-emerald-900 text-center">
+            <div className="w-10 flex-shrink-0" />
+
+            <h1 className="text-4xl font-bold text-emerald-900 text-center flex-1">
               {category !== 'all' ?
               categories.find((c) => c.value === category)?.label || 'Shop' :
               'Shop'}
             </h1>
 
             {/* Expandable Search & Filters */}
-            <div className="flex items-center gap-2 absolute right-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <AnimatePresence>
                 {isSearchOpen &&
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
+                  animate={{ width: 180, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden">
@@ -198,11 +200,10 @@ export default function Shop() {
                   setIsSearchOpen(!isSearchOpen);
                   if (isSearchOpen) setSearch('');
                 }}
-                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white flex-shrink-0">
 
                 {isSearchOpen ?
                 <X className="w-5 h-5 text-emerald-600" /> :
-
                 <Search className="w-5 h-5 text-emerald-600" />
                 }
               </Button>
@@ -210,7 +211,7 @@ export default function Shop() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white">
+                className="h-10 w-10 rounded-lg bg-white/60 hover:bg-white flex-shrink-0">
 
                 <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
               </Button>
