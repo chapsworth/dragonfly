@@ -238,7 +238,7 @@ function CRMDealsContent() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`min-h-[600px] rounded-xl p-4 ${
+                    className={`min-h-[600px] rounded-xl p-4 shrink-0 w-64 ${
                       snapshot.isDraggingOver ? 'bg-indigo-100' : 'bg-white/60'
                     } backdrop-blur border-2 border-indigo-200`}
                   >
