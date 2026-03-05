@@ -1364,6 +1364,12 @@ export default function CRMContacts() {
         allContacts={contacts}
       />
 
+      {/* Quick Message Manager */}
+      <QuickMessageManager
+        isOpen={isQuickMessageManagerOpen}
+        onClose={() => setIsQuickMessageManagerOpen(false)}
+      />
+
       {/* Email Group Manager */}
       <EmailGroupManager
         isOpen={isEmailGroupManagerOpen}
