@@ -40,10 +40,15 @@ function CRMDealsContent() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Deal.create({
-      ...data,
-      last_activity: new Date().toISOString()
-    }),
+    mutationFn: (data) => {
+      const now = new Date().toISOString();
+      const stageObj = stages.find(s => s.id === data.stage) || { label: data.stage };
+      return base44.entities.Deal.create({
+        ...data,
+        last_activity: now,
+        stage_history: [{ stage: data.stage, label: stageObj.label, timestamp: now, changed_by: '' }]
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal created');
@@ -52,10 +57,20 @@ function CRMDealsContent() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Deal.update(id, {
-      ...data,
-      last_activity: new Date().toISOString()
-    }),
+    mutationFn: ({ id, data }) => {
+      const now = new Date().toISOString();
+      const existing = deals.find(d => d.id === id);
+      const stageObj = stages.find(s => s.id === data.stage) || { label: data.stage };
+      const history = existing?.stage_history || [];
+      const stageChanged = existing?.stage !== data.stage;
+      return base44.entities.Deal.update(id, {
+        ...data,
+        last_activity: now,
+        stage_history: stageChanged
+          ? [...history, { stage: data.stage, label: stageObj.label, timestamp: now, changed_by: '' }]
+          : history
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal updated');
