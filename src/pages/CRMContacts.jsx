@@ -911,12 +911,14 @@ export default function CRMContacts() {
                                         { label: '⭐ Follow up', msg: `Hey ${contact.full_name?.split(' ')[0] || 'there'}, just following up from last time. How's everything going? 😊` },
                                         { label: '📍 We deliver', msg: `Hi ${contact.full_name?.split(' ')[0] || 'there'}! Quick reminder — we deliver to your area! Let us know if you'd like to place an order. 🌿` },
                                       ].map(({ label, msg }) => (
-                                        <button
-                                          key={label}
-                                          onClick={() => handleQuickText(contact, msg)}
-                                          className="px-2 py-1 text-xs bg-white border border-green-300 rounded-full hover:bg-green-100 transition-colors text-green-800 font-medium"
-                                        >
+                                        <button key={label} onClick={() => handleQuickText(contact, msg)} className="px-2 py-1 text-xs bg-white border border-green-300 rounded-full hover:bg-green-100 transition-colors text-green-800 font-medium">
                                           {label}
+                                        </button>
+                                      ))}
+                                      {/* Custom per-contact text shortcuts */}
+                                      {(contact.custom_text_messages || []).map((t, i) => (
+                                        <button key={`custom-text-${i}`} onClick={() => handleQuickText(contact, t.message)} className="px-2 py-1 text-xs bg-emerald-100 border border-emerald-400 rounded-full hover:bg-emerald-200 transition-colors text-emerald-900 font-medium">
+                                          {t.label}
                                         </button>
                                       ))}
                                     </div>
@@ -936,12 +938,14 @@ export default function CRMContacts() {
                                         { label: '📋 Order confirm', subject: 'Your Order Confirmation', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nThank you for your order! We're getting it ready and will be in touch with delivery details shortly.\n\nThank you,\nThe Team` },
                                         { label: '💚 Thank you', subject: 'Thank You!', body: `Hi ${contact.full_name?.split(' ')[0] || 'there'},\n\nJust wanted to say thank you for your continued support — it means the world to us!\n\nWith gratitude,\nThe Team` },
                                       ].map(({ label, subject, body }) => (
-                                        <button
-                                          key={label}
-                                          onClick={() => handleQuickEmail(contact, subject, body)}
-                                          className="px-2 py-1 text-xs bg-white border border-purple-300 rounded-full hover:bg-purple-100 transition-colors text-purple-800 font-medium"
-                                        >
+                                        <button key={label} onClick={() => handleQuickEmail(contact, subject, body)} className="px-2 py-1 text-xs bg-white border border-purple-300 rounded-full hover:bg-purple-100 transition-colors text-purple-800 font-medium">
                                           {label}
+                                        </button>
+                                      ))}
+                                      {/* Custom per-contact email shortcuts */}
+                                      {(contact.custom_email_messages || []).map((e, i) => (
+                                        <button key={`custom-email-${i}`} onClick={() => handleQuickEmail(contact, e.subject, e.body)} className="px-2 py-1 text-xs bg-indigo-100 border border-indigo-400 rounded-full hover:bg-indigo-200 transition-colors text-indigo-900 font-medium">
+                                          {e.label}
                                         </button>
                                       ))}
                                     </div>
