@@ -1,0 +1,60 @@
+{
+  "name": "ComponentTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Template description"
+    },
+    "code": {
+      "type": "string",
+      "description": "Component JSX code"
+    },
+    "preview_image": {
+      "type": "string",
+      "description": "Preview screenshot URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "hero",
+        "features",
+        "products",
+        "cart",
+        "forms",
+        "navigation",
+        "content",
+        "other"
+      ],
+      "default": "other",
+      "description": "Template category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Search tags"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "description": "Available to all apps"
+    }
+  },
+  "required": [
+    "name",
+    "code"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

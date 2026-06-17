@@ -1,0 +1,88 @@
+{
+  "name": "Bookmark",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Bookmark title"
+    },
+    "url": {
+      "type": "string",
+      "description": "Website URL"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "compliance",
+        "industry_news",
+        "vendors",
+        "tools",
+        "marketing",
+        "other"
+      ],
+      "default": "other"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
+    },
+    "icon_url": {
+      "type": "string",
+      "description": "Favicon or icon URL"
+    }
+  },
+  "required": [
+    "title",
+    "url"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

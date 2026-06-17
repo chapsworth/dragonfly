@@ -1,0 +1,25 @@
+{
+  "name": "TextGroup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "contact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of contact IDs in this group"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description"
+    }
+  },
+  "required": [
+    "name",
+    "contact_ids"
+  ]
+}

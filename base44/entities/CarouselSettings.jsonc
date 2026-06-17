@@ -1,0 +1,39 @@
+{
+  "name": "CarouselSettings",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "flower",
+        "pre-rolls",
+        "edibles",
+        "concentrates",
+        "vapes",
+        "tinctures",
+        "topicals",
+        "accessories"
+      ],
+      "description": "Category name"
+    },
+    "display_order": {
+      "type": "number",
+      "description": "Order in which carousel appears (lower = first)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "featured_product_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of product IDs to feature in order"
+    }
+  },
+  "required": [
+    "category",
+    "display_order"
+  ]
+}

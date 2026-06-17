@@ -31,12 +31,16 @@ function CRMDealsContent() {
 
   const { data: deals = [] } = useQuery({
     queryKey: ['deals'],
-    queryFn: () => base44.entities.Deal.list('-last_activity')
+    queryFn: () => base44.entities.Deal.list('-last_activity'),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list()
+    queryFn: () => base44.entities.Contact.list(),
+    staleTime: 60000,
+    refetchOnWindowFocus: false
   });
 
   const createMutation = useMutation({

@@ -42,10 +42,6 @@ export default function InteractiveOrderCard({ order }) {
     queryFn: () => base44.auth.me()
   });
 
-  if (!order) {
-    return null;
-  }
-
   // Get driver location when status is out_for_delivery
   useEffect(() => {
     if (order.status === 'out_for_delivery' && currentUser?.email === order.driver_email && navigator.geolocation) {
@@ -96,6 +92,10 @@ export default function InteractiveOrderCard({ order }) {
       setDistance((dist * 0.621371).toFixed(2)); // Convert to miles
     }
   }, [driverLocation, order.driver_lat, order.driver_lng, order.delivery_lat, order.delivery_lng]);
+
+  if (!order) {
+    return null;
+  }
 
   const updateStatusMutation = useMutation({
     mutationFn: (newStatus) => base44.entities.Order.update(order.id, { status: newStatus }),

@@ -1,0 +1,134 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "customer_id": {
+      "type": "string",
+      "description": "Related Contact ID"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "image_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number",
+      "description": "Order subtotal before discount and fees"
+    },
+    "discount": {
+      "type": "number",
+      "default": 0,
+      "description": "Discount amount"
+    },
+    "fees": {
+      "type": "number",
+      "default": 0,
+      "description": "Additional fees (delivery, service, etc.)"
+    },
+    "total": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "preparing",
+        "out_for_delivery",
+        "delivered",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "delivery_address": {
+      "type": "string"
+    },
+    "delivery_lat": {
+      "type": "number",
+      "description": "Delivery location latitude"
+    },
+    "delivery_lng": {
+      "type": "number",
+      "description": "Delivery location longitude"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "driver_phone": {
+      "type": "string"
+    },
+    "driver_email": {
+      "type": "string",
+      "description": "Driver's email for authorization"
+    },
+    "driver_lat": {
+      "type": "number",
+      "description": "Driver current latitude"
+    },
+    "driver_lng": {
+      "type": "number",
+      "description": "Driver current longitude"
+    },
+    "eta_minutes": {
+      "type": "number",
+      "description": "Estimated time of arrival in minutes"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "proximity_notification_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether 100m proximity notification has been sent to customer"
+    },
+    "notes_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Delivery notes added by driver or admin"
+    }
+  },
+  "required": [
+    "items",
+    "total"
+  ]
+}

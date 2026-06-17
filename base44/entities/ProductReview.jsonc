@@ -1,0 +1,48 @@
+{
+  "name": "ProductReview",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Product being reviewed"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Reviewer email"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Reviewer name"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Star rating 1-5"
+    },
+    "review_text": {
+      "type": "string",
+      "description": "Review content"
+    },
+    "helpful_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of helpful votes"
+    },
+    "verified_purchase": {
+      "type": "boolean",
+      "default": false,
+      "description": "Purchased this product"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin approved"
+    }
+  },
+  "required": [
+    "product_id",
+    "user_email",
+    "rating"
+  ]
+}

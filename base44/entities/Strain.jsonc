@@ -1,0 +1,108 @@
+{
+  "name": "Strain",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Strain name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "indica",
+        "sativa",
+        "hybrid",
+        "cbd"
+      ],
+      "description": "Strain type"
+    },
+    "thc_min": {
+      "type": "number",
+      "description": "Minimum THC percentage"
+    },
+    "thc_max": {
+      "type": "number",
+      "description": "Maximum THC percentage"
+    },
+    "cbd_min": {
+      "type": "number",
+      "description": "Minimum CBD percentage"
+    },
+    "cbd_max": {
+      "type": "number",
+      "description": "Maximum CBD percentage"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed strain description"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Effects of the strain"
+    },
+    "flavors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Flavor profile"
+    },
+    "medical_uses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Medical benefits"
+    },
+    "genetics": {
+      "type": "string",
+      "description": "Parent strains/lineage"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Strain image"
+    },
+    "growing_difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "moderate",
+        "difficult"
+      ],
+      "description": "Growing difficulty level"
+    },
+    "flowering_time": {
+      "type": "string",
+      "description": "Time to flower (e.g., '8-9 weeks')"
+    },
+    "popular": {
+      "type": "boolean",
+      "default": false,
+      "description": "Featured/popular strain"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ],
+  "rls": {
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

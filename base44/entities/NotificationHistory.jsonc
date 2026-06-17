@@ -1,0 +1,50 @@
+{
+  "name": "NotificationHistory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Recipient email"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "ios",
+        "android"
+      ],
+      "description": "Target platform"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "failed",
+        "delivered"
+      ],
+      "default": "sent",
+      "description": "Delivery status"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message if failed"
+    },
+    "data": {
+      "type": "object",
+      "description": "Additional notification data/payload"
+    }
+  },
+  "required": [
+    "user_email",
+    "title",
+    "body",
+    "platform"
+  ]
+}

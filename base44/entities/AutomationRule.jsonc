@@ -1,0 +1,58 @@
+{
+  "name": "AutomationRule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Rule name"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "deal_stage",
+        "birthday",
+        "inactive_customer",
+        "order_status"
+      ],
+      "description": "What triggers this automation"
+    },
+    "trigger_value": {
+      "type": "string",
+      "description": "Specific trigger value (e.g., stage name, status)"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "send_text",
+        "send_email",
+        "update_stage",
+        "add_points"
+      ],
+      "description": "Action to perform"
+    },
+    "delay_hours": {
+      "type": "number",
+      "default": 0,
+      "description": "Hours to wait before action"
+    },
+    "message_template": {
+      "type": "string",
+      "description": "Message to send"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Rule enabled"
+    },
+    "last_run": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last execution time"
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type",
+    "action_type"
+  ]
+}

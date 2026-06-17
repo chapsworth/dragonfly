@@ -1,0 +1,51 @@
+{
+  "name": "TextTemplate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Template title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Template message content"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "general",
+        "marketing",
+        "follow_up",
+        "notification"
+      ],
+      "default": "general",
+      "description": "Template category"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether template is active"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

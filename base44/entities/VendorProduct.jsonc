@@ -1,0 +1,43 @@
+{
+  "name": "VendorProduct",
+  "type": "object",
+  "properties": {
+    "vendor_name": {
+      "type": "string",
+      "description": "Name of the vendor"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "variant": {
+      "type": "string",
+      "description": "Product variant/flavor"
+    },
+    "price": {
+      "type": "number",
+      "description": "Unit price"
+    },
+    "size": {
+      "type": "string",
+      "description": "Product size/weight"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "vendor_name",
+    "product_name",
+    "price"
+  ]
+}

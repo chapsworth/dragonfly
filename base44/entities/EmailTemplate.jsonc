@@ -1,0 +1,58 @@
+{
+  "name": "EmailTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "outreach",
+        "orders",
+        "deals",
+        "holidays",
+        "follow_up",
+        "general"
+      ],
+      "default": "general",
+      "description": "Template category"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject line"
+    },
+    "body": {
+      "type": "string",
+      "description": "Email body/message"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether template is active"
+    }
+  },
+  "required": [
+    "name",
+    "subject",
+    "body"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

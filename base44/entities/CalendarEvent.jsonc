@@ -1,0 +1,118 @@
+{
+  "name": "CalendarEvent",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Event title"
+    },
+    "description": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start date and time"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End date and time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "meeting",
+        "call",
+        "delivery",
+        "compliance",
+        "inspection",
+        "other"
+      ],
+      "default": "meeting"
+    },
+    "location": {
+      "type": "string"
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of attendees"
+    },
+    "related_contact_id": {
+      "type": "string"
+    },
+    "related_vendor_id": {
+      "type": "string"
+    },
+    "reminder_minutes": {
+      "type": "number",
+      "default": 30,
+      "description": "Minutes before event to remind"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "color": {
+      "type": "string",
+      "default": "#10b981",
+      "description": "Calendar color"
+    }
+  },
+  "required": [
+    "title",
+    "start_date"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "attendees": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

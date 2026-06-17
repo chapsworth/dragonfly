@@ -1,0 +1,20 @@
+{
+  "name": "AppSettings",
+  "type": "object",
+  "properties": {
+    "header_icon_url": {
+      "type": "string",
+      "description": "Custom header icon/logo URL"
+    },
+    "site_name": {
+      "type": "string",
+      "description": "Site name",
+      "default": "Dragonfly"
+    },
+    "launcher_background": {
+      "type": "string",
+      "description": "App launcher background (CSS gradient or image URL)"
+    }
+  },
+  "required": []
+}

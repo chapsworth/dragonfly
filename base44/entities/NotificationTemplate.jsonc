@@ -1,0 +1,90 @@
+{
+  "name": "NotificationTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body text"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon emoji or URL"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "new_order",
+        "order_confirmed",
+        "order_preparing",
+        "order_out_for_delivery",
+        "order_delivered",
+        "order_cancelled",
+        "new_message",
+        "low_stock",
+        "deal"
+      ],
+      "description": "When this notification triggers"
+    },
+    "target_audience": {
+      "type": "string",
+      "enum": [
+        "all_users",
+        "customers",
+        "admins",
+        "drivers",
+        "specific_group",
+        "individual"
+      ],
+      "default": "all_users",
+      "description": "Who receives this notification"
+    },
+    "group_id": {
+      "type": "string",
+      "description": "Notification group ID if target is specific_group"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "page": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Notification action buttons"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "play_sound": {
+      "type": "boolean",
+      "default": true
+    },
+    "require_interaction": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "title",
+    "body"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "name": "Deal",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Deal title"
+    },
+    "contact_id": {
+      "type": "string",
+      "description": "Related contact ID"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Contact name for quick reference"
+    },
+    "value": {
+      "type": "number",
+      "description": "Deal value in USD"
+    },
+    "probability": {
+      "type": "number",
+      "default": 50,
+      "description": "Probability of closing (0-100)"
+    },
+    "expected_close_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected close date"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "new",
+        "existing",
+        "waiting_for_delivery",
+        "order_delivered",
+        "returning_customer",
+        "vip_customer",
+        "og_customer",
+        "special_needs",
+        "orders_weekly",
+        "orders_daily"
+      ],
+      "default": "new",
+      "description": "Customer delivery status stage"
+    },
+    "stage_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "changed_by": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "History of stage changes with timestamps"
+    },
+    "description": {
+      "type": "string",
+      "description": "Deal description and notes"
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Products/services in this deal"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium",
+      "description": "Deal priority"
+    },
+    "source": {
+      "type": "string",
+      "description": "How the deal originated"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "Email of assigned team member"
+    },
+    "next_step": {
+      "type": "string",
+      "description": "Next action to take"
+    },
+    "last_activity": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp"
+    }
+  },
+  "required": [
+    "title",
+    "value"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "assigned_to": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "assigned_to": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

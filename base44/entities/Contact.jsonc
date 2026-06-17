@@ -1,0 +1,196 @@
+{
+  "name": "Contact",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Contact full name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "company": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "role": {
+      "type": "string",
+      "description": "Job title/role"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "lead",
+        "vendor_contact"
+      ],
+      "default": "lead",
+      "description": "Contact type"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "qualified",
+        "negotiation",
+        "won",
+        "lost"
+      ],
+      "default": "new",
+      "description": "Pipeline stage"
+    },
+    "preferred_strain_type": {
+      "type": "string",
+      "enum": [
+        "indica",
+        "sativa",
+        "hybrid",
+        "cbd",
+        "no_preference"
+      ],
+      "description": "Preferred cannabis type"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    },
+    "address": {
+      "type": "string",
+      "description": "Full address"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date"
+    },
+    "medical_card_number": {
+      "type": "string",
+      "description": "Medical marijuana card number"
+    },
+    "medical_card_expiry": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_orders": {
+      "type": "number",
+      "default": 0
+    },
+    "total_spent": {
+      "type": "number",
+      "default": 0
+    },
+    "last_order_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes"
+    },
+    "source": {
+      "type": "string",
+      "description": "How they found us"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "Email of assigned team member"
+    },
+    "vendor_products": {
+      "type": "string",
+      "description": "Products this vendor supplies"
+    },
+    "custom_text_messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Custom quick text messages for this contact"
+    },
+    "custom_email_messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Custom quick email messages for this contact"
+    }
+  },
+  "required": [
+    "full_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "assigned_to": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "assigned_to": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

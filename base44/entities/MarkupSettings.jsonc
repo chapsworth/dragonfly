@@ -1,0 +1,22 @@
+{
+  "name": "MarkupSettings",
+  "type": "object",
+  "properties": {
+    "setting_key": {
+      "type": "string",
+      "description": "Unique key for this setting (e.g., 'factory_wholesale')"
+    },
+    "global_markup": {
+      "type": "number",
+      "default": 15,
+      "description": "Default markup percentage for all products"
+    },
+    "product_markups": {
+      "type": "object",
+      "description": "Map of product IDs to their custom markup percentages"
+    }
+  },
+  "required": [
+    "setting_key"
+  ]
+}

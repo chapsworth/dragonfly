@@ -1,0 +1,89 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message content"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "info",
+        "deal",
+        "order",
+        "product",
+        "announcement",
+        "alert"
+      ],
+      "default": "info",
+      "description": "Notification type"
+    },
+    "link_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "page",
+        "product",
+        "deal",
+        "order",
+        "url"
+      ],
+      "default": "none",
+      "description": "Type of link"
+    },
+    "link_value": {
+      "type": "string",
+      "description": "Link destination (page name, product ID, deal ID, order ID, or URL)"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "everyone",
+        "individual",
+        "group"
+      ],
+      "description": "Who receives this notification"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Email for individual recipient"
+    },
+    "recipient_group_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Contact IDs for group recipients"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Read status for individual notifications"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal",
+      "description": "Notification priority"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon name for notification"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "recipient_type"
+  ]
+}

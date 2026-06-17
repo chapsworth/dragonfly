@@ -1,0 +1,67 @@
+{
+  "name": "EmailTrigger",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Trigger name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this trigger does"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "order_placed",
+        "order_status_change",
+        "user_registered",
+        "points_earned",
+        "reward_redeemed",
+        "manual",
+        "scheduled"
+      ],
+      "description": "When this email is triggered"
+    },
+    "template_id": {
+      "type": "string",
+      "description": "ID of email template to use"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "admin",
+        "driver",
+        "specific_user",
+        "all_users",
+        "group"
+      ],
+      "description": "Who receives this email"
+    },
+    "recipient_group_id": {
+      "type": "string",
+      "description": "ID of EmailGroup if recipient_type is group"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this trigger is active"
+    },
+    "last_sent": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time this was sent"
+    },
+    "send_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total emails sent"
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type",
+    "recipient_type"
+  ]
+}

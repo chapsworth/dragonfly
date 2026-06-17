@@ -1,0 +1,18 @@
+{
+  "name": "Favorite",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "User email"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "Favorited product ID"
+    }
+  },
+  "required": [
+    "user_email",
+    "product_id"
+  ]
+}

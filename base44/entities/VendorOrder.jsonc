@@ -1,0 +1,97 @@
+{
+  "name": "VendorOrder",
+  "type": "object",
+  "properties": {
+    "vendor_name": {
+      "type": "string",
+      "description": "Vendor name"
+    },
+    "order_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "variant": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "received",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Customer name"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "Customer phone"
+    },
+    "customer_email": {
+      "type": "string",
+      "description": "Customer email"
+    },
+    "customer_address": {
+      "type": "string",
+      "description": "Customer address"
+    },
+    "customer_lat": {
+      "type": "number",
+      "description": "Customer latitude"
+    },
+    "customer_lng": {
+      "type": "number",
+      "description": "Customer longitude"
+    },
+    "delivery_address": {
+      "type": "string",
+      "description": "Delivery address"
+    },
+    "delivery_lat": {
+      "type": "number",
+      "description": "Delivery latitude"
+    },
+    "delivery_lng": {
+      "type": "number",
+      "description": "Delivery longitude"
+    }
+  },
+  "required": [
+    "vendor_name",
+    "items",
+    "total"
+  ]
+}

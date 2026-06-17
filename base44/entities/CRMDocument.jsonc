@@ -1,0 +1,100 @@
+{
+  "name": "CRMDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Document title"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "File URL"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "license",
+        "contract",
+        "invoice",
+        "medical_card",
+        "compliance",
+        "report",
+        "other"
+      ],
+      "default": "other"
+    },
+    "related_contact_id": {
+      "type": "string"
+    },
+    "related_vendor_id": {
+      "type": "string"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date",
+      "description": "For licenses/cards"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME type"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "file_url"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

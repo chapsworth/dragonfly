@@ -1,0 +1,53 @@
+{
+  "name": "Address",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "User email who owns this address"
+    },
+    "label": {
+      "type": "string",
+      "description": "Address label (e.g., Home, Work, etc.)"
+    },
+    "full_address": {
+      "type": "string",
+      "description": "Complete address"
+    },
+    "street": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "lat": {
+      "type": "number",
+      "description": "Latitude"
+    },
+    "lng": {
+      "type": "number",
+      "description": "Longitude"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Default delivery address"
+    },
+    "delivery_instructions": {
+      "type": "string",
+      "description": "Special delivery instructions"
+    }
+  },
+  "required": [
+    "user_email",
+    "label",
+    "full_address"
+  ]
+}

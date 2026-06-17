@@ -1,0 +1,78 @@
+{
+  "name": "ComponentBlueprint",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name of the component (e.g., 'Hero Section', 'Product Card')"
+    },
+    "type": {
+      "type": "string",
+      "description": "Internal type identifier used for mapping to React components (e.g., 'hero', 'product_card')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of what this component does"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Navigation",
+        "Content",
+        "E-commerce",
+        "Forms",
+        "Media",
+        "Data Display",
+        "Layout",
+        "Social"
+      ],
+      "description": "Category for organizing components in the library"
+    },
+    "default_props": {
+      "type": "object",
+      "description": "Default property values for this component"
+    },
+    "editable_fields_schema": {
+      "type": "object",
+      "description": "JSON Schema defining which properties can be edited"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0.0",
+      "description": "Semantic version number"
+    },
+    "preview_image_url": {
+      "type": "string",
+      "description": "URL to a preview screenshot"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for searchability"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "category"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

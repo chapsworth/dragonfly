@@ -1,0 +1,36 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "from_user_email": {
+      "type": "string",
+      "description": "Sender email"
+    },
+    "to_user_email": {
+      "type": "string",
+      "description": "Recipient email"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Message subject"
+    },
+    "body": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether message has been read"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Thread ID for grouping messages"
+    }
+  },
+  "required": [
+    "from_user_email",
+    "to_user_email",
+    "body"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "CustomerSegment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Segment name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Segment description"
+    },
+    "criteria": {
+      "type": "object",
+      "properties": {
+        "min_orders": {
+          "type": "number"
+        },
+        "max_orders": {
+          "type": "number"
+        },
+        "min_spent": {
+          "type": "number"
+        },
+        "max_spent": {
+          "type": "number"
+        },
+        "days_since_last_order": {
+          "type": "number"
+        },
+        "preferred_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Segmentation criteria"
+    },
+    "contact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Matching contact IDs"
+    },
+    "color": {
+      "type": "string",
+      "default": "#10b981",
+      "description": "Badge color"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

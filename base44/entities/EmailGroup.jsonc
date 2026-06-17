@@ -1,0 +1,25 @@
+{
+  "name": "EmailGroup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Group description"
+    },
+    "contact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of contact IDs in this group"
+    }
+  },
+  "required": [
+    "name",
+    "contact_ids"
+  ]
+}

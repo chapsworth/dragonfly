@@ -1,0 +1,51 @@
+{
+  "name": "SentNotification",
+  "type": "object",
+  "properties": {
+    "template_id": {
+      "type": "string",
+      "description": "Related template ID"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Who received it"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "delivered",
+        "clicked",
+        "dismissed"
+      ],
+      "default": "sent"
+    },
+    "sent_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "related_order_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "recipient_email",
+    "title",
+    "body"
+  ]
+}

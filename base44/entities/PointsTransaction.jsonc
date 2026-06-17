@@ -1,0 +1,62 @@
+{
+  "name": "PointsTransaction",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "User email"
+    },
+    "points": {
+      "type": "number",
+      "description": "Points earned or spent (negative for spending)"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": [
+        "earned",
+        "redeemed",
+        "expired",
+        "bonus"
+      ],
+      "description": "Type of transaction"
+    },
+    "description": {
+      "type": "string",
+      "description": "Transaction description"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "Related order ID if applicable"
+    },
+    "reward_id": {
+      "type": "string",
+      "description": "Related reward ID if redeemed"
+    },
+    "balance_after": {
+      "type": "number",
+      "description": "Points balance after transaction"
+    }
+  },
+  "required": [
+    "user_email",
+    "points",
+    "transaction_type"
+  ],
+  "rls": {
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

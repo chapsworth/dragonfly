@@ -1,0 +1,54 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "User's customizable display name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "Birthday"
+    },
+    "loyalty_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Loyalty reward points"
+    },
+    "loyalty_tier": {
+      "type": "string",
+      "enum": [
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ],
+      "default": "bronze",
+      "description": "Loyalty tier"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "User's unique referral code"
+    },
+    "referred_by": {
+      "type": "string",
+      "description": "Email of user who referred them"
+    },
+    "referral_bonus_claimed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether referral bonus has been claimed"
+    },
+    "is_on_duty": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether driver is currently on duty for deliveries"
+    }
+  },
+  "required": []
+}

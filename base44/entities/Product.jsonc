@@ -1,0 +1,114 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "flower",
+        "pre-rolls",
+        "edibles",
+        "concentrates",
+        "vapes",
+        "tinctures",
+        "topicals",
+        "accessories",
+        "merch",
+        "supplies"
+      ],
+      "description": "Product category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "price": {
+      "type": "number",
+      "description": "Base price in USD"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "stock_quantity": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      },
+      "description": "Product variants with different prices and stock levels"
+    },
+    "thc_level": {
+      "type": "number",
+      "description": "THC percentage"
+    },
+    "cbd_level": {
+      "type": "number",
+      "description": "CBD percentage"
+    },
+    "strain_type": {
+      "type": "string",
+      "enum": [
+        "indica",
+        "sativa",
+        "hybrid",
+        "cbd",
+        "n/a"
+      ],
+      "description": "Strain type"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "weight": {
+      "type": "string",
+      "description": "Product weight/size"
+    },
+    "in_stock": {
+      "type": "boolean",
+      "default": true
+    },
+    "stock_quantity": {
+      "type": "number",
+      "default": 0,
+      "description": "Current stock quantity"
+    },
+    "low_stock_threshold": {
+      "type": "number",
+      "default": 10,
+      "description": "Alert threshold for low stock"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Stock keeping unit identifier"
+    },
+    "published": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether product is visible to customers"
+    },
+    "printify_product_id": {
+      "type": "string",
+      "description": "Printify product ID for synced products"
+    },
+    "printify_shop_id": {
+      "type": "string",
+      "description": "Printify shop ID for synced products"
+    }
+  },
+  "required": [
+    "price"
+  ]
+}

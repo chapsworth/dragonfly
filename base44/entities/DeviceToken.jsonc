@@ -1,0 +1,37 @@
+{
+  "name": "DeviceToken",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "User's email address"
+    },
+    "device_token": {
+      "type": "string",
+      "description": "Device push notification token"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "ios",
+        "android"
+      ],
+      "description": "Device platform"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this token is active"
+    },
+    "last_used": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time this token was used"
+    }
+  },
+  "required": [
+    "user_email",
+    "device_token",
+    "platform"
+  ]
+}

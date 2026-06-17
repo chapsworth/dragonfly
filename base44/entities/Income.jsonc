@@ -1,0 +1,58 @@
+{
+  "name": "Income",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "Income description"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Income amount in USD"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "sales",
+        "services",
+        "investment",
+        "other"
+      ],
+      "default": "other",
+      "description": "Income category"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Income date"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Customer/client name"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "check",
+        "bank_transfer",
+        "other"
+      ],
+      "default": "card"
+    },
+    "invoice_url": {
+      "type": "string",
+      "description": "Invoice/receipt URL"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "description",
+    "amount",
+    "date"
+  ]
+}

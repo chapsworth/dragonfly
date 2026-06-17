@@ -1,0 +1,89 @@
+{
+  "name": "CRMNote",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Note title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Note content"
+    },
+    "note_type": {
+      "type": "string",
+      "enum": [
+        "call",
+        "meeting",
+        "email",
+        "general",
+        "complaint",
+        "feedback"
+      ],
+      "default": "general"
+    },
+    "related_contact_id": {
+      "type": "string"
+    },
+    "related_vendor_id": {
+      "type": "string"
+    },
+    "related_order_id": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pinned": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "content"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -90,7 +90,7 @@ const driverIcon = L.divIcon({
 });
 
 // Snap-to-Position Delivery Panel Component
-const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCenterMap }) => {
+const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCenterMap, onDeleteOrder }) => {
   const [snapPosition, setSnapPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
@@ -418,7 +418,7 @@ const SnapDeliveryPanel = ({ order, onOrderUpdate, onClose, currentUser, onCente
             variant="outline" 
             onClick={() => {
               if (confirm('Delete this order? This cannot be undone.')) {
-                deleteOrderMutation.mutate(order.id);
+                onDeleteOrder?.(order.id);
               }
             }}
             className="text-red-600 border-red-300 hover:bg-red-50"
@@ -1701,6 +1701,7 @@ export default function OrderTracking() {
           onClose={() => setShowPanel(false)}
           currentUser={user}
           onCenterMap={centerOnOrder}
+          onDeleteOrder={(id) => deleteOrderMutation.mutate(id)}
         />
       )}
 

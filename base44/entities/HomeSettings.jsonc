@@ -1,0 +1,31 @@
+{
+  "name": "HomeSettings",
+  "type": "object",
+  "properties": {
+    "hero_background_url": {
+      "type": "string",
+      "description": "Hero section background image URL",
+      "default": "https://images.unsplash.com/photo-1587579286550-d42fcad93ec2?w=1600&q=80"
+    },
+    "section_order": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "hero",
+          "features",
+          "category_grid",
+          "carousels"
+        ]
+      },
+      "default": [
+        "hero",
+        "features",
+        "category_grid",
+        "carousels"
+      ],
+      "description": "Order of sections on homepage"
+    }
+  },
+  "required": []
+}

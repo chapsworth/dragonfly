@@ -1,0 +1,79 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "Expense description"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Expense amount in USD"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "inventory",
+        "rent",
+        "utilities",
+        "payroll",
+        "marketing",
+        "delivery",
+        "licenses",
+        "insurance",
+        "equipment",
+        "supplies",
+        "other"
+      ],
+      "default": "other",
+      "description": "Expense category"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Expense date"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "Vendor/supplier name"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "check",
+        "bank_transfer",
+        "other"
+      ],
+      "default": "card"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Receipt/invoice URL"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "recurring": {
+      "type": "boolean",
+      "default": false,
+      "description": "Is this a recurring expense"
+    },
+    "recurring_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "yearly"
+      ],
+      "description": "Frequency if recurring"
+    }
+  },
+  "required": [
+    "description",
+    "amount",
+    "date"
+  ]
+}
