@@ -93,10 +93,6 @@ export default function InteractiveOrderCard({ order }) {
     }
   }, [driverLocation, order.driver_lat, order.driver_lng, order.delivery_lat, order.delivery_lng]);
 
-  if (!order) {
-    return null;
-  }
-
   const updateStatusMutation = useMutation({
     mutationFn: (newStatus) => base44.entities.Order.update(order.id, { status: newStatus }),
     onSuccess: () => {
@@ -107,6 +103,10 @@ export default function InteractiveOrderCard({ order }) {
       toast.error('Failed to update status');
     }
   });
+
+  if (!order) {
+    return null;
+  }
 
   const handleCall = () => {
     if (order.customer_phone) {

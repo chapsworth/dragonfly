@@ -56,12 +56,16 @@ export default function CRMContacts() {
 
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list()
+    queryFn: () => base44.entities.Contact.list(),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const { data: vendors = [] } = useQuery({
     queryKey: ['vendors'],
-    queryFn: () => base44.entities.Vendor.list()
+    queryFn: () => base44.entities.Vendor.list(),
+    staleTime: 60000,
+    refetchOnWindowFocus: false
   });
 
   const createMutation = useMutation({
@@ -1834,7 +1838,10 @@ function ContactDeals({ contactId, contactName }) {
 
   const { data: deals = [] } = useQuery({
     queryKey: ['contact-deals', contactId],
-    queryFn: () => base44.entities.Deal.filter({ contact_id: contactId })
+    queryFn: () => base44.entities.Deal.filter({ contact_id: contactId }),
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+    enabled: !!contactId
   });
 
   const createDealMutation = useMutation({

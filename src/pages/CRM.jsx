@@ -9,22 +9,30 @@ import { createPageUrl } from '@/utils';
 export default function CRM() {
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list()
+    queryFn: () => base44.entities.Contact.list(),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const { data: vendors = [] } = useQuery({
     queryKey: ['vendors'],
-    queryFn: () => base44.entities.Vendor.list()
+    queryFn: () => base44.entities.Vendor.list(),
+    staleTime: 60000,
+    refetchOnWindowFocus: false
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['crm-tasks'],
-    queryFn: () => base44.entities.CRMTask.list()
+    queryFn: () => base44.entities.CRMTask.list(),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['calendar-events'],
-    queryFn: () => base44.entities.CalendarEvent.list()
+    queryFn: () => base44.entities.CalendarEvent.list(),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const customers = contacts.filter(c => c.type === 'customer');
@@ -35,7 +43,9 @@ export default function CRM() {
 
   const { data: deals = [] } = useQuery({
     queryKey: ['deals'],
-    queryFn: () => base44.entities.Deal.list()
+    queryFn: () => base44.entities.Deal.list(),
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   const quickLinks = [
